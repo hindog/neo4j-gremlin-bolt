@@ -1,5 +1,10 @@
 # Change log
 
+## 0.2.25
+
+* Updated [BOLT driver](https://github.com/neo4j/neo4j-java-driver) to version 1.3.0
+* Updated [Apache Tinkerpop](http://tinkerpop.apache.org/) to version 3.2.5
+
 ## 0.2.24
 
 * Fixed bug reading LIST OF ANY? values, thanks [runnerway](https://github.com/runnerway)
