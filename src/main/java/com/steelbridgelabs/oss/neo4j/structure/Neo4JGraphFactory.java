@@ -37,7 +37,8 @@ public class Neo4JGraphFactory {
             throw Graph.Exceptions.argumentCanNotBeNull("configuration");
         try {
             // neo4j driver configuration
-            Config config = Config.build().toConfig();
+            Config config = Config.build()
+                .toConfig();
             // graph name
             String graphName = configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JGraphNameConfigurationKey);
             // create driver instance
