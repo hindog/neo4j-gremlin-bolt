@@ -29,6 +29,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.AbstractThreadLocalTransaction;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactoryClass;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
+import org.apache.tinkerpop.gremlin.structure.util.TransactionException;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
@@ -53,7 +54,7 @@ public class Neo4JGraph implements Graph {
 
     private class Neo4JTransaction extends AbstractThreadLocalTransaction {
 
-        public Neo4JTransaction() {
+        Neo4JTransaction() {
             super(Neo4JGraph.this);
         }
 

@@ -27,6 +27,9 @@ import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+
 /**
  * @author Rogelio J. Baucells
  */
@@ -44,8 +47,8 @@ public class Neo4JGraphFactory {
             // create driver instance
             Driver driver = GraphDatabase.driver(configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JUrlConfigurationKey), AuthTokens.basic(configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JUsernameConfigurationKey), configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JPasswordConfigurationKey)), config);
             // create providers
-            Neo4JElementIdProvider<?> vertexIdProvider = loadProvider(configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JVertexIdProviderClassNameConfigurationKey));
-            Neo4JElementIdProvider<?> edgeIdProvider = loadProvider(configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JEdgeIdProviderClassNameConfigurationKey));
+            Neo4JElementIdProvider<?> vertexIdProvider = loadProvider(driver, configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JVertexIdProviderClassNameConfigurationKey));
+            Neo4JElementIdProvider<?> edgeIdProvider = loadProvider(driver, configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JEdgeIdProviderClassNameConfigurationKey));
             // check a read partition is required
             if (graphName != null)
                 return new Neo4JGraph(new AnyLabelReadPartition(graphName), new String[]{graphName}, driver, vertexIdProvider, edgeIdProvider, configuration);
@@ -58,13 +61,21 @@ public class Neo4JGraphFactory {
         }
     }
 
-    private static Neo4JElementIdProvider<?> loadProvider(String className) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+    static Neo4JElementIdProvider<?> loadProvider(Driver driver, String className) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         // check class name
         if (className != null) {
             // load class
             Class<?> type = Class.forName(className);
-            // create instance
-            return (Neo4JElementIdProvider<?>)type.newInstance();
+            try {
+                // check class has constructor with a Driver parameter
+                Constructor<?> constructor = type.getConstructor(Driver.class);
+                // create instance
+                return (Neo4JElementIdProvider<?>)constructor.newInstance(driver);
+            }
+            catch (NoSuchMethodException | InvocationTargetException ex) {
+                // create instance
+                return (Neo4JElementIdProvider<?>)type.newInstance();
+            }
         }
         return null;
     }
