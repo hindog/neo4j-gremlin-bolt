@@ -19,7 +19,6 @@
 package com.steelbridgelabs.oss.neo4j.structure;
 
 import org.apache.tinkerpop.gremlin.structure.Element;
-import org.neo4j.driver.v1.Statement;
 
 /**
  * @author Rogelio J. Baucells

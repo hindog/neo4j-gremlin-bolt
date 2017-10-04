@@ -373,7 +373,7 @@ class Neo4JSession implements AutoCloseable {
         // create stream from result, skip deleted vertices
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(result, Spliterator.NONNULL | Spliterator.IMMUTABLE), false)
             .map(this::loadVertex)
-            .filter(vertex -> vertex != null);
+            .filter(Objects::nonNull);
     }
 
     public Iterator<Edge> edges(Object[] ids) {
@@ -452,7 +452,7 @@ class Neo4JSession implements AutoCloseable {
         // create stream from result, skip deleted edges
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(result, Spliterator.NONNULL | Spliterator.IMMUTABLE), false)
             .map(this::loadEdge)
-            .filter(edge -> edge != null);
+            .filter(Objects::nonNull);
     }
 
     private static <T> Iterator<T> combine(Stream<T> collection, Stream<T> query) {

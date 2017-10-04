@@ -265,7 +265,7 @@ public class Neo4JVertex extends Neo4JElement implements Vertex {
         StreamSupport.stream(node.keys().spliterator(), false).filter(key -> !key.equals(idFieldName)).forEach(key -> {
             // value
             Value value = node.get(key);
-            TypeRepresentation type = (TypeRepresentation) value.type();
+            TypeRepresentation type = (TypeRepresentation)value.type();
             // process value type
             switch (type.constructor()) {
                 case LIST_TyCon:
@@ -483,7 +483,7 @@ public class Neo4JVertex extends Neo4JElement implements Vertex {
                     // match clause
                     builder.append("MATCH ").append(matchPattern("n")).append("-[r").append(relationshipLabels.stream().map(label -> ":`" + label + "`").collect(Collectors.joining("|"))).append("]->(m").append(processLabels(Collections.emptySet(), true)).append(")").append(" WHERE ").append(vertexIdProvider.matchPredicateOperand("n")).append(" = {id}");
                     // edge ids already in memory
-                    List<Object> identifiers = outEdges.stream().map(Neo4JEdge::id).filter(id -> id != null).collect(Collectors.toList());
+                    List<Object> identifiers = outEdges.stream().map(Neo4JEdge::id).filter(Objects::nonNull).collect(Collectors.toList());
                     // process where clause
                     processEdgesWhereClause("m", identifiers, "r", builder, parameters);
                     // return
@@ -526,7 +526,7 @@ public class Neo4JVertex extends Neo4JElement implements Vertex {
                     // match clause
                     builder.append("MATCH ").append(matchPattern("n")).append("<-[r").append(relationshipLabels.stream().map(label -> ":`" + label + "`").collect(Collectors.joining("|"))).append("]-(m").append(processLabels(Collections.emptySet(), true)).append(")").append(" WHERE ").append(vertexIdProvider.matchPredicateOperand("n")).append(" = {id}");
                     // edge ids already in memory
-                    List<Object> identifiers = inEdges.stream().map(Neo4JEdge::id).filter(id -> id != null).collect(Collectors.toList());
+                    List<Object> identifiers = inEdges.stream().map(Neo4JEdge::id).filter(Objects::nonNull).collect(Collectors.toList());
                     // process where clause
                     processEdgesWhereClause("m", identifiers, "r", builder, parameters);
                     // return
@@ -565,7 +565,7 @@ public class Neo4JVertex extends Neo4JElement implements Vertex {
                 // match clause
                 builder.append("MATCH ").append(matchPattern("n")).append("-[r").append(set.stream().map(label -> ":`" + label + "`").collect(Collectors.joining("|"))).append("]-(m").append(processLabels(Collections.emptySet(), true)).append(")").append(" WHERE ").append(vertexIdProvider.matchPredicateOperand("n")).append(" = {id}");
                 // edge ids already in memory
-                List<Object> identifiers = Stream.concat(outEdges.stream(), inEdges.stream()).map(Neo4JEdge::id).filter(id -> id != null).collect(Collectors.toList());
+                List<Object> identifiers = Stream.concat(outEdges.stream(), inEdges.stream()).map(Neo4JEdge::id).filter(Objects::nonNull).collect(Collectors.toList());
                 // process where clause
                 processEdgesWhereClause("m", identifiers, "r", builder, parameters);
                 // return
@@ -627,7 +627,7 @@ public class Neo4JVertex extends Neo4JElement implements Vertex {
                     // match clause
                     builder.append("MATCH ").append(matchPattern("n")).append("-[r").append(relationshipLabels.stream().map(label -> ":`" + label + "`").collect(Collectors.joining("|"))).append("]->(m").append(processLabels(Collections.emptySet(), true)).append(")").append(" WHERE ").append(vertexIdProvider.matchPredicateOperand("n")).append(" = {id}");
                     // edge ids already in memory
-                    List<Object> identifiers = outEdges.stream().map(Neo4JEdge::id).filter(id -> id != null).collect(Collectors.toList());
+                    List<Object> identifiers = outEdges.stream().map(Neo4JEdge::id).filter(Objects::nonNull).collect(Collectors.toList());
                     // process where clause
                     processEdgesWhereClause("m", identifiers, "r", builder, parameters);
                     // return
@@ -666,7 +666,7 @@ public class Neo4JVertex extends Neo4JElement implements Vertex {
                     // match clause
                     builder.append("MATCH ").append(matchPattern("n")).append("<-[r").append(relationshipLabels.stream().map(label -> ":`" + label + "`").collect(Collectors.joining("|"))).append("]-(m").append(processLabels(Collections.emptySet(), true)).append(")").append(" WHERE ").append(vertexIdProvider.matchPredicateOperand("n")).append(" = {id}");
                     // edge ids already in memory
-                    List<Object> identifiers = inEdges.stream().map(Neo4JEdge::id).filter(id -> id != null).collect(Collectors.toList());
+                    List<Object> identifiers = inEdges.stream().map(Neo4JEdge::id).filter(Objects::nonNull).collect(Collectors.toList());
                     // process where clause
                     processEdgesWhereClause("m", identifiers, "r", builder, parameters);
                     // return
@@ -701,7 +701,7 @@ public class Neo4JVertex extends Neo4JElement implements Vertex {
                 // match clause
                 builder.append("MATCH ").append(matchPattern("n")).append("-[r").append(set.stream().map(label -> ":`" + label + "`").collect(Collectors.joining("|"))).append("]-(m").append(processLabels(Collections.emptySet(), true)).append(")").append(" WHERE ").append(vertexIdProvider.matchPredicateOperand("n")).append(" = {id}");
                 // edge ids already in memory
-                List<Object> identifiers = Stream.concat(outEdges.stream(), inEdges.stream()).map(Neo4JEdge::id).filter(id -> id != null).collect(Collectors.toList());
+                List<Object> identifiers = Stream.concat(outEdges.stream(), inEdges.stream()).map(Neo4JEdge::id).filter(Objects::nonNull).collect(Collectors.toList());
                 // process where clause
                 processEdgesWhereClause("m", identifiers, "r", builder, parameters);
                 // return
@@ -782,7 +782,7 @@ public class Neo4JVertex extends Neo4JElement implements Vertex {
                     cardinalities.put(name, VertexProperty.Cardinality.set);
                 }
                 // check value does not exist in collection, TODO: optimize this search
-                if (!set.stream().filter(item -> item.value().equals(value)).findAny().isPresent()) {
+                if (set.stream().noneMatch(item -> item.value().equals(value))) {
                     // add property to set
                     set.add(property);
                     // notify session
@@ -825,12 +825,12 @@ public class Neo4JVertex extends Neo4JElement implements Vertex {
                     // first element
                     return (VertexProperty<V>)iterator.next();
                 }
-                return VertexProperty.<V>empty();
+                return VertexProperty.empty();
             }
             // exception
             throw Vertex.Exceptions.multiplePropertiesExistForProvidedKey(key);
         }
-        return VertexProperty.<V>empty();
+        return VertexProperty.empty();
     }
 
     /**

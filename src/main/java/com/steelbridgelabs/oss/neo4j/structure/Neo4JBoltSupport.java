@@ -30,7 +30,7 @@ final class Neo4JBoltSupport {
     private Neo4JBoltSupport() {
     }
 
-    public static void checkPropertyValue(Object value) {
+    static void checkPropertyValue(Object value) {
         Objects.requireNonNull(value, "value cannot be null");
         // check for supported types, TODO: Bolt supports List and Map values
         if (value instanceof Boolean || value instanceof Long || value instanceof Double || value instanceof String)

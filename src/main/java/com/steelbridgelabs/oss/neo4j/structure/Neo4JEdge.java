@@ -56,7 +56,7 @@ public class Neo4JEdge extends Neo4JElement implements Edge {
         private final String name;
         private final T value;
 
-        public Neo4JEdgeProperty(Neo4JEdge edge, String name, T value) {
+        Neo4JEdgeProperty(Neo4JEdge edge, String name, T value) {
             Objects.requireNonNull(edge, "edge cannot be null");
             Objects.requireNonNull(name, "name cannot be null");
             Objects.requireNonNull(value, "value cannot be null");
@@ -269,7 +269,7 @@ public class Neo4JEdge extends Neo4JElement implements Edge {
         if (propertyValue != null)
             return (Property<V>)propertyValue;
         // empty property
-        return Property.<V>empty();
+        return Property.empty();
     }
 
     /**
@@ -311,7 +311,7 @@ public class Neo4JEdge extends Neo4JElement implements Edge {
         // filter properties (return a copy since properties iterator can be modified by calling remove())
         return Arrays.stream(propertyKeys)
             .map(key -> (Property<V>)properties.get(key))
-            .filter(property -> property != null)
+            .filter(Objects::nonNull)
             .collect(Collectors.toList())
             .iterator();
     }
