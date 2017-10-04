@@ -42,6 +42,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -110,6 +111,8 @@ public class Neo4JGraph implements Graph {
     private final ThreadLocal<Neo4JSession> session = ThreadLocal.withInitial(() -> null);
     private final Neo4JTransaction transaction = new Neo4JTransaction();
     private final Configuration configuration;
+
+    private final Set<Consumer<Neo4JGraph>> closeListeners = new HashSet<>();
 
     /**
      * Creates a {@link Neo4JGraph} instance.
@@ -472,6 +475,29 @@ public class Neo4JGraph implements Graph {
             session.close();
             // remove session
             this.session.remove();
+        }
+        // synchronize access to set
+        synchronized (closeListeners) {
+            // notify consumers
+            closeListeners.forEach(consumer -> consumer.accept(this));
+        }
+    }
+
+    public void addCloseListener(Consumer<Neo4JGraph> consumer) {
+        Objects.requireNonNull(consumer, "consumer cannot be null");
+        // synchronize access to set
+        synchronized (closeListeners) {
+            // add consumer
+            closeListeners.add(consumer);
+        }
+    }
+
+    public void removeCloseListener(Consumer<Neo4JGraph> consumer) {
+        Objects.requireNonNull(consumer, "consumer cannot be null");
+        // synchronize access to set
+        synchronized (closeListeners) {
+            // remove consumer
+            closeListeners.remove(consumer);
         }
     }
 

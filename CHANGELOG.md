@@ -1,5 +1,9 @@
 # Change log
 
+## 0.2.27
+
+* Updated [BOLT driver](https://github.com/neo4j/neo4j-java-driver) to version 1.4.4
+
 ## 0.2.26
 
 * Updated [Apache Tinkerpop](http://tinkerpop.apache.org/) to version 3.3.0 (#64)
