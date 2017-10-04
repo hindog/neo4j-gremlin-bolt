@@ -1,5 +1,10 @@
 # Change log
 
+## 0.2.26
+
+* Updated [Apache Tinkerpop](http://tinkerpop.apache.org/) to version 3.3.0 (#64)
+* Fixed bug creating provider with constructor arguments (#59)
+
 ## 0.2.25
 
 * Updated [BOLT driver](https://github.com/neo4j/neo4j-java-driver) to version 1.3.0
