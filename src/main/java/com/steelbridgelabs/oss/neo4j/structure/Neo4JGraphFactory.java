@@ -49,11 +49,17 @@ public class Neo4JGraphFactory {
             // create providers
             Neo4JElementIdProvider<?> vertexIdProvider = loadProvider(driver, configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JVertexIdProviderClassNameConfigurationKey));
             Neo4JElementIdProvider<?> edgeIdProvider = loadProvider(driver, configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JEdgeIdProviderClassNameConfigurationKey));
+            // graph instance
+            Neo4JGraph graph;
             // check a read partition is required
             if (graphName != null)
-                return new Neo4JGraph(new AnyLabelReadPartition(graphName), new String[]{graphName}, driver, vertexIdProvider, edgeIdProvider, configuration);
-            // no partition
-            return new Neo4JGraph(new NoReadPartition(), new String[]{}, driver, vertexIdProvider, edgeIdProvider, configuration);
+                graph = new Neo4JGraph(new AnyLabelReadPartition(graphName), new String[]{graphName}, driver, vertexIdProvider, edgeIdProvider, configuration);
+            else
+                graph = new Neo4JGraph(new NoReadPartition(), new String[]{}, driver, vertexIdProvider, edgeIdProvider, configuration);
+            // close driver when graph is closed
+            graph.addCloseListener(g -> driver.close());
+            // return graph instance
+            return graph;
         }
         catch (Throwable ex) {
             // throw runtime exception
