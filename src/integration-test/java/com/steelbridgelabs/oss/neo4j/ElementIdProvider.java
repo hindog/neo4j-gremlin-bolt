@@ -17,9 +17,9 @@
  * under the License.
  */
 
-package com.steelbridgelabs.oss.neo4j;
+package ta.nemahuta.neo4j;
 
-import com.steelbridgelabs.oss.neo4j.structure.Neo4JElementIdProvider;
+import ta.nemahuta.neo4j.structure.Neo4JElementIdProvider;
 import org.neo4j.driver.v1.types.Entity;
 
 import java.util.Objects;

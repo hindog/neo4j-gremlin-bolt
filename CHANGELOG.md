@@ -1,5 +1,8 @@
 # Change log
 
+## 0.3.0
+* Forked the project and re-engineered it almost completely
+
 ## 0.2.27
 
 * Updated [BOLT driver](https://github.com/neo4j/neo4j-java-driver) to version 1.4.4

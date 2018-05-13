@@ -17,9 +17,9 @@
  * under the License.
  */
 
-package com.steelbridgelabs.oss.neo4j;
+package ta.nemahuta.neo4j;
 
-import com.steelbridgelabs.oss.neo4j.structure.Neo4JGraph;
+import ta.nemahuta.neo4j.structure.Neo4JGraph;
 import org.apache.tinkerpop.gremlin.GraphProviderClass;
 import org.apache.tinkerpop.gremlin.structure.StructureStandardSuite;
 import org.junit.runner.RunWith;

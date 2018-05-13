@@ -1,0 +1,38 @@
+plugins {
+    id 'net.ltgt.apt' version '0.15'
+    id 'java'
+    id 'maven'
+}
+
+group = 'ta.nemahuta.neo4j'
+version = '0.3.0'
+
+description = "Tanemahuta's Neo4J Gremlin (Bolt) integration"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    final lombokVersion = "1.16.20"
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    apt "org.projectlombok:lombok:${lombokVersion}"
+
+    compile(group: 'org.apache.tinkerpop', name: 'gremlin-core', version: '3.3.0') {
+        exclude(group: "org.slf4j", module: 'slf4j-log4j12')
+    }
+    compile group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '1.4.4'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
+    compile group: 'com.google.guava', name: 'guava', version: '24.1-jre'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.7'
+    testCompile group: 'org.mockito', name: 'mockito-all', version: '1.10.19'
+}
