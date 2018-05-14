@@ -73,7 +73,7 @@ public class Neo4JConfiguration {
      */
     @Getter
     @ConfigurationKey
-    private int port = 27017;
+    private final int port;
 
     /**
      * the authentication token to be used

@@ -13,10 +13,13 @@ import lombok.ToString;
  */
 @RequiredArgsConstructor
 @ToString
-@EqualsAndHashCode(of = {"id", "remote"})
+@EqualsAndHashCode
 public abstract class AbstractNeo4JElementId<T> implements Neo4JElementId<T> {
 
     @Getter(onMethod = @__(@Override))
     protected final T id;
+
+    @Getter(onMethod = @__(@Override))
+    protected final boolean remote;
 
 }
