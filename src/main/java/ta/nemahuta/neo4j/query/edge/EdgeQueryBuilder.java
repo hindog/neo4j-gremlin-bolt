@@ -67,7 +67,7 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
         }
     };
 
-    private final MatchRelationPredicate relationPredicate = new MatchRelationPredicate(RELATION_ALIAS);
+    private final MatchRelationPredicate relationPredicate = new MatchRelationPredicate(VERTEX_ALIAS_LHS, RELATION_ALIAS, VERTEX_ALIAS_RHS);
     private final Neo4JElementIdAdapter<?> vertexIdProvider;
 
     /**

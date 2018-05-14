@@ -22,10 +22,21 @@ import java.util.Set;
 public class MatchRelationPredicate implements MatchPredicate {
 
     /**
+     * the alias for the lhs node
+     */
+    @NonNull
+    private final String lhsAlias;
+    /**
      * the alias of the relation ship
      */
     @NonNull
     private final String relationAlias;
+    /**
+     * the alias for the lhs node
+     */
+    @NonNull
+    private final String rhsAlias;
+
     /**
      * the {@link MatchPredicate} for the lhs node
      */
@@ -55,6 +66,8 @@ public class MatchRelationPredicate implements MatchPredicate {
 
         if (lhs != null) {
             lhs.append(queryBuilder, parameters);
+        } else {
+            queryBuilder.append(lhsAlias);
         }
         if (direction != null) {
             // In case a relation is set to be queried, we append the relation
@@ -65,6 +78,8 @@ public class MatchRelationPredicate implements MatchPredicate {
         }
         if (rhs != null) {
             rhs.append(queryBuilder, parameters);
+        } else {
+            queryBuilder.append(rhsAlias);
         }
     }
 

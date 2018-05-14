@@ -3,10 +3,10 @@ package ta.nemahuta.neo4j.query.edge.operation;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.tinkerpop.gremlin.structure.Direction;
-import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.id.Neo4JElementId;
-import ta.nemahuta.neo4j.query.edge.EdgeOperation;
+import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.query.QueryUtils;
+import ta.nemahuta.neo4j.query.edge.EdgeOperation;
 import ta.nemahuta.neo4j.state.PropertyValue;
 
 import javax.annotation.Nonnull;
@@ -80,17 +80,16 @@ public class CreateEdgeOperation implements EdgeOperation {
         QueryUtils.appendRelationStart(direction, queryBuilder);
         queryBuilder.append(relationAlias);
         QueryUtils.appendLabels(queryBuilder, Collections.singleton(label));
-        queryBuilder.append("= {").append(paramProperties).append("}");
+        queryBuilder.append("={").append(paramProperties).append("}");
         QueryUtils.appendRelationEnd(direction, queryBuilder);
 
         queryBuilder.append("(").append(rhsAlias).append(")");
 
-        final Map<String, Object> properties = QueryUtils.computeProperties(Collections.emptyMap(), this.properties);
+        parameters.put(paramProperties, QueryUtils.computeProperties(Collections.emptyMap(), this.properties));
         if (id.isRemote()) {
-            properties.put(idAdapter.propertyName(), id.getId());
+            parameters.put(idAdapter.propertyName(), id.getId());
         } else {
-            queryBuilder.append("RETURN ").append(relationAlias).append(".").append(idAdapter.propertyName());
+            queryBuilder.append(" RETURN ").append(relationAlias).append(".").append(idAdapter.propertyName());
         }
-        parameters.put(paramProperties, properties);
     }
 }
