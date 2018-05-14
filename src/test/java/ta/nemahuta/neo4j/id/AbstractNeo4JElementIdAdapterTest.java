@@ -52,7 +52,6 @@ class AbstractNeo4JElementIdAdapterTest {
     static Stream<TestData> convertIllegalSource() {
         return Stream.of(
                 new TestData(new Neo4JTransientElementId<>(1l), null),
-                new TestData(null, null),
                 new TestData("1.2", null),
                 new TestData(1.2d, null),
                 new TestData(1.2f, null)
