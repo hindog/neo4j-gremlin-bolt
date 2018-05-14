@@ -2,24 +2,26 @@ language:
     java
 jdk:
     - oraclejdk8
-sudo:
-    required
-services:
-    - docker
-before_install:
-    - docker run -d --name neo4j -p 7687:7687 -e NEO4J_AUTH=neo4j/neo4j123 neo4j:3.1-enterprise
-    - docker ps -a
-install:
-    mvn install -P !build-extras -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+# TODO sudo:
+    # required
+# TODO services:
+    # - docker
+# TODO before_install:
+    # - docker run -d --name neo4j -p 7687:7687 -e NEO4J_AUTH=neo4j/neo4j123 neo4j:3.1-enterprise
+    # - docker ps -a
+# TODO install:
+    # upload to bintray
 script:
-    mvn test -P !build-extras -B
+    ./gradlew check assemble
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 cache:
-    directories:
-        - ~/.m2/repository
-after_success:
-    - mvn clean test jacoco:report coveralls:report
-    - mvn clean test -Pintegration-test
-    - .travis/before-deploy.sh
-    - .travis/deploy.sh
-after_script:
-    - docker rm -f neo4j
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+# TODO after_success:
+  # add integration tests
+  # Add uploading
+# TODO after_script:
+    # - docker rm -f neo4j
