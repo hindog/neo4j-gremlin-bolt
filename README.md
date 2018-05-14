@@ -4,8 +4,8 @@ This project allows the use of the [Apache Tinkerpop](http://tinkerpop.apache.or
 
 ## Build status
 
-[![Build Status](https://travis-ci.org/Tanemahuta/neo4j-gremlin-bolt.svg?branch=develop)
-[![Coverage Status](https://codecov.io/github/Tanemahuta/neo4j-gremlin-bolt?branch=develop)
+![Build Status](https://travis-ci.org/Tanemahuta/neo4j-gremlin-bolt.svg?branch=develop)
+![Coverage Status](https://codecov.io/github/Tanemahuta/neo4j-gremlin-bolt?branch=develop)
 
 ## Requirements
 
