@@ -19,9 +19,11 @@ public abstract class AbstractNeo4JElementIdAdapter implements Neo4JElementIdAda
      * @return The {@link org.apache.tinkerpop.gremlin.structure.Element} identifier converted to the correct type if necessary.
      */
     @Override
+    @Nonnull
     public Neo4JElementId<Long> convert(@Nonnull @NonNull final Object id) {
         if (id instanceof Neo4JElementId &&
-                ((Neo4JElementId<?>) id).getId() instanceof Long) {
+                ((Neo4JElementId<?>) id).getId() instanceof Long &&
+                ((Neo4JElementId<?>) id).isRemote()) {
             return (Neo4JElementId<Long>) id;
         }
         return convertId(id)
@@ -38,17 +40,19 @@ public abstract class AbstractNeo4JElementIdAdapter implements Neo4JElementIdAda
     @Nonnull
     protected Optional<Long> convertId(@Nonnull @NonNull Object id) {
         // check for Long
-        if (id instanceof Neo4JElementId) {
+        if (id instanceof Neo4JElementId && ((Neo4JElementId) id).isRemote()) {
             id = ((Neo4JElementId<?>) id).getId();
         }
         if (id instanceof Long) {
             return Optional.of((Long) id);
             // check for numeric types
-        } else if (id instanceof Number) {
+        } else if (id instanceof Number && !(id instanceof Float) && !(id instanceof Double)) {
             return Optional.of(((Number) id).longValue());
             // check for string
         } else if (id instanceof String) {
             return Optional.of(Long.valueOf((String) id));
+        } else if (id instanceof Character) {
+            return Optional.of(Long.valueOf(id + ""));
         } else {
             return Optional.empty();
         }

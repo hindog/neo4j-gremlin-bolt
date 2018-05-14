@@ -1,7 +1,9 @@
 package ta.nemahuta.neo4j.id;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 /**
  * Abstract {@link Neo4JElementId}.
@@ -10,6 +12,8 @@ import lombok.RequiredArgsConstructor;
  * @author Christian Heike (christian.heike@icloud.com)
  */
 @RequiredArgsConstructor
+@ToString
+@EqualsAndHashCode(of = {"id", "remote"})
 public abstract class AbstractNeo4JElementId<T> implements Neo4JElementId<T> {
 
     @Getter(onMethod = @__(@Override))

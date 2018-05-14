@@ -22,8 +22,11 @@ repositories {
 
 dependencies {
     final lombokVersion = "1.16.20"
+    final mockitoVersion = "2.18.3"
+    final junitVersion = "5.2.0"
+
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
-    apt "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
     compile(group: 'org.apache.tinkerpop', name: 'gremlin-core', version: '3.3.0') {
         exclude(group: "org.slf4j", module: 'slf4j-log4j12')
@@ -32,7 +35,26 @@ dependencies {
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
     compile group: 'com.google.guava', name: 'guava', version: '24.1-jre'
 
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.7'
-    testCompile group: 'org.mockito', name: 'mockito-all', version: '1.10.19'
+    ["junit-jupiter-api", "junit-jupiter-params"].each {
+        testCompile "org.junit.jupiter:${it}:${junitVersion}"
+    }
+    testCompile 'ch.qos.logback:logback-classic:1.2.3'
+    ["mockito-core", "mockito-junit-jupiter"].each {
+        testCompile "org.mockito:${it}:${mockitoVersion}"
+    }
+
+    testRuntime "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testRuntime 'org.junit.platform:junit-platform-launcher:1.2.0'
+}
+
+test {
+    useJUnitPlatform()
+
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+
+    reports {
+        html.enabled = true
+    }
 }

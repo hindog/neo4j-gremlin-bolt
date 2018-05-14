@@ -22,14 +22,4 @@ public interface Neo4JElementId<T> {
      */
     boolean isRemote();
 
-    /**
-     * Create a new element of the same type using a new value.
-     *
-     * @param newValue the new value
-     * @param <R>      the result identifier type
-     * @return the new element id
-     */
-    @Nonnull
-    <R> Neo4JElementId<R> withId(@Nonnull R newValue);
-
 }
