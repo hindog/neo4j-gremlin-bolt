@@ -1,10 +1,8 @@
 package ta.nemahuta.neo4j.partition;
 
 import com.google.common.collect.ImmutableSet;
-import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import ta.nemahuta.neo4j.query.WherePredicate;
 
 import javax.annotation.Nonnull;
@@ -19,8 +17,6 @@ import java.util.stream.StreamSupport;
  *
  * @author Christian Heike (christian.heike@icloud.com)
  */
-@EqualsAndHashCode
-@ToString
 @RequiredArgsConstructor
 public class Neo4JLabelGraphPartition implements Neo4JGraphPartition {
 
@@ -41,7 +37,7 @@ public class Neo4JLabelGraphPartition implements Neo4JGraphPartition {
         switch (opMode) {
             case OR:
                 if (!labelSet.isEmpty()) {
-                    builder.add(labels.iterator().next());
+                    builder.add(labelSet.iterator().next());
                 }
                 break;
             case AND:
@@ -58,12 +54,16 @@ public class Neo4JLabelGraphPartition implements Neo4JGraphPartition {
 
     @Override
     public Optional<WherePredicate> vertexWhereLabelPredicate(@Nonnull final String alias) {
+        if (labelSet.isEmpty()) {
+            return Optional.empty();
+        }
         switch (opMode) {
             case AND:
-                return labelSet.isEmpty() ? Optional.empty() : Optional.of(whereAndPredicate(alias, labelSet));
+                return Optional.of(whereAndPredicate(alias, labelSet));
             case OR:
-                return Stream.of(labelSet).map(Collections::singleton)
-                        .map(andSets -> andSets.stream().map(andSet -> whereAndPredicate(alias, andSet)))
+                return labelSet.stream()
+                        .map(Collections::singleton)
+                        .map(andSets -> andSets.stream().map(andSet -> whereAndPredicate(alias, Collections.singleton(andSet))))
                         .reduce(Stream::concat)
                         .orElseGet(Stream::empty)
                         .reduce(WherePredicate::orOp);
@@ -76,7 +76,7 @@ public class Neo4JLabelGraphPartition implements Neo4JGraphPartition {
     private WherePredicate whereAndPredicate(@Nonnull final String alias, final Iterable<String> labels) {
         return (queryBuilder, parameters) -> {
             queryBuilder.append(alias);
-            labelSet.forEach(l -> queryBuilder.append(":").append("`").append(l).append("`"));
+            labels.forEach(l -> queryBuilder.append(":").append("`").append(l).append("`"));
         };
     }
 
