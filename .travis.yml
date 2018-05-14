@@ -12,7 +12,7 @@ jdk:
 # TODO install:
     # upload to bintray
 script:
-    ./gradlew check codeCoverageReport assemble
+    ./gradlew check jacocoTestReport assemble
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
