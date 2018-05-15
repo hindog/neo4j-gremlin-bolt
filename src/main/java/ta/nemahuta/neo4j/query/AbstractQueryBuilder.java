@@ -70,15 +70,17 @@ public abstract class AbstractQueryBuilder implements StatementBuilder {
         final StringBuilder sb = new StringBuilder();
         final Map<String, Object> parameters = new HashMap<>();
         Optional.ofNullable(getMatch()).ifPresent(m -> {
-            sb.append("\nMATCH ");
+            sb.append("MATCH ");
             m.append(sb, parameters);
         });
         Optional.ofNullable(getWhere()).ifPresent(w -> {
-            sb.append("\nWHERE ");
+            Objects.requireNonNull(getMatch(), "Where without a match is not allowed");
+            sb.append(" WHERE ");
             w.append(sb, parameters);
         });
         boolean needsOperation = false;
         for (Operation operation : operations) {
+            sb.append(" ");
             if (operation.isNeedsStatement()) {
                 operation.append(sb, parameters);
                 needsOperation = true;

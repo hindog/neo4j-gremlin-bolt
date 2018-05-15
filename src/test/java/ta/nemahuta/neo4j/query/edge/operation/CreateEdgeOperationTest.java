@@ -8,8 +8,6 @@ import ta.nemahuta.neo4j.id.Neo4JNativeElementIdAdapter;
 import ta.nemahuta.neo4j.id.Neo4JPersistentElementId;
 import ta.nemahuta.neo4j.id.Neo4JTransientElementId;
 import ta.nemahuta.neo4j.query.AbstractStatementBuilderTest;
-import ta.nemahuta.neo4j.state.PropertyCardinality;
-import ta.nemahuta.neo4j.state.PropertyValue;
 
 import javax.annotation.Nonnull;
 
@@ -21,7 +19,7 @@ class CreateEdgeOperationTest extends AbstractStatementBuilderTest {
     @Nonnull
     private CreateEdgeOperation createOperation(final Neo4JElementId<?> id) {
         return new CreateEdgeOperation("n", "r", "m",
-                id, "test", Direction.IN, ImmutableMap.of("x", PropertyValue.from(1l, "y", PropertyCardinality.SINGLE)),
+                id, "test", Direction.IN, ImmutableMap.of("golden", prop("retriever")),
                 "props", new Neo4JNativeElementIdAdapter());
     }
 
@@ -33,11 +31,11 @@ class CreateEdgeOperationTest extends AbstractStatementBuilderTest {
     @Test
     void append() {
         assertBuildsStatement("CREATE (n)<-[r:`test`={props}]-(m) RETURN r.id",
-                ImmutableMap.of("props", ImmutableMap.of("x", "y")),
+                ImmutableMap.of("props", ImmutableMap.of("golden", "retriever")),
                 createOperation(new Neo4JTransientElementId<>(1l))
         );
         assertBuildsStatement("CREATE (n)<-[r:`test`={props}]-(m)",
-                ImmutableMap.of("props", ImmutableMap.of("x", "y"), "id", 1l),
+                ImmutableMap.of("props", ImmutableMap.of("golden", "retriever"), "id", 1l),
                 createOperation(new Neo4JPersistentElementId<>(1l)));
     }
 }

@@ -4,6 +4,7 @@ import lombok.NonNull;
 import ta.nemahuta.neo4j.id.Neo4JElementId;
 import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.query.MatchPredicate;
+import ta.nemahuta.neo4j.query.UniqueParamNameGenerator;
 import ta.nemahuta.neo4j.query.WherePredicate;
 import ta.nemahuta.neo4j.query.predicate.WhereIdInPredicate;
 import ta.nemahuta.neo4j.query.vertex.predicate.MatchAllVertexLabelsPredicate;
@@ -39,7 +40,7 @@ public abstract class VertexQueryPredicateFactory {
      */
     @Nonnull
     public WherePredicate idsInSet(@Nonnull @NonNull final Set<Neo4JElementId<?>> ids) {
-        return new WhereIdInPredicate(getIdAdapter(), ids, getAlias());
+        return new WhereIdInPredicate(getIdAdapter(), ids, getAlias(), getParamNameGenerator().generate("vertexId"));
     }
 
     /**
@@ -50,7 +51,7 @@ public abstract class VertexQueryPredicateFactory {
      */
     @Nonnull
     public WherePredicate id(@Nonnull @NonNull final Neo4JElementId<?> id) {
-        return new WhereIdInPredicate(getIdAdapter(), Collections.singleton(id), getAlias());
+        return new WhereIdInPredicate(getIdAdapter(), Collections.singleton(id), getAlias(), getParamNameGenerator().generate("vertexId"));
     }
 
     /**
@@ -63,5 +64,11 @@ public abstract class VertexQueryPredicateFactory {
     public MatchPredicate labelsMatch(@Nonnull @NonNull final Set<String> labels) {
         return new MatchAllVertexLabelsPredicate(labels, getAlias());
     }
+
+    /**
+     * @return the parameter name generator
+     */
+    @Nonnull
+    protected abstract UniqueParamNameGenerator getParamNameGenerator();
 
 }

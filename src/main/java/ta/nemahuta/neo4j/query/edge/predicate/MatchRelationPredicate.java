@@ -7,10 +7,12 @@ import lombok.Setter;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import ta.nemahuta.neo4j.query.MatchPredicate;
 import ta.nemahuta.neo4j.query.QueryUtils;
+import ta.nemahuta.neo4j.query.vertex.predicate.MatchAllVertexLabelsPredicate;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -64,11 +66,9 @@ public class MatchRelationPredicate implements MatchPredicate {
     public void append(@Nonnull @NonNull final StringBuilder queryBuilder,
                        @Nonnull @NonNull final Map<String, Object> parameters) {
 
-        if (lhs != null) {
-            lhs.append(queryBuilder, parameters);
-        } else {
-            queryBuilder.append(lhsAlias);
-        }
+        Optional.ofNullable(lhs)
+                .orElseGet(() -> this.defaultLabelMatcher(lhsAlias))
+                .append(queryBuilder, parameters);
         if (direction != null) {
             // In case a relation is set to be queried, we append the relation
             appendRelation(queryBuilder);
@@ -76,22 +76,24 @@ public class MatchRelationPredicate implements MatchPredicate {
             // Otherwise we match the pure nodes at the end of the edges
             queryBuilder.append(", ");
         }
-        if (rhs != null) {
-            rhs.append(queryBuilder, parameters);
-        } else {
-            queryBuilder.append(rhsAlias);
-        }
+        Optional.ofNullable(rhs)
+                .orElseGet(() -> this.defaultLabelMatcher(rhsAlias))
+                .append(queryBuilder, parameters);
+    }
+
+    private MatchPredicate defaultLabelMatcher(final String alias) {
+        return new MatchAllVertexLabelsPredicate(Collections.emptySet(), alias);
     }
 
     private void appendRelation(@Nonnull @NonNull final StringBuilder queryBuilder) {
         QueryUtils.appendRelationStart(direction, queryBuilder);
+        queryBuilder.append(relationAlias);
         final int idx = queryBuilder.length();
         // Join all relation orLabelsAnd using an OR
         labels.forEach(label -> {
             if (idx < queryBuilder.length()) {
                 queryBuilder.append("|");
             }
-            queryBuilder.append(relationAlias);
             QueryUtils.appendLabels(queryBuilder, Collections.singleton(label));
         });
         QueryUtils.appendRelationEnd(direction, queryBuilder);

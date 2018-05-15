@@ -7,6 +7,7 @@ import org.apache.tinkerpop.gremlin.structure.Direction;
 import ta.nemahuta.neo4j.id.Neo4JElementId;
 import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
+import ta.nemahuta.neo4j.query.UniqueParamNameGenerator;
 import ta.nemahuta.neo4j.query.WherePredicate;
 import ta.nemahuta.neo4j.query.edge.operation.CreateEdgeOperation;
 import ta.nemahuta.neo4j.query.edge.operation.ReturnEdgeOperation;
@@ -83,6 +84,12 @@ public abstract class EdgeQueryFactory {
         protected String getAlias() {
             return EdgeQueryFactory.this.getLhsAlias();
         }
+
+        @Nonnull
+        @Override
+        protected UniqueParamNameGenerator getParamNameGenerator() {
+            return EdgeQueryFactory.this.getParamNameGenerator();
+        }
     };
 
     @Getter(onMethod = @__(@Nonnull))
@@ -97,6 +104,12 @@ public abstract class EdgeQueryFactory {
         @Override
         protected String getAlias() {
             return EdgeQueryFactory.this.getRhsAlias();
+        }
+
+        @Nonnull
+        @Override
+        protected UniqueParamNameGenerator getParamNameGenerator() {
+            return EdgeQueryFactory.this.getParamNameGenerator();
         }
     };
 
@@ -119,7 +132,7 @@ public abstract class EdgeQueryFactory {
      */
     @Nonnull
     public WherePredicate whereIds(@Nonnull @NonNull final Set<Neo4JElementId<?>> ids) {
-        return new WhereIdInPredicate(getEdgeIdAdapter(), ids, getRelationAlias());
+        return new WhereIdInPredicate(getEdgeIdAdapter(), ids, getRelationAlias(), getParamNameGenerator().generate("relationId"));
     }
 
     /**
@@ -176,5 +189,11 @@ public abstract class EdgeQueryFactory {
                                     @Nonnull @NonNull final ImmutableMap<String, PropertyValue<?>> currentProperties) {
         return new UpdatePropertiesOperation(committedProperties, currentProperties, getRelationAlias());
     }
+
+    /**
+     * @return the parameter name generator
+     */
+    @Nonnull
+    protected abstract UniqueParamNameGenerator getParamNameGenerator();
 
 }

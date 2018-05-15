@@ -1,11 +1,14 @@
 package ta.nemahuta.neo4j.query.edge;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.query.MatchPredicate;
+import ta.nemahuta.neo4j.query.UniqueParamNameGenerator;
 import ta.nemahuta.neo4j.query.WherePredicate;
 import ta.nemahuta.neo4j.query.edge.predicate.MatchRelationPredicate;
 import ta.nemahuta.neo4j.query.vertex.VertexQueryFactory;
@@ -36,6 +39,10 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
     public static final String RELATION_ALIAS = "r";
 
     private final EdgeQueryFactory factory = new EdgeQueryFactory() {
+
+        @Getter(value = AccessLevel.PROTECTED, onMethod = @__(@Override))
+        protected final UniqueParamNameGenerator paramNameGenerator = new UniqueParamNameGenerator();
+
         @Override
         protected String getLhsAlias() {
             return VERTEX_ALIAS_LHS;
@@ -82,6 +89,7 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
                             @Nonnull @NonNull final Neo4JElementIdAdapter<?> vertexIdAdapter) {
         super(edgeIdAdapter, partition);
         this.vertexIdProvider = vertexIdAdapter;
+        setMatch(relationPredicate);
     }
 
     /**

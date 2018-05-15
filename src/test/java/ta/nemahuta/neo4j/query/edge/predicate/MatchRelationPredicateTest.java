@@ -17,7 +17,7 @@ class MatchRelationPredicateTest extends AbstractStatementBuilderTest {
         final MatchRelationPredicate sut = createMatchRelationPredicate();
         sut.setLabels(ImmutableSet.of("a"));
         sut.setDirection(Direction.IN);
-        assertBuildsStatement("n<-[r:`a`]-m", ImmutableMap.of(), sut);
+        assertBuildsStatement("(n)<-[r:`a`]-(m)", ImmutableMap.of(), sut);
     }
 
 }

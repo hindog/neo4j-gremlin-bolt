@@ -1,12 +1,11 @@
 package ta.nemahuta.neo4j.query.vertex;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NonNull;
 import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
-import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
-import ta.nemahuta.neo4j.query.MatchPredicate;
-import ta.nemahuta.neo4j.query.StatementBuilder;
-import ta.nemahuta.neo4j.query.WherePredicate;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
+import ta.nemahuta.neo4j.query.*;
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
@@ -29,6 +28,9 @@ public class VertexQueryBuilder extends AbstractQueryBuilder {
     public static final String PARAM_PROPERTIES = "vp";
 
     private final VertexQueryFactory factory = new VertexQueryFactory() {
+
+        @Getter(AccessLevel.PROTECTED)
+        private final UniqueParamNameGenerator paramNameGenerator = new UniqueParamNameGenerator();
 
         @Override
         protected Neo4JElementIdAdapter<?> getIdAdapter() {
