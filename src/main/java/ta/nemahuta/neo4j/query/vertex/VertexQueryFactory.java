@@ -11,7 +11,6 @@ import ta.nemahuta.neo4j.query.vertex.operation.ReturnVertexOperation;
 import ta.nemahuta.neo4j.state.PropertyValue;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,17 +38,6 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
     }
 
     /**
-     * Set the provided orLabelsAnd.
-     *
-     * @param labels the orLabelsAnd to be set
-     * @return the operation
-     */
-    @Nonnull
-    public VertexOperation labels(@Nonnull @NonNull final Set<String> labels) {
-        return labels(Collections.emptySet(), labels);
-    }
-
-    /**
      * Set/unset the orLabelsAnd so they match with the current ones.
      *
      * @param committedLabels the committed orLabelsAnd
@@ -62,16 +50,6 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
         return new UpdateLabelsOperation(committedLabels, currentLabels, getAlias());
     }
 
-    /**
-     * Set the provided properties.
-     *
-     * @param properties the properties to be set
-     * @return the operation
-     */
-    @Nonnull
-    public VertexOperation properties(@Nonnull @NonNull final Map<String, PropertyValue<?>> properties) {
-        return properties(Collections.emptyMap(), properties);
-    }
 
     /**
      * Set/unset the properties so they match with the current ones.

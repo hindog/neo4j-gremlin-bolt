@@ -10,6 +10,8 @@ import ta.nemahuta.neo4j.partition.Neo4JLabelGraphPartition;
 import ta.nemahuta.neo4j.query.AbstractStatementBuilderTest;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 class VertexQueryBuilderTest extends AbstractStatementBuilderTest {
 
@@ -50,6 +52,44 @@ class VertexQueryBuilderTest extends AbstractStatementBuilderTest {
                         .match(v -> v.labelsMatch(Collections.emptySet()))
                         .where(v -> v.id(new Neo4JPersistentElementId<>(1l)))
                         .andThen(q -> q.delete())
+        );
+    }
+
+    @Test
+    void returnVertexById() {
+        assertBuildsStatement("MATCH (v) WHERE v.id={vertexId1} RETURN v",
+                ImmutableMap.of("vertexId1", 1l),
+                query()
+                        .match(v -> v.labelsMatch(Collections.emptySet()))
+                        .where(v -> v.id(new Neo4JPersistentElementId<>(1l)))
+                        .andThen(q -> q.returnVertex())
+        );
+    }
+
+    @Test
+    void returnVertexIdByLabels() {
+        assertBuildsStatement("MATCH (v:`a`:`b`) RETURN v.id",
+                ImmutableMap.of(),
+                query()
+                        .match(v -> v.labelsMatch(ImmutableSet.of("a", "b")))
+                        .andThen(q -> q.returnId())
+        );
+    }
+
+    @Test
+    void updateVertexById() {
+        final Map<String, Object> properties = new HashMap<>(ImmutableMap.of("a", "c", "e", "f"));
+        properties.put("u", null);
+        assertBuildsStatement("MATCH (v:`x`) WHERE v.id={vertexId1} SET v:`y`:`z` REMOVE v:`x` SET v={vertexProps1}",
+                ImmutableMap.of("vertexId1", 1l, "vertexProps1", properties),
+                query()
+                        .match(b -> b.labelsMatch(ImmutableSet.of("x")))
+                        .where(b -> b.id(new Neo4JPersistentElementId<>(1l)))
+                        .andThen(b -> b.labels(ImmutableSet.of("x"), ImmutableSet.of("y", "z")))
+                        .andThen(b -> b.properties(
+                                ImmutableMap.of("a", prop("b"), "u", prop("v")),
+                                ImmutableMap.of("a", prop("c"), "e", prop("f"))
+                        ))
         );
     }
 

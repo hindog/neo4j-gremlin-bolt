@@ -3,8 +3,8 @@ package ta.nemahuta.neo4j.query.operation;
 import com.google.common.collect.ImmutableMap;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import ta.nemahuta.neo4j.query.edge.EdgeOperation;
 import ta.nemahuta.neo4j.query.QueryUtils;
+import ta.nemahuta.neo4j.query.edge.EdgeOperation;
 import ta.nemahuta.neo4j.query.vertex.VertexOperation;
 
 import javax.annotation.Nonnull;
@@ -41,12 +41,16 @@ public class UpdateLabelsOperation implements VertexOperation, EdgeOperation {
     @Override
     public void append(@Nonnull @NonNull final StringBuilder queryBuilder,
                        @Nonnull @NonNull final Map<String, Object> parameters) {
+        final int idx = queryBuilder.length();
         ImmutableMap.of(
                 "SET", getAddedLabels().collect(Collectors.toSet()),
                 "REMOVE", getRemovedLabels().collect(Collectors.toSet())
         ).forEach((op, set) -> {
             if (!set.isEmpty()) {
-                queryBuilder.append("\n").append(op).append(" ").append(alias);
+                if (idx < queryBuilder.length()) {
+                    queryBuilder.append(" ");
+                }
+                queryBuilder.append(op).append(" ").append(alias);
                 QueryUtils.appendLabels(queryBuilder, set);
             }
         });

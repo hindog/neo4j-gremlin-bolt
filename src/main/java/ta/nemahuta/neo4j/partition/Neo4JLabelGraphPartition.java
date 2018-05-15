@@ -61,14 +61,13 @@ public class Neo4JLabelGraphPartition implements Neo4JGraphPartition {
             case AND:
                 return Optional.of(whereAndPredicate(alias, labelSet));
             case OR:
+            default:
                 return labelSet.stream()
                         .map(Collections::singleton)
                         .map(andSets -> andSets.stream().map(andSet -> whereAndPredicate(alias, Collections.singleton(andSet))))
                         .reduce(Stream::concat)
                         .orElseGet(Stream::empty)
                         .reduce(WherePredicate::orOp);
-            default:
-                throw new IllegalArgumentException("Cannot handle modus operandi for the labels: " + opMode);
         }
     }
 

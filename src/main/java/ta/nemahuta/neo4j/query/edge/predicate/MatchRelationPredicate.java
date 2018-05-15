@@ -1,6 +1,5 @@
 package ta.nemahuta.neo4j.query.edge.predicate;
 
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -53,13 +52,11 @@ public class MatchRelationPredicate implements MatchPredicate {
      * the direction of the relation
      */
     @Setter
-    @Getter
     private Direction direction;
     /**
      * the labels for the match (in terms of one-of-the-labels)
      */
     @Setter
-    @Getter
     private Set<String> labels;
 
     @Override
