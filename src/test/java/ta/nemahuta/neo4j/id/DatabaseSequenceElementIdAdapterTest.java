@@ -11,6 +11,7 @@ import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.types.Entity;
 
 import java.time.Duration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -19,8 +20,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -91,14 +91,21 @@ class DatabaseSequenceElementIdAdapterTest {
     void generate() {
         // setup: 'a mocked next batch which is lower than the current one'
         stubDriverAndSession();
-        mockNextId(i -> DatabaseSequenceElementIdAdapter.DEFAULT_POOL_SIZE);
+        final Iterator<Long> iter = Stream.of(DatabaseSequenceElementIdAdapter.DEFAULT_POOL_SIZE, DatabaseSequenceElementIdAdapter.DEFAULT_POOL_SIZE, DatabaseSequenceElementIdAdapter.DEFAULT_POOL_SIZE * 2).iterator();
+        mockNextId(i -> iter.next());
 
-        assertTimeoutPreemptively(Duration.ofSeconds(1l), () -> {
+        assertTimeoutPreemptively(Duration.ofSeconds(5l), () -> {
             // when: 'requesting a new id'
             final Neo4JElementId<?> newId = sut.generate();
             // then: 'the next id is generated'
             assertEquals(new Neo4JPersistentElementId<>(1l), newId);
+            // when: 'requesting another pool by requesting the ids'
+            Stream.generate(() -> sut.generate()).limit(DatabaseSequenceElementIdAdapter.DEFAULT_POOL_SIZE*2-1).forEach(r -> assertTrue(r.isRemote()));
+            // then: 'the pool request should have been invoked three times (one for the first pool, the second for the invalid, the third for the new one'
+            verify(transaction, times(3)).run(any(Statement.class));
         });
+
+
     }
 
     @Test

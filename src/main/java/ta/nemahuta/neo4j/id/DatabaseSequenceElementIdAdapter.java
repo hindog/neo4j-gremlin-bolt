@@ -74,7 +74,7 @@ public class DatabaseSequenceElementIdAdapter extends AbstractNeo4JElementIdAdap
     protected long generateId() {
         final long max = maximumIdentifier.get();
         final long identifier = currentIdentifier.incrementAndGet();
-        return identifier <= max ? identifier : retrieveNewIdBatch(max);
+        return identifier <= max ? identifier : retrieveNewIdBatch(identifier, max);
     }
 
     /**
@@ -83,7 +83,7 @@ public class DatabaseSequenceElementIdAdapter extends AbstractNeo4JElementIdAdap
      * @param currentMax the current maximum identifier
      * @return the new identifier retrieved
      */
-    protected long retrieveNewIdBatch(final long currentMax) {
+    protected long retrieveNewIdBatch(final long identifier, final long currentMax) {
         final ReentrantReadWriteLock.WriteLock writeLock = lockProvider.writeLock();
         writeLock.lock();
         try {
@@ -104,9 +104,9 @@ public class DatabaseSequenceElementIdAdapter extends AbstractNeo4JElementIdAdap
                         }
                         transaction.success();
                     }
-                    log.debug("Requested new pool of identifiers from database, current id: {}, maximum id: {}", result, max);
+                    log.debug("Pool size provided from generator: {}...{}", result, max);
                 }
-            } while (result > max);
+            } while (identifier > max);
             this.currentIdentifier.set(result);
             this.maximumIdentifier.set(max);
             return result;
