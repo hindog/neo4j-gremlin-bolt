@@ -1,7 +1,7 @@
 plugins {
     id 'net.ltgt.apt' version '0.15'
     id 'java'
-    id 'maven'
+    id 'maven-publish'
     id 'jacoco'
     id 'com.jfrog.bintray' version '1.8.0'
 }
