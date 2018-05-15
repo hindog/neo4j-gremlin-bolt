@@ -2,15 +2,20 @@
 
 This project allows the use of the [Apache Tinkerpop](http://tinkerpop.apache.org/) Java API with the [neo4j server](http://neo4j.com/) using the [BOLT](https://github.com/neo4j/neo4j-java-driver) protocol.
 
+# Kudos
+
+I forked this project from [Steelbridge Labs](https://github.com/SteelBridgeLabs/neo4j-gremlin-bolt) and alhough I have nearly re-engineered
+each and every part of the code, I want to acknowledge their work. 
+
 ## Build status
 
 ![Build Status](https://travis-ci.org/Tanemahuta/neo4j-gremlin-bolt.svg?branch=develop)
-![Coverage Status](https://codecov.io/github/Tanemahuta/neo4j-gremlin-bolt?branch=develop)
+![Coverage Status](https://codecov.io/gh/Tanemahuta/neo4j-gremlin-bolt/branch/develop/graph/badge.svg)
 
-## Requirements
+## Requirements for building
 
 * Java 8.
-* Maven 3.0.0 or newer.
+* Gradle 4.6 or newer (use the wrapper, please)
 
 ## Usage
 
@@ -20,13 +25,18 @@ Add the Neo4j [Apache Tinkerpop](http://tinkerpop.apache.org/) implementation to
 
 ```xml
     <dependency>
-        <groupId>com.steelbridgelabs.oss</groupId>
+        <groupId>ta.nemahuta.neo4j</groupId>
         <artifactId>neo4j-gremlin-bolt</artifactId>
         <version>{version}</version>
     </dependency>
 ```
 
-*Please check the [Maven Central](https://maven-badges.herokuapp.com/maven-central/com.steelbridgelabs.oss/neo4j-gremlin-bolt/) for the latest version available.
+### Gradle
+```groovy
+dependencies {
+    compile 'ta.nemahuta.neo4j:neo4j-gremlin-bolt:{version}'
+}
+```
 
 ## License
 
@@ -36,12 +46,11 @@ neo4j-gremlin-bolt and it's modules are licensed under the [Apache License v 2.0
 
 * [Apache Tinkerpop](http://tinkerpop.apache.org/) 3.x Online Transactional Processing Graph Systems (OLTP) support.
 * [neo4j](http://neo4j.com/) implementation on top of the [BOLT](https://github.com/neo4j/neo4j-java-driver) protocol.
-* Support for [Graph partitioning](https://github.com/SteelBridgeLabs/neo4j-gremlin-bolt/blob/master/src/main/java/com/steelbridgelabs/oss/neo4j/structure/Neo4JReadPartition.java), out of the box implementation for All labels and Any label partitions.
 
 # Graph API
 
 ## Element ID providers
-
+**TODO rewrite this section**
 The library supports an open architecture for element ID generation for new Vertices and Edges. The following element ID providers are supported out of the box:
 
 ### Neo4J native id() support, see [Neo4JNativeElementIdProvider](https://github.com/SteelBridgeLabs/neo4j-gremlin-bolt/blob/master/src/main/java/com/steelbridgelabs/oss/neo4j/structure/providers/Neo4JNativeElementIdProvider.java) for more information.
