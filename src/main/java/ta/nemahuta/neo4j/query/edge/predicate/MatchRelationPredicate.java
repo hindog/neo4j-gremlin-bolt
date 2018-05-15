@@ -88,14 +88,16 @@ public class MatchRelationPredicate implements MatchPredicate {
     private void appendRelation(@Nonnull @NonNull final StringBuilder queryBuilder) {
         QueryUtils.appendRelationStart(direction, queryBuilder);
         queryBuilder.append(relationAlias);
-        final int idx = queryBuilder.length();
-        // Join all relation orLabelsAnd using an OR
-        labels.forEach(label -> {
-            if (idx < queryBuilder.length()) {
-                queryBuilder.append("|");
-            }
-            QueryUtils.appendLabels(queryBuilder, Collections.singleton(label));
-        });
+        if (labels != null) {
+            final int idx = queryBuilder.length();
+            // Join all relation orLabelsAnd using an OR
+            labels.forEach(label -> {
+                if (idx < queryBuilder.length()) {
+                    queryBuilder.append("|");
+                }
+                QueryUtils.appendLabels(queryBuilder, Collections.singleton(label));
+            });
+        }
         QueryUtils.appendRelationEnd(direction, queryBuilder);
     }
 

@@ -22,10 +22,6 @@ public class VertexQueryBuilder extends AbstractQueryBuilder {
      * The alias of the vertex when querying
      */
     public static final String ALIAS = "v";
-    /**
-     * The parameter name of the vertex properties in the query
-     */
-    public static final String PARAM_PROPERTIES = "vp";
 
     private final VertexQueryFactory factory = new VertexQueryFactory() {
 

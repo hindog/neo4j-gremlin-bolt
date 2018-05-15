@@ -2,10 +2,9 @@ package ta.nemahuta.neo4j.query.operation;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import ta.nemahuta.neo4j.query.edge.EdgeOperation;
 import ta.nemahuta.neo4j.query.QueryUtils;
+import ta.nemahuta.neo4j.query.edge.EdgeOperation;
 import ta.nemahuta.neo4j.query.vertex.VertexOperation;
-import ta.nemahuta.neo4j.query.vertex.VertexQueryBuilder;
 import ta.nemahuta.neo4j.state.PropertyValue;
 
 import javax.annotation.Nonnull;
@@ -34,6 +33,11 @@ public class UpdatePropertiesOperation implements VertexOperation, EdgeOperation
      */
     @NonNull
     private final String alias;
+    /**
+     * the parameter name
+     */
+    @NonNull
+    private final String paramName;
 
     @Override
     public boolean isNeedsStatement() {
@@ -43,7 +47,7 @@ public class UpdatePropertiesOperation implements VertexOperation, EdgeOperation
     @Override
     public void append(@Nonnull @NonNull final StringBuilder queryBuilder,
                        @Nonnull @NonNull final Map<String, Object> parameters) {
-        queryBuilder.append("SET ").append(alias).append(" = {").append(VertexQueryBuilder.PARAM_PROPERTIES).append("}");
-        parameters.put(VertexQueryBuilder.PARAM_PROPERTIES, QueryUtils.computeProperties(committedProperties, currentProperties));
+        queryBuilder.append("SET ").append(alias).append(" = {").append(paramName).append("}");
+        parameters.put(paramName, QueryUtils.computeProperties(committedProperties, currentProperties));
     }
 }

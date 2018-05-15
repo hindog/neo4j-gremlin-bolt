@@ -110,7 +110,8 @@ public class DefaultNeo4JEdgeScope extends AbstractNeo4JElementScope<Neo4JEdge> 
     @Nonnull
     protected Stream<Neo4JEdge> load(@Nonnull @NonNull final Neo4JGraph graph,
                                      @Nonnull @NonNull final Iterable<? extends Neo4JElementId<?>> ids) {
-        return query().direction(Direction.OUT)
+        return query()
+                .direction(Direction.OUT)
                 .where(b -> b.whereIds(ImmutableSet.copyOf(ids)))
                 .andThen(b -> b.returnEdge())
                 .build()
@@ -125,7 +126,7 @@ public class DefaultNeo4JEdgeScope extends AbstractNeo4JElementScope<Neo4JEdge> 
                                                       @Nonnull @NonNull final StateHolder<Neo4JElementState> committed,
                                                       @Nonnull @NonNull final StateHolder<Neo4JElementState> current) {
         return query()
-                .direction(Direction.OUT)
+                .direction(Direction.BOTH)
                 .labels(Collections.singleton(element.label()))
                 .where(b -> b.getLhs().id(element.getInSupplier().getVertexId()).and(b.getRhs().id(element.getOutSupplier().getVertexId())))
                 .andThen(b -> b.deleteEdge())
@@ -139,6 +140,7 @@ public class DefaultNeo4JEdgeScope extends AbstractNeo4JElementScope<Neo4JEdge> 
                                                       @Nonnull @NonNull final StateHolder<Neo4JElementState> current) {
         return query()
                 .where(b -> b.getLhs().id(element.getInSupplier().getVertexId()).and(b.getRhs().id(element.getOutSupplier().getVertexId())).and(b.whereId(element.id())))
+                .direction(Direction.BOTH)
                 .andThen(b -> b.properties(committed.state.properties, current.state.properties))
                 .build();
     }

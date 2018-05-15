@@ -132,7 +132,7 @@ public abstract class EdgeQueryFactory {
      */
     @Nonnull
     public WherePredicate whereIds(@Nonnull @NonNull final Set<Neo4JElementId<?>> ids) {
-        return new WhereIdInPredicate(getEdgeIdAdapter(), ids, getRelationAlias(), getParamNameGenerator().generate("relationId"));
+        return new WhereIdInPredicate(getEdgeIdAdapter(), ids, getRelationAlias(), getParamNameGenerator().generate("edgeId"));
     }
 
     /**
@@ -187,7 +187,7 @@ public abstract class EdgeQueryFactory {
     @Nonnull
     public EdgeOperation properties(@Nonnull @NonNull final ImmutableMap<String, PropertyValue<?>> committedProperties,
                                     @Nonnull @NonNull final ImmutableMap<String, PropertyValue<?>> currentProperties) {
-        return new UpdatePropertiesOperation(committedProperties, currentProperties, getRelationAlias());
+        return new UpdatePropertiesOperation(committedProperties, currentProperties, getRelationAlias(), getParamNameGenerator().generate("edgeProps"));
     }
 
     /**

@@ -105,6 +105,8 @@ public class QueryUtils {
                 return start ? "<-[" : "]-";
             case OUT:
                 return start ? "-[" : "]->";
+            case BOTH:
+                return start ? "-[" : "]-";
             default:
                 throw new IllegalArgumentException("Cannot handle direction: " + direction);
         }

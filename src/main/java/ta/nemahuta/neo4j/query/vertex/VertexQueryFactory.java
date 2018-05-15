@@ -4,10 +4,10 @@ import lombok.NonNull;
 import ta.nemahuta.neo4j.id.Neo4JElementId;
 import ta.nemahuta.neo4j.query.operation.DeleteOperation;
 import ta.nemahuta.neo4j.query.operation.ReturnIdOperation;
-import ta.nemahuta.neo4j.query.vertex.operation.CreateVertexOperation;
-import ta.nemahuta.neo4j.query.vertex.operation.ReturnVertexOperation;
 import ta.nemahuta.neo4j.query.operation.UpdateLabelsOperation;
 import ta.nemahuta.neo4j.query.operation.UpdatePropertiesOperation;
+import ta.nemahuta.neo4j.query.vertex.operation.CreateVertexOperation;
+import ta.nemahuta.neo4j.query.vertex.operation.ReturnVertexOperation;
 import ta.nemahuta.neo4j.state.PropertyValue;
 
 import javax.annotation.Nonnull;
@@ -82,7 +82,7 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
     @Nonnull
     public VertexOperation properties(@Nonnull @NonNull final Map<String, PropertyValue<?>> committedProperties,
                                       @Nonnull @NonNull final Map<String, PropertyValue<?>> currentProperties) {
-        return new UpdatePropertiesOperation(committedProperties, currentProperties, getAlias());
+        return new UpdatePropertiesOperation(committedProperties, currentProperties, getAlias(), getParamNameGenerator().generate("vertexProps"));
     }
 
     /**
@@ -97,7 +97,7 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
     public VertexOperation create(@Nonnull @NonNull final Neo4JElementId<?> id,
                                   @Nonnull @NonNull final Set<String> labels,
                                   @Nonnull @NonNull final Map<String, PropertyValue<?>> properties) {
-        return new CreateVertexOperation(getIdAdapter(), id, labels, properties, VertexQueryBuilder.PARAM_PROPERTIES, getAlias());
+        return new CreateVertexOperation(getIdAdapter(), id, labels, properties, getParamNameGenerator().generate("vertexProps"), getAlias());
     }
 
     @Nonnull
