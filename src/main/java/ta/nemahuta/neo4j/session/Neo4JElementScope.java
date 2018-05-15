@@ -1,10 +1,10 @@
 package ta.nemahuta.neo4j.session;
 
 import ta.nemahuta.neo4j.id.Neo4JElementId;
-import ta.nemahuta.neo4j.id.Neo4JElementIdGenerator;
 import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
-import ta.nemahuta.neo4j.structure.Neo4JElement;
+import ta.nemahuta.neo4j.id.Neo4JElementIdGenerator;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
+import ta.nemahuta.neo4j.structure.Neo4JElement;
 import ta.nemahuta.neo4j.structure.Neo4JGraph;
 
 import javax.annotation.Nonnull;
@@ -61,4 +61,9 @@ public interface Neo4JElementScope<T extends Neo4JElement> extends RollbackAndCo
      */
     Stream<T> getOrLoadLabelIn(@Nonnull Neo4JGraph graph,
                                @Nonnull Iterable<String> labels);
+
+    /**
+     * Flushes the scope
+     */
+    void flush();
 }

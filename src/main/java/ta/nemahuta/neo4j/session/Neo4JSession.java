@@ -41,8 +41,6 @@ public class Neo4JSession implements StatementExecutor, EdgeFactory, AutoCloseab
     public static final String STMT_PREFIX_PROFILE = "PROFILE ";
     public static final String STMT_PREFIX_EXPLAIN = "EXPLAIN ";
 
-    private static final String DEFAULT_ID_PROVIDER_CLASS_NAME = Neo4JNativeElementIdAdapter.class.getName();
-
     private final AsyncAccess<Optional<Transaction>> txHolder = new AsyncAccess<>(Optional.empty());
 
     @Getter
@@ -196,7 +194,7 @@ public class Neo4JSession implements StatementExecutor, EdgeFactory, AutoCloseab
 
         final Neo4JVertex vertex = new Neo4JVertex(graph, scope.getVertexScope(), labels, inEdgeProviderFactory(), outEdgeProviderFactory(), this::createEdge);
         ElementHelper.attachProperties(vertex, keyValues);
-
+        scope.getVertexScope().add(vertex);
         return vertex;
     }
 
@@ -247,14 +245,19 @@ public class Neo4JSession implements StatementExecutor, EdgeFactory, AutoCloseab
                 VertexOnEdgeSupplier.wrap(outVertex));
 
         ElementHelper.attachProperties(edge, keyValues);
+        scope.getEdgeScope().add(edge);
         return edge;
     }
 
     @Override
     public void close() throws Exception {
+        if (isTxOpen()) {
+            throw new IllegalStateException("Transaction is still open, refusing to close the session.");
+        }
         if (wrapped.isOpen()) {
             wrapped.close();
         }
+        scope.flush();
         driver.close();
     }
 

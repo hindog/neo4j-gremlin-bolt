@@ -44,6 +44,12 @@ public class Neo4JTransaction extends AbstractThreadedTransaction {
     }
 
     @Override
+    public void close() {
+        super.close();
+        session.getScope().flush();
+    }
+
+    @Override
     public boolean isOpen() {
         return session.isTxOpen();
     }

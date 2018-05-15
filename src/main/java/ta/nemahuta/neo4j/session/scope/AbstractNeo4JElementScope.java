@@ -140,6 +140,11 @@ public abstract class AbstractNeo4JElementScope<T extends Neo4JElement> implemen
         return getOrLoad(graph, idsWithLabelIn(ImmutableSet.copyOf(labels)).iterator());
     }
 
+    @Override
+    public void flush() {
+        elements.update(es -> ImmutableMap.of());
+    }
+
     /**
      * Query the ids for each element which has at least one label from the provided orLabelsAnd
      *

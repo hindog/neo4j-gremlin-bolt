@@ -25,4 +25,8 @@ public interface SessionScope extends RollbackAndCommit {
     @Nonnull
     Neo4JEdgeScope getEdgeScope();
 
+    default void flush() {
+        getVertexScope().flush();
+        getEdgeScope().flush();
+    }
 }
