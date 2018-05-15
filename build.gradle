@@ -83,7 +83,7 @@ bintray {
     pkg {
         repo = 'neo4j'
         name = 'neo4j-gremlin-bolt'
-        userOrg = 'ta.nemahuta'
+        userOrg = 'tanemahuta'
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/Tanemahuta/neo4j-gremlin-bolt.git'
         version {
