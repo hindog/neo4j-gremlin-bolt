@@ -67,7 +67,7 @@ public class StateHolder<S> {
      * @return the new state holder
      */
     public StateHolder<S> synced(final S state) {
-        return new StateHolder<>(SyncState.SYNCHRONOUS, state);
+        return new StateHolder<>(this.syncState.asSynchronized(), state);
     }
 
 }

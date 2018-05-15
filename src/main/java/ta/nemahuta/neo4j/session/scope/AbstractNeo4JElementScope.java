@@ -3,7 +3,6 @@ package ta.nemahuta.neo4j.session.scope;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -217,9 +216,8 @@ public abstract class AbstractNeo4JElementScope<T extends Neo4JElement> implemen
                 return createDeleteCommand(element, committed, current);
             case DISCARDED:
             case SYNCHRONOUS:
-                return Optional.empty();
             default:
-                throw new IllegalStateException("Unable to handle element " + element + " with state: " + current.syncState);
+                return Optional.empty();
         }
     }
 
@@ -246,9 +244,11 @@ public abstract class AbstractNeo4JElementScope<T extends Neo4JElement> implemen
     protected void invokeRemovingDiscarded(@Nonnull @NonNull final Consumer<T> elementConsumer) {
         elements.update(current -> {
             current.values().forEach(elementConsumer);
-            final ImmutableMap<Neo4JElementId<?>, T> newElements = ImmutableMap.copyOf(Maps.filterValues(current, Neo4JElement::isNotDiscarded));
-            log.debug("Removed {} discarded element(s) from the scope.", current.size() - newElements.size());
-            return newElements;
+            final ImmutableMap.Builder<Neo4JElementId<?>, T> newElements = ImmutableMap.builder();
+            current.values().stream()
+                    .filter(Neo4JElement::isNotDiscarded)
+                    .forEach(e -> newElements.put(e.id(), e));
+            return newElements.build();
         });
     }
 

@@ -74,4 +74,18 @@ public enum SyncState {
         }
     }
 
+    @Nonnull
+    public SyncState asSynchronized() {
+        switch (this) {
+            case DELETED:
+            case DISCARDED:
+                return DISCARDED;
+            case TRANSIENT:
+            case SYNCHRONOUS:
+            case MODIFIED:
+                return SYNCHRONOUS;
+            default:
+                throw new IllegalStateException("Cannot map state " + this + " to a synchronized state");
+        }
+    }
 }
