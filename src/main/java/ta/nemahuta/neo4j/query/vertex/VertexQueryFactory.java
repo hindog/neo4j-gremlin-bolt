@@ -97,7 +97,7 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
     public VertexOperation create(@Nonnull @NonNull final Neo4JElementId<?> id,
                                   @Nonnull @NonNull final Set<String> labels,
                                   @Nonnull @NonNull final Map<String, PropertyValue<?>> properties) {
-        return new CreateVertexOperation(getIdAdapter(), id, labels, properties, getParamNameGenerator().generate("vertexProps"), getAlias());
+        return new CreateVertexOperation(getIdAdapter(), id, labels, properties, getAlias(), getParamNameGenerator().generate("vertexProps"));
     }
 
     @Nonnull

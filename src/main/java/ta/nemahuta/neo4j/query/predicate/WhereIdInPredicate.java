@@ -48,7 +48,7 @@ public class WhereIdInPredicate implements WherePredicate {
         // First append the match predicate, in case the partition is limited
         if (ids.size() == 1) {
             // In case we have a single id, we use the single statement
-            queryBuilder.append(alias).append(".").append(idAdapter.propertyName()).append(" = {").append(paramName).append("}");
+            queryBuilder.append(alias).append(".").append(idAdapter.propertyName()).append("={").append(paramName).append("}");
             parameters.put(paramName, ids.iterator().next().getId());
         } else {
             queryBuilder.append(alias).append(".").append(idAdapter.propertyName()).append(" IN {").append(paramName).append("}");

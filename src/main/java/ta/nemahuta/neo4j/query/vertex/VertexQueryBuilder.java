@@ -8,7 +8,6 @@ import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.*;
 
 import javax.annotation.Nonnull;
-import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -87,10 +86,4 @@ public class VertexQueryBuilder extends AbstractQueryBuilder {
         return this;
     }
 
-    @Override
-    protected WherePredicate getWhere() {
-        return Optional.ofNullable(super.getWhere())
-                .map(w -> partition.vertexWhereLabelPredicate(ALIAS).map(p -> w.and(p)).orElse(w))
-                .orElse(null);
-    }
 }

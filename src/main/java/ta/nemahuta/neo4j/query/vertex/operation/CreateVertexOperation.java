@@ -60,17 +60,16 @@ public class CreateVertexOperation implements VertexOperation {
     @Override
     public void append(@Nonnull @NonNull final StringBuilder queryBuilder,
                        @Nonnull @NonNull final Map<String, Object> parameters) {
-        queryBuilder.append("CREATE (n");
+        queryBuilder.append("CREATE (").append(alias);
         QueryUtils.appendLabels(queryBuilder, labels);
-        queryBuilder.append("{").append(propertiesParam).append("})");
+        queryBuilder.append("={").append(propertiesParam).append("})");
         final Map<String, Object> properties = QueryUtils.computeProperties(Collections.emptyMap(), this.properties);
-        if (!id.isRemote()) {
+        if (id.isRemote()) {
             properties.put(idAdapter.propertyName(), id.getId());
+        } else {
+            queryBuilder.append(" RETURN ").append(alias).append(".").append(idAdapter.propertyName());
         }
         parameters.put(propertiesParam, properties);
-        if (!id.isRemote()) {
-            queryBuilder.append("RETURN ").append(alias).append(".").append(idAdapter.propertyName());
-        }
     }
 
 }

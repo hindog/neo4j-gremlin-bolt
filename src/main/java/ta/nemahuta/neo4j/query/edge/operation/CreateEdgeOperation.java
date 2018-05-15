@@ -85,11 +85,12 @@ public class CreateEdgeOperation implements EdgeOperation {
 
         queryBuilder.append("(").append(rhsAlias).append(")");
 
-        parameters.put(paramProperties, QueryUtils.computeProperties(Collections.emptyMap(), this.properties));
+        final Map<String, Object> properties = QueryUtils.computeProperties(Collections.emptyMap(), this.properties);
         if (id.isRemote()) {
-            parameters.put(idAdapter.propertyName(), id.getId());
+            properties.put(idAdapter.propertyName(), id.getId());
         } else {
             queryBuilder.append(" RETURN ").append(relationAlias).append(".").append(idAdapter.propertyName());
         }
+        parameters.put(paramProperties, properties);
     }
 }

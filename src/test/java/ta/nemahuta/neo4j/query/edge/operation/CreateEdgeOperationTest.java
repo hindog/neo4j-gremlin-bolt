@@ -35,7 +35,7 @@ class CreateEdgeOperationTest extends AbstractStatementBuilderTest {
                 createOperation(new Neo4JTransientElementId<>(1l))
         );
         assertBuildsStatement("CREATE (n)<-[r:`test`={props}]-(m)",
-                ImmutableMap.of("props", ImmutableMap.of("golden", "retriever"), "id", 1l),
+                ImmutableMap.of("props", ImmutableMap.of("golden", "retriever", "id", 1l)),
                 createOperation(new Neo4JPersistentElementId<>(1l)));
     }
 }

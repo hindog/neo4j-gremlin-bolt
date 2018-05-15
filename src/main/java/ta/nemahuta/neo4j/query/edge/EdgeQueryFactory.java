@@ -31,11 +31,6 @@ import java.util.Set;
 public abstract class EdgeQueryFactory {
 
     /**
-     * the parameter name to be used to supply the properties of an edge
-     */
-    public static final String PARAM_PROPERTIES = "ep";
-
-    /**
      * @return the alias of the lhs node.
      */
     @Nonnull
@@ -166,7 +161,7 @@ public abstract class EdgeQueryFactory {
                                     @Nonnull @NonNull final String label,
                                     @Nonnull @NonNull final Map<String, PropertyValue<?>> properties) {
         return new CreateEdgeOperation(getLhsAlias(), getRelationAlias(), getRhsAlias(), id, label, direction, properties,
-                PARAM_PROPERTIES, getEdgeIdAdapter());
+                getParamNameGenerator().generate("edgeProps"), getEdgeIdAdapter());
     }
 
     /**
