@@ -164,6 +164,24 @@ class AbstractNeo4JElementScopeTest {
 
     @Test
     void rollback() {
+        // setup: 'a transient element'
+        sut.add(elemTransient);
+        final ImmutableSet<String> labels = elemSync.getState().current(s -> s.getState().labels);
+        final ImmutableMap<String, PropertyValue<?>> props = elemSync.getState().current(s -> s.getState().properties);
+        // when: 'modifying the synchronous element'
+        elemSync.getState().modify(s -> s.withLabels(ImmutableSet.of()));
+        // and: 'rolling back'
+        sut.rollback();
+        // then: 'no statement was executed'
+        verify(executor, never()).executeStatement(any());
+        assertEquals(SyncState.DISCARDED, elemTransient.getState().getCurrentSyncState());
+        assertEquals(labels, elemSync.getState().current(s -> s.getState().labels));
+        assertEquals(props, elemSync.getState().current(s -> s.getState().properties));
+        sut.elements.consume(c -> {
+            assertTrue(c.containsKey(elemSync.id()));
+            assertFalse(c.containsKey(elemDiscarded.id()));
+        });
+
     }
 
     @Test
