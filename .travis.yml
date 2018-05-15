@@ -9,8 +9,8 @@ jdk:
 # TODO before_install:
     # - docker run -d --name neo4j -p 7687:7687 -e NEO4J_AUTH=neo4j/neo4j123 neo4j:3.1-enterprise
     # - docker ps -a
-# TODO install:
-    # upload to bintray
+install:
+    - ./gradlew bintrayUpload
 script:
     ./gradlew check jacocoTestReport assemble
 before_cache:

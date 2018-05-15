@@ -3,6 +3,7 @@ plugins {
     id 'java'
     id 'maven'
     id 'jacoco'
+    id 'com.jfrog.bintray' version '1.8.0'
 }
 
 group = 'ta.nemahuta.neo4j'
@@ -71,6 +72,38 @@ jacocoTestCoverageVerification {
             limit {
                 minimum = 0.8
             }
+        }
+    }
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    publications = ['ModuleJar']
+    pkg {
+        repo = 'neo4j'
+        name = 'neo4j-gremlin-bolt'
+        userOrg = 'ta.nemahuta'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/Tanemahuta/neo4j-gremlin-bolt.git'
+        version {
+            name = project.version as String
+            desc = project.description
+            released = new Date()
+            if (!name.endsWith("-SNAPSHOT")) {
+                vcsTag = name
+            }
+        }
+    }
+}
+
+publishing {
+    publications {
+        ModuleJar(MavenPublication) {
+            from components.java
+            groupId project.group
+            artifactId project.name
+            version project.version as String
         }
     }
 }
