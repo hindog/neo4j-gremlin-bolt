@@ -141,7 +141,7 @@ public class DefaultNeo4JEdgeScope extends AbstractNeo4JElementScope<Neo4JEdge> 
         return query()
                 .where(b -> b.getLhs().id(element.getInSupplier().getVertexId()).and(b.getRhs().id(element.getOutSupplier().getVertexId())).and(b.whereId(element.id())))
                 .direction(Direction.BOTH)
-                .andThen(b -> b.properties(committed.state.properties, current.state.properties))
+                .andThen(b -> b.properties(committed.getState().properties, current.getState().properties))
                 .build();
     }
 
@@ -152,7 +152,7 @@ public class DefaultNeo4JEdgeScope extends AbstractNeo4JElementScope<Neo4JEdge> 
                                                       @Nonnull @NonNull final StateHolder<Neo4JElementState> current) {
         return query()
                 .where(b -> b.getLhs().id(element.getInSupplier().getVertexId()).and(b.getRhs().id(element.getOutSupplier().getVertexId())))
-                .andThen(b -> b.createEdge(element.id(), Direction.OUT, element.label(), current.state.properties))
+                .andThen(b -> b.createEdge(element.id(), Direction.OUT, element.label(), current.getState().properties))
                 .build();
     }
 

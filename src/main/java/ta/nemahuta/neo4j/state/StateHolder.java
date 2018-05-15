@@ -46,7 +46,7 @@ public class StateHolder<S> {
      */
     @Nonnull
     public StateHolder<S> modify(@Nonnull @NonNull final S newState) {
-        if (Objects.equals(this.state, newState)) {
+        if (Objects.equals(this.getState(), newState)) {
             return this;
         }
         return new StateHolder<>(syncState.asModified(), newState);

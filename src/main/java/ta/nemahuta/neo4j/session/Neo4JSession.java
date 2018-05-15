@@ -219,14 +219,14 @@ public class Neo4JSession implements StatementExecutor, EdgeFactory, AutoCloseab
      * @return the factory which provides the inbound {@link EdgeProvider} for a given {@link Neo4JVertex}
      */
     public Function<Neo4JVertex, EdgeProvider> inEdgeProviderFactory() {
-        return v -> new LazyEdgeProvider(v, labels -> scope.getEdgeScope().inEdgesOf(graph, v, labels), SyncState.TRANSIENT.equals(v.state.getCurrentSyncState()));
+        return v -> new LazyEdgeProvider(v, labels -> scope.getEdgeScope().inEdgesOf(graph, v, labels), SyncState.TRANSIENT.equals(v.getState().getCurrentSyncState()));
     }
 
     /**
      * @return the factory which provides the outbound {@link EdgeProvider} for a given {@link Neo4JVertex}
      */
     public Function<Neo4JVertex, EdgeProvider> outEdgeProviderFactory() {
-        return v -> new LazyEdgeProvider(v, labels -> scope.getEdgeScope().outEdgesOf(graph, v, labels), SyncState.TRANSIENT.equals(v.state.getCurrentSyncState()));
+        return v -> new LazyEdgeProvider(v, labels -> scope.getEdgeScope().outEdgesOf(graph, v, labels), SyncState.TRANSIENT.equals(v.getState().getCurrentSyncState()));
     }
 
     @Nonnull

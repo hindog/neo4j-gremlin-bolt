@@ -24,7 +24,7 @@ public class Neo4JVertexProperty<T> extends Neo4JProperty<Neo4JVertex, T> implem
 
     @Override
     public Object id() {
-        return parent.state.current(s -> Optional.ofNullable(s.state.properties.get(key)).map(PropertyValue::getId).get());
+        return parent.getState().current(s -> Optional.ofNullable(s.getState().properties.get(key)).map(PropertyValue::getId).get());
     }
 
     @Override

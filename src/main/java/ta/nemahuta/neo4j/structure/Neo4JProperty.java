@@ -49,7 +49,7 @@ public class Neo4JProperty<P extends Neo4JElement, T> implements Property<T> {
     public void setValue(@Nonnull @NonNull final Neo4JElementIdGenerator<?> idGenerator,
                          @Nonnull @NonNull final PropertyCardinality cardinality,
                          @Nonnull @NonNull final T value) {
-        parent.state.modify(s -> {
+        parent.getState().modify(s -> {
             final PropertyValue<?> propertyValue = Optional.ofNullable(s.properties.get(key))
                     .map(e -> ((PropertyValue<T>) e).with(cardinality, value))
                     .orElseGet(() -> PropertyValue.from(idGenerator.generate(), value, cardinality));

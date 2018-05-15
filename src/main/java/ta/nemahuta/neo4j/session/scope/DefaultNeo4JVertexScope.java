@@ -91,8 +91,8 @@ public class DefaultNeo4JVertexScope extends AbstractNeo4JElementScope<Neo4JVert
                                                       @Nonnull @NonNull final StateHolder<Neo4JElementState> committed,
                                                       @Nonnull @NonNull final StateHolder<Neo4JElementState> current) {
         return query()
-                .match(b -> b.labelsMatch(getReadPartition().ensurePartitionLabelsSet(committed.state.labels)))
-                .where(b -> b.id(committed.state.id))
+                .match(b -> b.labelsMatch(getReadPartition().ensurePartitionLabelsSet(committed.getState().labels)))
+                .where(b -> b.id(committed.getState().id))
                 .andThen(VertexQueryFactory::delete)
                 .build();
     }
@@ -103,10 +103,10 @@ public class DefaultNeo4JVertexScope extends AbstractNeo4JElementScope<Neo4JVert
                                                       @Nonnull @NonNull final StateHolder<Neo4JElementState> committed,
                                                       @Nonnull @NonNull final StateHolder<Neo4JElementState> current) {
         return query()
-                .match(b -> b.labelsMatch(committed.state.labels))
-                .where(b -> b.id(committed.state.id))
-                .andThen(b -> b.labels(committed.state.labels, getReadPartition().ensurePartitionLabelsSet(current.state.labels)))
-                .andThen(b -> b.properties(committed.state.properties, current.state.properties))
+                .match(b -> b.labelsMatch(committed.getState().labels))
+                .where(b -> b.id(committed.getState().id))
+                .andThen(b -> b.labels(committed.getState().labels, getReadPartition().ensurePartitionLabelsSet(current.getState().labels)))
+                .andThen(b -> b.properties(committed.getState().properties, current.getState().properties))
                 .build();
     }
 
@@ -116,7 +116,7 @@ public class DefaultNeo4JVertexScope extends AbstractNeo4JElementScope<Neo4JVert
                                                       @Nonnull @NonNull final StateHolder<Neo4JElementState> committed,
                                                       @Nonnull @NonNull final StateHolder<Neo4JElementState> current) {
         return query()
-                .andThen(b -> b.create(current.state.id, getReadPartition().ensurePartitionLabelsSet(current.state.labels), current.state.properties))
+                .andThen(b -> b.create(current.getState().id, getReadPartition().ensurePartitionLabelsSet(current.getState().labels), current.getState().properties))
                 .build();
     }
 

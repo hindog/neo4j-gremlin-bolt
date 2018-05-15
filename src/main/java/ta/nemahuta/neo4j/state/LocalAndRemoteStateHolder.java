@@ -30,7 +30,7 @@ public class LocalAndRemoteStateHolder<S> {
     public LocalAndRemoteStateHolder(@Nonnull @NonNull final StateHolder<S> initialState) {
         // Note: in case the initial state is TRANSIENT, the committed state is actually DISCARDED
         final StateHolder<S> rollbackState = SyncState.TRANSIENT.equals(initialState.syncState) ?
-                new StateHolder<>(SyncState.DISCARDED, initialState.state) :
+                new StateHolder<>(SyncState.DISCARDED, initialState.getState()) :
                 initialState;
         this.committedState = new AsyncAccess<>(rollbackState);
         this.currentState = new AsyncAccess<>(initialState);
@@ -45,7 +45,7 @@ public class LocalAndRemoteStateHolder<S> {
     public boolean modify(@Nonnull @NonNull final Function<S, S> update) {
         boolean[] result = new boolean[]{false};
         this.currentState.update(s -> {
-            final S newState = update.apply(s.state);
+            final S newState = update.apply(s.getState());
             final StateHolder<S> newStateHolder = s.modify(newState);
             result[0] = newStateHolder == s;
             return newStateHolder;

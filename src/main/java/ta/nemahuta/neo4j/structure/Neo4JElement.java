@@ -1,5 +1,6 @@
 package ta.nemahuta.neo4j.structure;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -23,7 +24,8 @@ import java.util.function.Function;
 @ToString
 public abstract class Neo4JElement implements Element {
 
-    public final LocalAndRemoteStateHolder<Neo4JElementState> state;
+    @Getter
+    private final LocalAndRemoteStateHolder<Neo4JElementState> state;
     protected final Neo4JGraph graph;
 
     /**
@@ -39,7 +41,7 @@ public abstract class Neo4JElement implements Element {
     }
 
     <R> R currentState(final Function<Neo4JElementState, R> function) {
-        return state.current(s -> function.apply(s.state));
+        return state.current(s -> function.apply(s.getState()));
     }
 
     public boolean isNotDiscarded() {
@@ -56,13 +58,13 @@ public abstract class Neo4JElement implements Element {
 
     @Override
     public Neo4JElementId<?> id() {
-        return state.current(s -> s.state.id);
+        return state.current(s -> s.getState().id);
     }
 
     @Override
     public String label() {
         // orLabelsAnd separated by "::"
-        return state.current(s -> String.join("::", s.state.labels));
+        return state.current(s -> String.join("::", s.getState().labels));
     }
 
     @Override

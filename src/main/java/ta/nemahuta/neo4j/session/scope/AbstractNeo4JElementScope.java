@@ -95,7 +95,7 @@ public abstract class AbstractNeo4JElementScope<T extends Neo4JElement> implemen
     @Override
     public void rollback() {
         log.debug("Rolling back elements...");
-        invokeRemovingDiscarded(e -> e.state.rollback());
+        invokeRemovingDiscarded(e -> e.getState().rollback());
     }
 
     @Override
@@ -258,13 +258,13 @@ public abstract class AbstractNeo4JElementScope<T extends Neo4JElement> implemen
      * @param element the element to be committed.
      */
     protected void commit(@Nonnull @NonNull final T element) {
-        element.state.commit((committed, current) ->
+        element.getState().commit((committed, current) ->
                 maybeCreateStatement(element, committed, current)
                         .map(stmt -> logStatement(element, stmt))
                         .map(statementExecutor::executeStatement)
                         .flatMap(this::extractId)
-                        .map(current.state::withId)
-                        .orElse(current.state)
+                        .map(current.getState()::withId)
+                        .orElse(current.getState())
         );
     }
 
