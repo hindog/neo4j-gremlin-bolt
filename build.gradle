@@ -86,16 +86,17 @@ bintray {
         userOrg = 'tanemahuta'
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/Tanemahuta/neo4j-gremlin-bolt.git'
+        githubRepo = 'Tanemahuta/neo4j-gremlin-bolt'
+        githubReleaseNotesFile = 'README.md'
         version {
             name = project.version as String
-            desc = project.description
             released = new Date()
-            if (!name.endsWith("-SNAPSHOT")) {
-                vcsTag = name
-            }
+            vcsTag = name
         }
     }
 }
+
+tasks.bintrayUpload.onlyIf { !(project.version as String).endsWith("-SNAPSHOT") }
 
 publishing {
     publications {
