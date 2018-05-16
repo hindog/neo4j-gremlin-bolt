@@ -48,6 +48,19 @@ class DatabaseSequenceElementIdAdapterTest {
     }
 
     @Test
+    void retrieveIdNullValue() {
+        assertThrows(RuntimeException.class, () -> sut.retrieveId(null));
+    }
+
+    @Test
+    void illegalNullConstructorParms() {
+        assertThrows(RuntimeException.class, () -> new DatabaseSequenceElementIdAdapter(null, 0l, null, null));
+        assertThrows(RuntimeException.class, () -> new DatabaseSequenceElementIdAdapter(driver, 0l, null, null));
+        assertThrows(RuntimeException.class, () -> new DatabaseSequenceElementIdAdapter(driver, 100l, null, null));
+        assertThrows(RuntimeException.class, () -> new DatabaseSequenceElementIdAdapter(driver, 100l, "field", null));
+    }
+
+    @Test
     void propertyName() {
         assertEquals(sut.propertyName(), "id");
     }
@@ -100,7 +113,7 @@ class DatabaseSequenceElementIdAdapterTest {
             // then: 'the next id is generated'
             assertEquals(new Neo4JPersistentElementId<>(1l), newId);
             // when: 'requesting another pool by requesting the ids'
-            Stream.generate(() -> sut.generate()).limit(DatabaseSequenceElementIdAdapter.DEFAULT_POOL_SIZE*2-1).forEach(r -> assertTrue(r.isRemote()));
+            Stream.generate(() -> sut.generate()).limit(DatabaseSequenceElementIdAdapter.DEFAULT_POOL_SIZE * 2 - 1).forEach(r -> assertTrue(r.isRemote()));
             // then: 'the pool request should have been invoked three times (one for the first pool, the second for the invalid, the third for the new one'
             verify(transaction, times(3)).run(any(Statement.class));
         });

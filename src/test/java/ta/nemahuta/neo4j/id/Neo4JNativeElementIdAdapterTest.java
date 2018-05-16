@@ -11,8 +11,7 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,6 +26,12 @@ class Neo4JNativeElementIdAdapterTest {
     @Test
     void propertyName() {
         assertEquals(sut.propertyName(), "id");
+    }
+
+
+    @Test
+    void retrieveIdNullValue() {
+        assertThrows(RuntimeException.class, () -> sut.retrieveId(null));
     }
 
     @Test

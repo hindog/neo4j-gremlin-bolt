@@ -10,6 +10,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class Neo4JPersistentElementIdTest {
 
     @Test
+    void nullValueNotAllowed() {
+        assertThrows(RuntimeException.class, () -> new Neo4JPersistentElementId<>(null));
+    }
+
+    @Test
     void equalsToStringAndRemote() {
         // setup: 'some element ids'
         final Neo4JElementId<?> id1 = new Neo4JPersistentElementId<>("1");

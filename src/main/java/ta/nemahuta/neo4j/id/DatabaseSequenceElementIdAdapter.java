@@ -44,6 +44,9 @@ public class DatabaseSequenceElementIdAdapter extends AbstractNeo4JElementIdAdap
                                             @Nonnull @NonNull final String idFieldName,
                                             @Nonnull @NonNull final String sequenceNodeLabel) {
         this.driver = driver;
+        if (poolSize <= 0l) {
+            throw new IllegalArgumentException("Pool size should be greater than zero.");
+        }
         this.poolSize = poolSize;
         this.idFieldName = idFieldName;
         this.query = "MERGE (g:`" + sequenceNodeLabel + "`) ON CREATE SET g.nextId = 1 ON MATCH SET g.nextId = g.nextId + {" + PARAM_POOL_SIZE + "} RETURN g.nextId";

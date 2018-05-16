@@ -1,5 +1,9 @@
 package ta.nemahuta.neo4j.id;
 
+import lombok.NonNull;
+
+import javax.annotation.Nonnull;
+
 /**
  * Denotes a transient element identifier, which is only temporary.
  *
@@ -8,7 +12,7 @@ package ta.nemahuta.neo4j.id;
  */
 public class Neo4JTransientElementId<T> extends AbstractNeo4JElementId<T> {
 
-    public Neo4JTransientElementId(final T id) {
+    public Neo4JTransientElementId(@NonNull @Nonnull final T id) {
         super(id, false);
     }
 
