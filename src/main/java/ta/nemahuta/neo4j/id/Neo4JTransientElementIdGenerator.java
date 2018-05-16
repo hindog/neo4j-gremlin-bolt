@@ -12,7 +12,7 @@ public class Neo4JTransientElementIdGenerator implements Neo4JElementIdGenerator
     /**
      * The sequence generator
      */
-    private final AtomicLong idProvider = new AtomicLong(1l);
+    private final AtomicLong idProvider = new AtomicLong(0l);
 
     @Override
     public Neo4JElementId<Long> generate() {
