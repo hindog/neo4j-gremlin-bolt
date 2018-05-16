@@ -1,19 +1,29 @@
 package ta.nemahuta.neo4j.query;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
+import org.apache.tinkerpop.gremlin.structure.VertexProperty;
+import org.javatuples.Pair;
 import org.neo4j.driver.v1.Statement;
-import ta.nemahuta.neo4j.state.PropertyCardinality;
-import ta.nemahuta.neo4j.state.PropertyValue;
+import org.neo4j.driver.v1.types.MapAccessor;
+import ta.nemahuta.neo4j.property.AbstractPropertyFactory;
+import ta.nemahuta.neo4j.structure.Neo4JElement;
+import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public abstract class AbstractStatementBuilderTest {
-
-    private static final AtomicLong propId = new AtomicLong(0);
 
     @Nonnull
     public static Statement build(@Nonnull final StatementBuilderAppender appender) {
@@ -40,12 +50,6 @@ public abstract class AbstractStatementBuilderTest {
         } else {
             assertFalse(stmtOpt.isPresent());
         }
-    }
-
-    public static <V> PropertyValue<V> prop(final V value) {
-        final PropertyCardinality cardinality = (value instanceof Set) ? PropertyCardinality.SET :
-                value instanceof Iterable ? PropertyCardinality.LIST : PropertyCardinality.SINGLE;
-        return PropertyValue.from(propId.incrementAndGet(), value, cardinality);
     }
 
 }

@@ -3,6 +3,7 @@ package ta.nemahuta.neo4j.session.scope;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -11,13 +12,12 @@ import org.neo4j.driver.v1.StatementResult;
 import ta.nemahuta.neo4j.async.AsyncAccess;
 import ta.nemahuta.neo4j.id.Neo4JElementId;
 import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
-import ta.nemahuta.neo4j.id.Neo4JElementIdGenerator;
-import ta.nemahuta.neo4j.id.PropertyElementIdGenerator;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.session.Neo4JElementScope;
 import ta.nemahuta.neo4j.session.StatementExecutor;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 import ta.nemahuta.neo4j.state.StateHolder;
+import ta.nemahuta.neo4j.state.SyncState;
 import ta.nemahuta.neo4j.structure.Neo4JElement;
 import ta.nemahuta.neo4j.structure.Neo4JGraph;
 
@@ -46,12 +46,6 @@ public abstract class AbstractNeo4JElementScope<T extends Neo4JElement> implemen
      */
     @Getter(onMethod = @__({@Override, @Nonnull}))
     protected final Neo4JElementIdAdapter<?> idAdapter;
-
-    /**
-     * the {@link Neo4JElementIdGenerator} for properties of elements
-     */
-    @Getter(onMethod = @__({@Override, @Nonnull}))
-    protected final Neo4JElementIdGenerator<?> propertyIdGenerator = new PropertyElementIdGenerator();
 
     /**
      * the executor being used to execute statements
@@ -207,7 +201,7 @@ public abstract class AbstractNeo4JElementScope<T extends Neo4JElement> implemen
     protected Optional<Statement> maybeCreateStatement(@Nonnull @NonNull final T element,
                                                        @Nonnull @NonNull final StateHolder<Neo4JElementState> committed,
                                                        @Nonnull @NonNull final StateHolder<Neo4JElementState> current) {
-        switch (current.syncState) {
+        switch (current.getSyncState()) {
             case TRANSIENT:
                 return createInsertCommand(element, committed, current);
             case MODIFIED:
@@ -244,9 +238,11 @@ public abstract class AbstractNeo4JElementScope<T extends Neo4JElement> implemen
     protected void invokeRemovingDiscarded(@Nonnull @NonNull final Consumer<T> elementConsumer) {
         elements.update(current -> {
             current.values().forEach(elementConsumer);
-            final ImmutableMap.Builder<Neo4JElementId<?>, T> newElements = ImmutableMap.builder();
+            final ImmutableMap.Builder<Neo4JElementId<?>, T> newElements = ImmutableMap.<Neo4JElementId<?>, T>builder()
+                    .putAll(Maps.filterValues(current, v -> !SyncState.DISCARDED.equals(v.getState().getCurrentSyncState())));
+            // Add possible new entries with new keys
             current.values().stream()
-                    .filter(Neo4JElement::isNotDiscarded)
+                    .filter(e -> !current.containsKey(e.id()))
                     .forEach(e -> newElements.put(e.id(), e));
             return newElements.build();
         });

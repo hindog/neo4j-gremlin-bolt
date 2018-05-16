@@ -18,13 +18,13 @@ public class StateHolder<S> {
      * the synchronisation state
      */
     @Getter(onMethod = @__(@Nonnull))
-    public final SyncState syncState;
+    private final SyncState syncState;
 
     /**
      * the actual state value
      */
     @Getter(onMethod = @__(@Nonnull))
-    public final S state;
+    private final S state;
 
     /**
      * Create a new state holder from the provided parameters.
@@ -57,7 +57,7 @@ public class StateHolder<S> {
      */
     @Nonnull
     public StateHolder<S> delete() {
-        return new StateHolder(syncState.asDeleted(), null);
+        return new StateHolder(syncState.asDeleted(), state);
     }
 
     /**

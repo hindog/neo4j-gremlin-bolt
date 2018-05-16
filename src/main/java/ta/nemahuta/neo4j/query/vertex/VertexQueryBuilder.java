@@ -37,6 +37,12 @@ public class VertexQueryBuilder extends AbstractQueryBuilder {
             return ALIAS;
         }
 
+        @Nonnull
+        @Override
+        protected Neo4JGraphPartition getPartition() {
+            return VertexQueryBuilder.this.partition;
+        }
+
     };
 
     /**

@@ -13,6 +13,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static ta.nemahuta.neo4j.testutils.MockUtils.mockProperties;
+
 class VertexQueryBuilderTest extends AbstractStatementBuilderTest {
 
     @Test
@@ -31,7 +33,7 @@ class VertexQueryBuilderTest extends AbstractStatementBuilderTest {
         assertBuildsStatement("CREATE (v:`x`:`y`={vertexProps1}) RETURN v.id",
                 ImmutableMap.of("vertexProps1", ImmutableMap.of("a", "b")),
                 query()
-                        .andThen(q -> q.create(new Neo4JTransientElementId<>(2l), ImmutableSet.of("x", "y"), ImmutableMap.of("a", prop("b"))))
+                        .andThen(q -> q.create(new Neo4JTransientElementId<>(2l), ImmutableSet.of("x", "y"), mockProperties(ImmutableMap.of("a", "b"))))
         );
     }
 
@@ -40,7 +42,7 @@ class VertexQueryBuilderTest extends AbstractStatementBuilderTest {
         assertBuildsStatement("CREATE (v:`x`:`y`={vertexProps1})",
                 ImmutableMap.of("vertexProps1", ImmutableMap.of("a", "b", "id", 2l)),
                 query()
-                        .andThen(q -> q.create(new Neo4JPersistentElementId<>(2l), ImmutableSet.of("x", "y"), ImmutableMap.of("a", prop("b"))))
+                        .andThen(q -> q.create(new Neo4JPersistentElementId<>(2l), ImmutableSet.of("x", "y"), mockProperties(ImmutableMap.of("a", "b"))))
         );
     }
 
@@ -87,8 +89,8 @@ class VertexQueryBuilderTest extends AbstractStatementBuilderTest {
                         .where(b -> b.id(new Neo4JPersistentElementId<>(1l)))
                         .andThen(b -> b.labels(ImmutableSet.of("x"), ImmutableSet.of("y", "z")))
                         .andThen(b -> b.properties(
-                                ImmutableMap.of("a", prop("b"), "u", prop("v")),
-                                ImmutableMap.of("a", prop("c"), "e", prop("f"))
+                                mockProperties(ImmutableMap.of("a", "b", "u", "v")),
+                                mockProperties(ImmutableMap.of("a", "c", "e", "f"))
                         ))
         );
     }

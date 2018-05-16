@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PropertyElementIdGeneratorTest {
 
-    private final PropertyElementIdGenerator sut = new PropertyElementIdGenerator();
+    private final Neo4JTransientElementIdGenerator sut = new Neo4JTransientElementIdGenerator();
     private final CountDownLatch latch = new CountDownLatch(1);
 
     @Test

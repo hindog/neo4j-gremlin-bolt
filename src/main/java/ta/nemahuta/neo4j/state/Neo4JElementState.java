@@ -8,6 +8,7 @@ import lombok.ToString;
 import lombok.experimental.Wither;
 import ta.nemahuta.neo4j.id.Neo4JElementId;
 import ta.nemahuta.neo4j.structure.Neo4JElement;
+import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 
@@ -32,7 +33,7 @@ public class Neo4JElementState {
     /**
      * the properties for the element
      */
-    public final ImmutableMap<String, PropertyValue<?>> properties;
+    public final ImmutableMap<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> properties;
 
     /**
      * Construct a new state using the provided parameters.
@@ -43,7 +44,7 @@ public class Neo4JElementState {
      */
     public Neo4JElementState(@Nonnull @NonNull final Neo4JElementId<?> id,
                              @Nonnull @NonNull final ImmutableSet<String> labels,
-                             @Nonnull @NonNull final ImmutableMap<String, PropertyValue<?>> properties) {
+                             @Nonnull @NonNull final ImmutableMap<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> properties) {
         this.id = id;
         this.labels = labels;
         this.properties = properties;

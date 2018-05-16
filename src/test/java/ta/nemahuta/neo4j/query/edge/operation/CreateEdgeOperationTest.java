@@ -12,6 +12,7 @@ import ta.nemahuta.neo4j.query.AbstractStatementBuilderTest;
 import javax.annotation.Nonnull;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static ta.nemahuta.neo4j.testutils.MockUtils.mockProperties;
 
 class CreateEdgeOperationTest extends AbstractStatementBuilderTest {
 
@@ -19,7 +20,7 @@ class CreateEdgeOperationTest extends AbstractStatementBuilderTest {
     @Nonnull
     private CreateEdgeOperation createOperation(final Neo4JElementId<?> id) {
         return new CreateEdgeOperation("n", "r", "m",
-                id, "test", Direction.IN, ImmutableMap.of("golden", prop("retriever")),
+                id, "test", Direction.IN, mockProperties(ImmutableMap.of("golden", "retriever")),
                 "props", new Neo4JNativeElementIdAdapter());
     }
 

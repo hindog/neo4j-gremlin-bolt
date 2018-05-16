@@ -18,7 +18,7 @@ public class Neo4JNativeElementIdAdapter extends AbstractNeo4JElementIdAdapter {
     /**
      * The id generator for the transient ids
      */
-    private final AtomicLong curId = new AtomicLong(Long.MAX_VALUE);
+    private final Neo4JTransientElementIdGenerator idGenerator = new Neo4JTransientElementIdGenerator();
 
     /**
      * Gets the field name used for {@link Entity} identifier.
@@ -51,7 +51,7 @@ public class Neo4JNativeElementIdAdapter extends AbstractNeo4JElementIdAdapter {
     @Override
     @Nonnull
     public Neo4JElementId<Long> generate() {
-        return new Neo4JTransientElementId<>(curId.addAndGet(1l));
+        return idGenerator.generate();
     }
 
 }

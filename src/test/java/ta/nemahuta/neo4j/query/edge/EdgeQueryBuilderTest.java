@@ -15,11 +15,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static ta.nemahuta.neo4j.testutils.MockUtils.mockProperties;
+
 class EdgeQueryBuilderTest extends AbstractStatementBuilderTest {
 
     @Test
     void buildLhsLabelsAndRelationLabelsReturningId() {
-        assertBuildsStatement("MATCH (n:`u`:`v`)<-[r:`x`]-(m) RETURN r.id",
+        assertBuildsStatement("MATCH (n:`u`:`v`:`graphLabel`)<-[r:`x`]-(m:`graphLabel`) RETURN r.id",
                 Collections.emptyMap(),
                 query()
                         .lhsMatch(v -> v.labelsMatch(ImmutableSet.of("u", "v")))
@@ -31,7 +33,7 @@ class EdgeQueryBuilderTest extends AbstractStatementBuilderTest {
 
     @Test
     void buildRhsLabelsAndRelationLabelsReturningId() {
-        assertBuildsStatement("MATCH (n)-[r:`x`]->(m:`u`:`v`) RETURN r.id",
+        assertBuildsStatement("MATCH (n:`graphLabel`)-[r:`x`]->(m:`u`:`v`:`graphLabel`) RETURN r.id",
                 Collections.emptyMap(),
                 query()
                         .rhsMatch(v -> v.labelsMatch(ImmutableSet.of("u", "v")))
@@ -43,7 +45,7 @@ class EdgeQueryBuilderTest extends AbstractStatementBuilderTest {
 
     @Test
     void buildBothIdsAndRelationLabelsReturningRelation() {
-        assertBuildsStatement("MATCH (n)-[r:`x`]->(m) WHERE n.id={vertexId1} AND m.id={vertexId2} RETURN n.id, r, m.id",
+        assertBuildsStatement("MATCH (n:`graphLabel`)-[r:`x`]->(m:`graphLabel`) WHERE n.id={vertexId1} AND m.id={vertexId2} RETURN n.id, r, m.id",
                 ImmutableMap.of("vertexId1", 1l, "vertexId2", 2l),
                 query()
                         .labels(ImmutableSet.of("x"))
@@ -55,7 +57,7 @@ class EdgeQueryBuilderTest extends AbstractStatementBuilderTest {
 
     @Test
     void queryRelationLabelsReturnId() {
-        assertBuildsStatement("MATCH (n)<-[r:`x`|:`y`]-(m) RETURN r.id",
+        assertBuildsStatement("MATCH (n:`graphLabel`)<-[r:`x`|:`y`]-(m:`graphLabel`) RETURN r.id",
                 Collections.emptyMap(),
                 query()
                         .labels(ImmutableSet.of("x", "y"))
@@ -67,31 +69,31 @@ class EdgeQueryBuilderTest extends AbstractStatementBuilderTest {
 
     @Test
     void createEdgeWithVertexIds() {
-        assertBuildsStatement("MATCH (n), (m) WHERE n.id={vertexId1} AND m.id={vertexId2} CREATE (n)-[r:`u`={edgeProps1}]->(m) RETURN r.id",
+        assertBuildsStatement("MATCH (n:`graphLabel`), (m:`graphLabel`) WHERE n.id={vertexId1} AND m.id={vertexId2} CREATE (n)-[r:`u`={edgeProps1}]->(m) RETURN r.id",
                 ImmutableMap.of("vertexId2", 2l, "vertexId1", 1l, "edgeProps1", ImmutableMap.of("cool", "cat")),
                 query()
                         .where(v -> v.getLhs().id(new Neo4JPersistentElementId<>(1l)).and(v.getRhs().id(new Neo4JPersistentElementId<>(2l))))
                         .labels(ImmutableSet.of("x", "y"))
-                        .andThen(e -> e.createEdge(new Neo4JTransientElementId<>(1l), Direction.OUT, "u", ImmutableMap.of("cool", prop("cat"))))
+                        .andThen(e -> e.createEdge(new Neo4JTransientElementId<>(1l), Direction.OUT, "u", mockProperties(ImmutableMap.of("cool", "cat"))))
 
         );
     }
 
     @Test
     void createEdgeWithRemoteIdAndVertexIds() {
-        assertBuildsStatement("MATCH (n), (m) WHERE n.id={vertexId1} AND m.id={vertexId2} CREATE (n)-[r:`u`={edgeProps1}]->(m)",
+        assertBuildsStatement("MATCH (n:`graphLabel`), (m:`graphLabel`) WHERE n.id={vertexId1} AND m.id={vertexId2} CREATE (n)-[r:`u`={edgeProps1}]->(m)",
                 ImmutableMap.of("vertexId2", 2l, "vertexId1", 1l, "edgeProps1", ImmutableMap.of("cool", "cat", "id", 3l)),
                 query()
                         .where(v -> v.getLhs().id(new Neo4JPersistentElementId<>(1l)).and(v.getRhs().id(new Neo4JPersistentElementId<>(2l))))
                         .labels(ImmutableSet.of("x", "y"))
-                        .andThen(e -> e.createEdge(new Neo4JPersistentElementId<>(3l), Direction.OUT, "u", ImmutableMap.of("cool", prop("cat"))))
+                        .andThen(e -> e.createEdge(new Neo4JPersistentElementId<>(3l), Direction.OUT, "u", mockProperties(ImmutableMap.of("cool", "cat"))))
 
         );
     }
 
     @Test
     void deleteWithId() {
-        assertBuildsStatement("MATCH (n)-[r:`a`]->(m) WHERE r.id={edgeId1} DETACH DELETE r",
+        assertBuildsStatement("MATCH (n:`graphLabel`)-[r:`a`]->(m:`graphLabel`) WHERE r.id={edgeId1} DETACH DELETE r",
                 ImmutableMap.of("edgeId1", 1l),
                 query()
                         .where(v -> v.whereId(new Neo4JPersistentElementId<>(1l)))
@@ -104,7 +106,7 @@ class EdgeQueryBuilderTest extends AbstractStatementBuilderTest {
 
     @Test
     void deleteWithIds() {
-        assertBuildsStatement("MATCH (n)-[r:`a`|:`b`]->(m) WHERE r.id IN {edgeId1} DETACH DELETE r",
+        assertBuildsStatement("MATCH (n:`graphLabel`)-[r:`a`|:`b`]->(m:`graphLabel`) WHERE r.id IN {edgeId1} DETACH DELETE r",
                 ImmutableMap.of("edgeId1", ImmutableList.of(1l, 2l)),
                 query()
                         .where(v -> v.whereIds(ImmutableSet.of(new Neo4JPersistentElementId<>(1l), new Neo4JPersistentElementId<>(2l))))
@@ -120,22 +122,22 @@ class EdgeQueryBuilderTest extends AbstractStatementBuilderTest {
         final Map<String, Object> properties = new HashMap<>(ImmutableMap.of("a", "c", "e", "f"));
         properties.put("x", null);
 
-        assertBuildsStatement("MATCH (n)-[r]-(m) WHERE n.id={vertexId1} AND m.id={vertexId2} AND r.id={edgeId1} SET r={edgeProps1}",
+        assertBuildsStatement("MATCH (n:`graphLabel`)-[r]-(m:`graphLabel`) WHERE n.id={vertexId1} AND m.id={vertexId2} AND r.id={edgeId1} SET r={edgeProps1}",
                 ImmutableMap.of("vertexId1", 1l, "vertexId2", 2l, "edgeId1", 3l, "edgeProps1", properties),
                 query()
                         .where(b -> b.getLhs().id(new Neo4JPersistentElementId<>(1l))
                                 .and(b.getRhs().id(new Neo4JPersistentElementId<>(2l)).and(b.whereId(new Neo4JPersistentElementId<>(3l)))))
                         .direction(Direction.BOTH)
                         .andThen(b -> b.properties(
-                                ImmutableMap.of("x", prop("y"), "a", prop("b"), "u", prop("v")),
-                                ImmutableMap.of("a", prop("c"), "e", prop("f"), "u", prop("v"))
+                                mockProperties(ImmutableMap.of("x", "y", "a", "b", "u", "v")),
+                                mockProperties(ImmutableMap.of("a", "c", "e", "f", "u", "v"))
                                 )
                         )
         );
     }
 
     private static EdgeQueryBuilder query() {
-        return new EdgeQueryBuilder(new Neo4JNativeElementIdAdapter(), Neo4JLabelGraphPartition.anyLabel(), new Neo4JNativeElementIdAdapter());
+        return new EdgeQueryBuilder(new Neo4JNativeElementIdAdapter(), Neo4JLabelGraphPartition.allLabelsOf("graphLabel"), new Neo4JNativeElementIdAdapter());
     }
 
 }

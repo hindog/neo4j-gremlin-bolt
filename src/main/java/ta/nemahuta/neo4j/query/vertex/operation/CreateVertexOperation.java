@@ -6,7 +6,8 @@ import ta.nemahuta.neo4j.id.Neo4JElementId;
 import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.query.QueryUtils;
 import ta.nemahuta.neo4j.query.vertex.VertexOperation;
-import ta.nemahuta.neo4j.state.PropertyValue;
+import ta.nemahuta.neo4j.structure.Neo4JElement;
+import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -40,7 +41,7 @@ public class CreateVertexOperation implements VertexOperation {
      * the properties to be set for the new vertex
      */
     @NonNull
-    private final Map<String, PropertyValue<?>> properties;
+    private final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> properties;
     /**
      * the alias of the vertex from the MATCH clause
      */

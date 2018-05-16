@@ -5,7 +5,8 @@ import lombok.RequiredArgsConstructor;
 import ta.nemahuta.neo4j.query.QueryUtils;
 import ta.nemahuta.neo4j.query.edge.EdgeOperation;
 import ta.nemahuta.neo4j.query.vertex.VertexOperation;
-import ta.nemahuta.neo4j.state.PropertyValue;
+import ta.nemahuta.neo4j.structure.Neo4JElement;
+import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -22,12 +23,12 @@ public class UpdatePropertiesOperation implements VertexOperation, EdgeOperation
      * the currently committed properties
      */
     @NonNull
-    private final Map<String, PropertyValue<?>> committedProperties;
+    private final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> committedProperties;
     /**
      * the current properties to be committed
      */
     @NonNull
-    private final Map<String, PropertyValue<?>> currentProperties;
+    private final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> currentProperties;
     /**
      * the alias of the MATCH the properties should be set on
      */

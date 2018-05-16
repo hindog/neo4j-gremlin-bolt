@@ -2,6 +2,7 @@ package ta.nemahuta.neo4j.session.scope;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import lombok.Getter;
 import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.neo4j.driver.v1.Record;
@@ -10,6 +11,7 @@ import org.neo4j.driver.v1.types.Relationship;
 import ta.nemahuta.neo4j.id.Neo4JElementId;
 import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
+import ta.nemahuta.neo4j.property.Neo4JEdgePropertyFactory;
 import ta.nemahuta.neo4j.query.edge.EdgeQueryBuilder;
 import ta.nemahuta.neo4j.query.vertex.VertexQueryBuilder;
 import ta.nemahuta.neo4j.session.Neo4JElementScope;
@@ -39,6 +41,9 @@ public class DefaultNeo4JEdgeScope extends AbstractNeo4JElementScope<Neo4JEdge> 
      */
     private final Neo4JElementScope<Neo4JVertex> vertexScope;
 
+    @Getter(onMethod = @__({@Override, @Nonnull}))
+    private final Neo4JEdgePropertyFactory propertyFactory;
+
     public DefaultNeo4JEdgeScope(@Nonnull @NonNull final Neo4JElementIdAdapter<?> idProvider,
                                  @Nonnull @NonNull final StatementExecutor statementExecutor,
                                  @Nonnull @NonNull final Neo4JGraphPartition partition,
@@ -53,6 +58,7 @@ public class DefaultNeo4JEdgeScope extends AbstractNeo4JElementScope<Neo4JEdge> 
                                  @Nonnull @NonNull final Neo4JElementScope<Neo4JVertex> vertexScope) {
         super(initialElements, idProvider, partition, statementExecutor);
         this.vertexScope = vertexScope;
+        propertyFactory = new Neo4JEdgePropertyFactory(idAdapter);
     }
 
     /**
@@ -208,10 +214,14 @@ public class DefaultNeo4JEdgeScope extends AbstractNeo4JElementScope<Neo4JEdge> 
     @Nonnull
     private Neo4JEdge createEdge(@Nonnull @NonNull final Neo4JGraph graph,
                                  @Nonnull @NonNull final Record record) {
+
         final Neo4JElementId<?> outId = vertexScope.getIdAdapter().convert(record.get(0).asObject());
         final Relationship relationship = record.get(1).asRelationship();
         final Neo4JElementId<?> inId = vertexScope.getIdAdapter().convert(record.get(2).asObject());
-        return new Neo4JEdge(graph, relationship, DefaultNeo4JEdgeScope.this, createVertexGet(graph, inId), createVertexGet(graph, outId));
+        final Neo4JElementId<?> elementId = getIdAdapter().retrieveId(relationship);
+
+        return new Neo4JEdge(graph, elementId, ImmutableSet.of(relationship.type()), Optional.of(relationship),
+                propertyFactory, createVertexGet(graph, inId), createVertexGet(graph, outId));
     }
 
 }

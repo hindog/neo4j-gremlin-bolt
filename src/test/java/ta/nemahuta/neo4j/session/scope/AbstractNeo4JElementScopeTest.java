@@ -2,7 +2,6 @@ package ta.nemahuta.neo4j.session.scope;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,18 +12,21 @@ import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.v1.types.MapAccessor;
 import ta.nemahuta.neo4j.id.Neo4JElementId;
 import ta.nemahuta.neo4j.id.Neo4JNativeElementIdAdapter;
 import ta.nemahuta.neo4j.id.Neo4JPersistentElementId;
 import ta.nemahuta.neo4j.id.Neo4JTransientElementId;
 import ta.nemahuta.neo4j.partition.Neo4JLabelGraphPartition;
+import ta.nemahuta.neo4j.property.AbstractPropertyFactory;
+import ta.nemahuta.neo4j.query.TestNeo4JPropertyFactory;
 import ta.nemahuta.neo4j.session.StatementExecutor;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
-import ta.nemahuta.neo4j.state.PropertyValue;
 import ta.nemahuta.neo4j.state.StateHolder;
 import ta.nemahuta.neo4j.state.SyncState;
 import ta.nemahuta.neo4j.structure.Neo4JElement;
 import ta.nemahuta.neo4j.structure.Neo4JGraph;
+import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 import java.util.Iterator;
@@ -35,17 +37,13 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static ta.nemahuta.neo4j.query.AbstractStatementBuilderTest.prop;
+import static ta.nemahuta.neo4j.testutils.MockUtils.mockMapAccessor;
 
 @ExtendWith(MockitoExtension.class)
 class AbstractNeo4JElementScopeTest {
 
     private final Neo4JGraph graph = mock(Neo4JGraph.class);
-    private final Neo4JElement elemSync = element(SyncState.SYNCHRONOUS, new Neo4JPersistentElementId<>(1l), ImmutableSet.of("x", "y"), ImmutableMap.of("a", "b")),
-            elemTransient = element(SyncState.TRANSIENT, new Neo4JTransientElementId<>(1l), ImmutableSet.of("x", "y"), ImmutableMap.of("a", "b")),
-            elemModified = element(SyncState.MODIFIED, new Neo4JPersistentElementId<>(2l), ImmutableSet.of("x", "y"), ImmutableMap.of("a", "b")),
-            elemDeleted = element(SyncState.DELETED, new Neo4JPersistentElementId<>(3l), ImmutableSet.of("x", "y"), ImmutableMap.of("a", "b")),
-            elemDiscarded = element(SyncState.DISCARDED, new Neo4JPersistentElementId<>(2l), ImmutableSet.of("x", "y"), ImmutableMap.of("a", "b"));
+    private Neo4JElement elemSync, elemTransient;
 
     @Mock
     private Statement deleteStmt, updateStmt, insertStmt;
@@ -53,10 +51,19 @@ class AbstractNeo4JElementScopeTest {
     private StatementExecutor executor;
 
     private AbstractNeo4JElementScope<Neo4JElement> sut;
+    private TestNeo4JPropertyFactory propertyFactory;
 
     @BeforeEach
     void createSutAndStub() {
+        this.propertyFactory = new TestNeo4JPropertyFactory();
+        this.elemSync = element(new Neo4JPersistentElementId<>(1l), ImmutableSet.of("x", "y"), ImmutableMap.of("a", "b"));
+        this.elemTransient = element(new Neo4JTransientElementId<>(1l), ImmutableSet.of("x", "y"), ImmutableMap.of());
         this.sut = new AbstractNeo4JElementScope<Neo4JElement>(ImmutableMap.of(elemSync.id(), elemSync), new Neo4JNativeElementIdAdapter(), Neo4JLabelGraphPartition.anyLabel(), executor) {
+            @Override
+            public AbstractPropertyFactory<? extends Neo4JProperty<Neo4JElement, ?>> getPropertyFactory() {
+                return propertyFactory;
+            }
+
             @Override
             protected Stream<? extends Neo4JElementId<?>> idsWithLabelIn(final Set<String> labels) {
                 return Stream.empty();
@@ -121,7 +128,7 @@ class AbstractNeo4JElementScopeTest {
         verify(executor, times(1)).executeStatement(insertStmt);
         assertEquals(SyncState.SYNCHRONOUS, elemTransient.getState().getCurrentSyncState());
         sut.elements.consume(c -> {
-            assertFalse(c.containsKey(previousId));
+            assertTrue(c.containsKey(previousId));
             assertTrue(c.containsKey(elemTransient.id()));
         });
     }
@@ -129,45 +136,45 @@ class AbstractNeo4JElementScopeTest {
     @Test
     void commitModified() {
         // setup: 'a deleted element'
-        sut.add(elemModified);
+        elemSync.getState().modify(s -> s.withLabels(ImmutableSet.of("y", "z")));
         // when: 'committing the transaction'
         sut.commit();
         // then: 'the delete statement was executed'
         verify(executor, times(1)).executeStatement(updateStmt);
-        assertEquals(SyncState.SYNCHRONOUS, elemModified.getState().getCurrentSyncState());
-        sut.elements.consume(c -> assertTrue(c.containsKey(elemModified.id())));
+        assertEquals(SyncState.SYNCHRONOUS, elemSync.getState().getCurrentSyncState());
+        sut.elements.consume(c -> assertTrue(c.containsKey(elemSync.id())));
     }
 
     @Test
     void commitDeleted() {
         // setup: 'a deleted element'
-        sut.add(elemDeleted);
+        elemSync.remove();
         // when: 'committing the transaction'
         sut.commit();
         // then: 'the delete statement was executed'
         verify(executor, times(1)).executeStatement(deleteStmt);
-        assertEquals(SyncState.DISCARDED, elemDeleted.getState().getCurrentSyncState());
-        sut.elements.consume(c -> assertFalse(c.containsKey(elemDeleted.id())));
+        assertEquals(SyncState.DISCARDED, elemSync.getState().getCurrentSyncState());
+        sut.elements.consume(c -> assertFalse(c.containsKey(elemSync.id())));
     }
 
     @Test
     void commitDiscarded() {
         // setup: 'a discarded element'
-        sut.add(elemDiscarded);
+        elemTransient.remove();
         // when: 'committing the transaction'
         sut.commit();
         // then: 'the delete statement was executed'
         verify(executor, never()).executeStatement(any());
-        assertEquals(SyncState.DISCARDED, elemDiscarded.getState().getCurrentSyncState());
-        sut.elements.consume(c -> assertFalse(c.containsKey(elemDiscarded.id())));
+        assertEquals(SyncState.DISCARDED, elemTransient.getState().getCurrentSyncState());
+        sut.elements.consume(c -> assertFalse(c.containsKey(elemTransient.id())));
     }
 
     @Test
     void rollback() {
         // setup: 'a transient element'
         sut.add(elemTransient);
-        final ImmutableSet<String> labels = elemSync.getState().current(s -> s.getState().labels);
-        final ImmutableMap<String, PropertyValue<?>> props = elemSync.getState().current(s -> s.getState().properties);
+        final ImmutableSet<String> labels = elemSync.getState().current(s -> s.labels);
+        final ImmutableMap<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> props = elemSync.getState().current(s -> s.properties);
         // when: 'modifying the synchronous element'
         elemSync.getState().modify(s -> s.withLabels(ImmutableSet.of()));
         // and: 'rolling back'
@@ -175,11 +182,11 @@ class AbstractNeo4JElementScopeTest {
         // then: 'no statement was executed'
         verify(executor, never()).executeStatement(any());
         assertEquals(SyncState.DISCARDED, elemTransient.getState().getCurrentSyncState());
-        assertEquals(labels, elemSync.getState().current(s -> s.getState().labels));
-        assertEquals(props, elemSync.getState().current(s -> s.getState().properties));
+        assertEquals(labels, elemSync.getState().current(s -> s.labels));
+        assertEquals(props, elemSync.getState().current(s -> s.properties));
         sut.elements.consume(c -> {
             assertTrue(c.containsKey(elemSync.id()));
-            assertFalse(c.containsKey(elemDiscarded.id()));
+            assertFalse(c.containsKey(elemTransient.id()));
         });
 
     }
@@ -208,22 +215,25 @@ class AbstractNeo4JElementScopeTest {
     void getReadPartition() {
     }
 
-    private Neo4JElement element(final SyncState syncState,
-                                 final Neo4JElementId<?> id,
+    private Neo4JElement element(final Neo4JElementId<?> id,
                                  final ImmutableSet<String> labels,
                                  final ImmutableMap<String, Object> props) {
-        final ImmutableMap<String, PropertyValue<?>> properties = ImmutableMap.copyOf(Maps.transformValues(props, v -> prop(v)));
-        return new Neo4JElement(graph, new StateHolder<>(syncState, new Neo4JElementState(id, labels, properties))) {
+
+        final Optional<MapAccessor> propAccess = id.isRemote() ? Optional.of(mockMapAccessor(props)) : Optional.empty();
+
+        final Neo4JElement element = new Neo4JElement(graph, id, labels, propAccess, propertyFactory) {
+
             @Override
             public <V> Property<V> property(final String key, final V value) {
-                return null;
+                return property(key, value, Property::empty);
             }
 
             @Override
             public <V> Iterator<? extends Property<V>> properties(final String... propertyKeys) {
-                return null;
+                return properties(Property::empty, propertyKeys);
             }
         };
+        return element;
     }
 
     private static StatementResult mockRecordWithId(final long id) {

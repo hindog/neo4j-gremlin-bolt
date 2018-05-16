@@ -2,6 +2,7 @@ package ta.nemahuta.neo4j.query.vertex.predicate;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.MatchPredicate;
 import ta.nemahuta.neo4j.query.QueryUtils;
 
@@ -21,6 +22,13 @@ public class MatchAllVertexLabelsPredicate implements MatchPredicate {
      */
     @NonNull
     private final Set<String> labels;
+
+    /**
+     * the partition to be used
+     */
+    @NonNull
+    private final Neo4JGraphPartition partition;
+
     /**
      * the alias for the vertex
      */
@@ -30,7 +38,7 @@ public class MatchAllVertexLabelsPredicate implements MatchPredicate {
     @Override
     public void append(final StringBuilder queryBuilder, final Map<String, Object> parameters) {
         queryBuilder.append("(").append(alias);
-        QueryUtils.appendLabels(queryBuilder, labels);
+        QueryUtils.appendLabels(queryBuilder, partition.ensurePartitionLabelsSet(labels));
         queryBuilder.append(")");
     }
 }

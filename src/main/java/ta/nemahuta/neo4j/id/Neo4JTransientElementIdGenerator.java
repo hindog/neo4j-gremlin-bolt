@@ -3,12 +3,11 @@ package ta.nemahuta.neo4j.id;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * {@link Neo4JElementIdGenerator} for {@link org.apache.tinkerpop.gremlin.structure.Property}s which also are
- * {@link org.apache.tinkerpop.gremlin.structure.Element}s.
+ * {@link Neo4JElementIdGenerator} which generates {@link Neo4JTransientElementId}s.
  *
  * @author Christian Heike (christian.heike@icloud.com)
  */
-public class PropertyElementIdGenerator implements Neo4JElementIdGenerator<Long> {
+public class Neo4JTransientElementIdGenerator implements Neo4JElementIdGenerator<Long> {
 
     /**
      * The sequence generator

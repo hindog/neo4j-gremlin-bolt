@@ -1,20 +1,25 @@
 package ta.nemahuta.neo4j.structure;
 
-import org.apache.tinkerpop.gremlin.structure.Element;
+import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
-import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
-import ta.nemahuta.neo4j.state.PropertyValue;
+import ta.nemahuta.neo4j.id.Neo4JElementId;
 
+import javax.annotation.Nonnull;
 import java.util.Iterator;
-import java.util.Optional;
 
 public class Neo4JVertexProperty<T> extends Neo4JProperty<Neo4JVertex, T> implements VertexProperty<T> {
 
+    private final Neo4JElementId<?> id;
 
-    public Neo4JVertexProperty(final Neo4JVertex parent, final String key) {
-        super(parent, key);
+    public Neo4JVertexProperty(@NonNull @Nonnull final Neo4JVertex parent,
+                               @NonNull @Nonnull final Neo4JElementId<?> id,
+                               @NonNull @Nonnull final String key,
+                               @NonNull @Nonnull final Iterable<T> wrapped,
+                               @NonNull @Nonnull final Cardinality cardinality) {
+        super(parent, key, wrapped, cardinality);
+        this.id = id;
     }
 
     @Override
@@ -24,7 +29,7 @@ public class Neo4JVertexProperty<T> extends Neo4JProperty<Neo4JVertex, T> implem
 
     @Override
     public Object id() {
-        return parent.getState().current(s -> Optional.ofNullable(s.getState().properties.get(key)).map(PropertyValue::getId).get());
+        return id;
     }
 
     @Override
@@ -32,18 +37,17 @@ public class Neo4JVertexProperty<T> extends Neo4JProperty<Neo4JVertex, T> implem
         throw VertexProperty.Exceptions.metaPropertiesNotSupported();
     }
 
+    @Nonnull
+    @Override
+    protected Neo4JProperty<Neo4JVertex, ?> withValue(@Nonnull @NonNull final Cardinality cardinality,
+                                                      @Nonnull @NonNull final Iterable<?> value) {
+        return new Neo4JVertexProperty<>(parent, id, key, value, cardinality);
+    }
+
     @Override
     public boolean equals(final Object object) {
         return object instanceof VertexProperty && ElementHelper.areEqual(this, object);
     }
 
-    @Override
-    public int hashCode() {
-        return ElementHelper.hashCode((Element) this);
-    }
 
-    @Override
-    public String toString() {
-        return StringFactory.propertyString(this);
-    }
 }

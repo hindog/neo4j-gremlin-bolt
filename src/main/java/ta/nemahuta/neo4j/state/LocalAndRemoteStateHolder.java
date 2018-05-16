@@ -29,7 +29,7 @@ public class LocalAndRemoteStateHolder<S> {
      */
     public LocalAndRemoteStateHolder(@Nonnull @NonNull final StateHolder<S> initialState) {
         // Note: in case the initial state is TRANSIENT, the committed state is actually DISCARDED
-        final StateHolder<S> rollbackState = SyncState.TRANSIENT.equals(initialState.syncState) ?
+        final StateHolder<S> rollbackState = SyncState.TRANSIENT.equals(initialState.getSyncState()) ?
                 new StateHolder<>(SyncState.DISCARDED, initialState.getState()) :
                 initialState;
         this.committedState = new AsyncAccess<>(rollbackState);
@@ -94,8 +94,8 @@ public class LocalAndRemoteStateHolder<S> {
      * @return the result of the function
      */
     @Nullable
-    public <R> R current(@Nonnull @NonNull final Function<StateHolder<S>, R> function) {
-        return currentState.get(function);
+    public <R> R current(@Nonnull @NonNull final Function<S, R> function) {
+        return currentState.get(s -> function.apply(s.getState()));
     }
 
     /**
@@ -103,7 +103,7 @@ public class LocalAndRemoteStateHolder<S> {
      */
     @Nonnull
     public SyncState getCurrentSyncState() {
-        return Optional.ofNullable(current(s -> s.syncState)).orElse(SyncState.DISCARDED);
+        return Optional.ofNullable(currentState.get(s -> s.getSyncState())).orElse(SyncState.DISCARDED);
     }
 
 }

@@ -59,11 +59,6 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
         }
 
         @Override
-        protected Neo4JGraphPartition getPartition() {
-            return EdgeQueryBuilder.this.partition;
-        }
-
-        @Override
         protected Neo4JElementIdAdapter<?> getEdgeIdAdapter() {
             return EdgeQueryBuilder.this.idAdapter;
         }
@@ -72,9 +67,15 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
         protected Neo4JElementIdAdapter<?> getVertexIdAdapter() {
             return EdgeQueryBuilder.this.vertexIdProvider;
         }
+
+        @Nonnull
+        @Override
+        protected Neo4JGraphPartition getPartition() {
+            return EdgeQueryBuilder.this.partition;
+        }
     };
 
-    private final MatchRelationPredicate relationPredicate = new MatchRelationPredicate(VERTEX_ALIAS_LHS, RELATION_ALIAS, VERTEX_ALIAS_RHS);
+    private final MatchRelationPredicate relationPredicate = new MatchRelationPredicate(VERTEX_ALIAS_LHS, RELATION_ALIAS, VERTEX_ALIAS_RHS, partition);
     private final Neo4JElementIdAdapter<?> vertexIdProvider;
 
     /**

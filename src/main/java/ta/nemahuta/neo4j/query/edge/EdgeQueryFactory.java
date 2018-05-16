@@ -16,11 +16,11 @@ import ta.nemahuta.neo4j.query.operation.ReturnIdOperation;
 import ta.nemahuta.neo4j.query.operation.UpdatePropertiesOperation;
 import ta.nemahuta.neo4j.query.predicate.WhereIdInPredicate;
 import ta.nemahuta.neo4j.query.vertex.VertexQueryFactory;
-import ta.nemahuta.neo4j.state.PropertyValue;
+import ta.nemahuta.neo4j.structure.Neo4JElement;
+import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -49,12 +49,6 @@ public abstract class EdgeQueryFactory {
     protected abstract String getRhsAlias();
 
     /**
-     * @return the {@link Neo4JGraphPartition} selecting parts of the graph
-     */
-    @Nonnull
-    protected abstract Neo4JGraphPartition getPartition();
-
-    /**
      * @return the adapter for the identifiers being used on edges
      */
     @Nonnull
@@ -65,6 +59,13 @@ public abstract class EdgeQueryFactory {
      */
     @Nonnull
     protected abstract Neo4JElementIdAdapter<?> getVertexIdAdapter();
+
+    /**
+     * @return the partition to be used
+     */
+    @Nonnull
+    protected abstract Neo4JGraphPartition getPartition();
+
 
     @Getter(onMethod = @__(@Nonnull))
     private final VertexQueryFactory lhs = new VertexQueryFactory() {
@@ -80,6 +81,12 @@ public abstract class EdgeQueryFactory {
             return EdgeQueryFactory.this.getLhsAlias();
         }
 
+        @Override
+        @Nonnull
+        protected Neo4JGraphPartition getPartition() {
+            return EdgeQueryFactory.this.getPartition();
+        }
+
         @Nonnull
         @Override
         protected UniqueParamNameGenerator getParamNameGenerator() {
@@ -93,6 +100,12 @@ public abstract class EdgeQueryFactory {
         @Override
         protected Neo4JElementIdAdapter<?> getIdAdapter() {
             return EdgeQueryFactory.this.getEdgeIdAdapter();
+        }
+
+        @Override
+        @Nonnull
+        protected Neo4JGraphPartition getPartition() {
+            return EdgeQueryFactory.this.getPartition();
         }
 
         @Nonnull
@@ -159,7 +172,7 @@ public abstract class EdgeQueryFactory {
     public EdgeOperation createEdge(@Nonnull @NonNull final Neo4JElementId<?> id,
                                     @Nonnull @NonNull final Direction direction,
                                     @Nonnull @NonNull final String label,
-                                    @Nonnull @NonNull final Map<String, PropertyValue<?>> properties) {
+                                    @Nonnull @NonNull final ImmutableMap<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> properties) {
         return new CreateEdgeOperation(getLhsAlias(), getRelationAlias(), getRhsAlias(), id, label, direction, properties,
                 getParamNameGenerator().generate("edgeProps"), getEdgeIdAdapter());
     }
@@ -180,8 +193,8 @@ public abstract class EdgeQueryFactory {
      * @return the operation
      */
     @Nonnull
-    public EdgeOperation properties(@Nonnull @NonNull final ImmutableMap<String, PropertyValue<?>> committedProperties,
-                                    @Nonnull @NonNull final ImmutableMap<String, PropertyValue<?>> currentProperties) {
+    public EdgeOperation properties(@Nonnull @NonNull final ImmutableMap<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> committedProperties,
+                                    @Nonnull @NonNull final ImmutableMap<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> currentProperties) {
         return new UpdatePropertiesOperation(committedProperties, currentProperties, getRelationAlias(), getParamNameGenerator().generate("edgeProps"));
     }
 

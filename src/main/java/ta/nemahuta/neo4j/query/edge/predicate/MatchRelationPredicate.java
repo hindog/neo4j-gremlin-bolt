@@ -4,6 +4,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.tinkerpop.gremlin.structure.Direction;
+import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.MatchPredicate;
 import ta.nemahuta.neo4j.query.QueryUtils;
 import ta.nemahuta.neo4j.query.vertex.predicate.MatchAllVertexLabelsPredicate;
@@ -37,6 +38,12 @@ public class MatchRelationPredicate implements MatchPredicate {
      */
     @NonNull
     private final String rhsAlias;
+
+    /**
+     * the partition to be used
+     */
+    @NonNull
+    private final Neo4JGraphPartition partition;
 
     /**
      * the {@link MatchPredicate} for the lhs node
@@ -79,7 +86,7 @@ public class MatchRelationPredicate implements MatchPredicate {
     }
 
     private MatchPredicate defaultLabelMatcher(final String alias) {
-        return new MatchAllVertexLabelsPredicate(Collections.emptySet(), alias);
+        return new MatchAllVertexLabelsPredicate(Collections.emptySet(), partition, alias);
     }
 
     private void appendRelation(@Nonnull @NonNull final StringBuilder queryBuilder) {

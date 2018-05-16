@@ -1,5 +1,6 @@
 package ta.nemahuta.neo4j.session;
 
+import com.google.common.collect.ImmutableSet;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tinkerpop.gremlin.structure.Edge;
@@ -10,7 +11,6 @@ import org.neo4j.driver.v1.exceptions.ClientException;
 import ta.nemahuta.neo4j.async.AsyncAccess;
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
 import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
-import ta.nemahuta.neo4j.id.Neo4JNativeElementIdAdapter;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.partition.Neo4JLabelGraphPartition;
 import ta.nemahuta.neo4j.session.scope.DefaultNeo4JEdgeScope;
@@ -22,7 +22,6 @@ import ta.nemahuta.neo4j.structure.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -66,7 +65,7 @@ public class Neo4JSession implements StatementExecutor, EdgeFactory, AutoCloseab
 
 
         final Neo4JGraphPartition partition = Optional.ofNullable(configuration.getGraphName())
-                .map(Neo4JLabelGraphPartition::anyLabelOf)
+                .map(Neo4JLabelGraphPartition::allLabelsOf)
                 .orElseGet(Neo4JLabelGraphPartition::anyLabel);
 
         final Neo4JElementIdAdapter<?> vertexIdProvider = configuration.createVertexIdAdapter(driver);
@@ -190,9 +189,19 @@ public class Neo4JSession implements StatementExecutor, EdgeFactory, AutoCloseab
         if (ElementHelper.getIdValue(keyValues).isPresent())
             throw Vertex.Exceptions.userSuppliedIdsNotSupported();
 
-        final Collection<String> labels = Arrays.asList(ElementHelper.getLabelValue(keyValues).orElse(Vertex.DEFAULT_LABEL).split(Neo4JVertex.LabelDelimiter));
+        final ImmutableSet<String> labels = ImmutableSet.copyOf(
+                scope.getVertexScope().getReadPartition().ensurePartitionLabelsSet(
+                        Arrays.asList(ElementHelper.getLabelValue(keyValues).orElse(Vertex.DEFAULT_LABEL).split(Neo4JVertex.LabelDelimiter))
+                )
+        );
 
-        final Neo4JVertex vertex = new Neo4JVertex(graph, scope.getVertexScope(), labels, inEdgeProviderFactory(), outEdgeProviderFactory(), this::createEdge);
+        final Neo4JVertex vertex = new Neo4JVertex(graph,
+                scope.getVertexScope().getIdAdapter().generate(),
+                labels,
+                Optional.empty(),
+                getScope().getVertexScope().getPropertyFactory(),
+                inEdgeProviderFactory(), outEdgeProviderFactory(), this::createEdge);
+
         ElementHelper.attachProperties(vertex, keyValues);
         scope.getVertexScope().add(vertex);
         return vertex;
@@ -237,12 +246,19 @@ public class Neo4JSession implements StatementExecutor, EdgeFactory, AutoCloseab
                                 @Nonnull final Object... keyValues) {
         ElementHelper.validateLabel(label);
         ElementHelper.legalPropertyKeyValueArray(keyValues);
+
         if (!(inVertex instanceof Neo4JVertex)) {
             throw new IllegalArgumentException("Cannot handle a vertex of type: " + inVertex.getClass().getName());
         }
-        final Neo4JEdge edge = new Neo4JEdge(graph, label, scope.getEdgeScope(),
+
+        final Neo4JEdge edge = new Neo4JEdge(graph,
+                getScope().getEdgeScope().getIdAdapter().generate(),
+                ImmutableSet.of(label),
+                Optional.empty(),
+                getScope().getEdgeScope().getPropertyFactory(),
                 VertexOnEdgeSupplier.wrap((Neo4JVertex) inVertex),
-                VertexOnEdgeSupplier.wrap(outVertex));
+                VertexOnEdgeSupplier.wrap(outVertex)
+        );
 
         ElementHelper.attachProperties(edge, keyValues);
         scope.getEdgeScope().add(edge);

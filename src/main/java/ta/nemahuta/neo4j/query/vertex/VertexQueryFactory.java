@@ -8,7 +8,8 @@ import ta.nemahuta.neo4j.query.operation.UpdateLabelsOperation;
 import ta.nemahuta.neo4j.query.operation.UpdatePropertiesOperation;
 import ta.nemahuta.neo4j.query.vertex.operation.CreateVertexOperation;
 import ta.nemahuta.neo4j.query.vertex.operation.ReturnVertexOperation;
-import ta.nemahuta.neo4j.state.PropertyValue;
+import ta.nemahuta.neo4j.structure.Neo4JElement;
+import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -47,7 +48,7 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
     @Nonnull
     public VertexOperation labels(@Nonnull @NonNull final Set<String> committedLabels,
                                   @Nonnull @NonNull final Set<String> currentLabels) {
-        return new UpdateLabelsOperation(committedLabels, currentLabels, getAlias());
+        return new UpdateLabelsOperation(committedLabels, getPartition().ensurePartitionLabelsSet(currentLabels), getAlias());
     }
 
 
@@ -58,8 +59,8 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
      * @param currentProperties   the properties which are currently set
      */
     @Nonnull
-    public VertexOperation properties(@Nonnull @NonNull final Map<String, PropertyValue<?>> committedProperties,
-                                      @Nonnull @NonNull final Map<String, PropertyValue<?>> currentProperties) {
+    public VertexOperation properties(@Nonnull @NonNull final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> committedProperties,
+                                      @Nonnull @NonNull final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> currentProperties) {
         return new UpdatePropertiesOperation(committedProperties, currentProperties, getAlias(), getParamNameGenerator().generate("vertexProps"));
     }
 
@@ -74,8 +75,9 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
     @Nonnull
     public VertexOperation create(@Nonnull @NonNull final Neo4JElementId<?> id,
                                   @Nonnull @NonNull final Set<String> labels,
-                                  @Nonnull @NonNull final Map<String, PropertyValue<?>> properties) {
-        return new CreateVertexOperation(getIdAdapter(), id, labels, properties, getAlias(), getParamNameGenerator().generate("vertexProps"));
+                                  @Nonnull @NonNull final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> properties) {
+        return new CreateVertexOperation(getIdAdapter(), id, getPartition().ensurePartitionLabelsSet(labels), properties,
+                getAlias(), getParamNameGenerator().generate("vertexProps"));
     }
 
     @Nonnull

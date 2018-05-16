@@ -2,10 +2,11 @@ package ta.nemahuta.neo4j.session;
 
 import ta.nemahuta.neo4j.id.Neo4JElementId;
 import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
-import ta.nemahuta.neo4j.id.Neo4JElementIdGenerator;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
+import ta.nemahuta.neo4j.property.AbstractPropertyFactory;
 import ta.nemahuta.neo4j.structure.Neo4JElement;
 import ta.nemahuta.neo4j.structure.Neo4JGraph;
+import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 import java.util.Iterator;
@@ -30,12 +31,6 @@ public interface Neo4JElementScope<T extends Neo4JElement> extends RollbackAndCo
     Neo4JGraphPartition getReadPartition();
 
     /**
-     * @return the identifier generator for the properties of the elements
-     */
-    @Nonnull
-    Neo4JElementIdGenerator<?> getPropertyIdGenerator();
-
-    /**
      * Add the element to the scope.
      *
      * @param element the element to be added
@@ -49,6 +44,7 @@ public interface Neo4JElementScope<T extends Neo4JElement> extends RollbackAndCo
      * @param ids   the identifiers of the elements
      * @return an iterator of the ids of the elements
      */
+    @Nonnull
     Stream<T> getOrLoad(@Nonnull Neo4JGraph graph,
                         @Nonnull Iterator<? extends Neo4JElementId<?>> ids);
 
@@ -59,6 +55,7 @@ public interface Neo4JElementScope<T extends Neo4JElement> extends RollbackAndCo
      * @param labels the {@link Iterable} of orLabelsAnd of which one has to match
      * @return an iterator of the ids of the elements
      */
+    @Nonnull
     Stream<T> getOrLoadLabelIn(@Nonnull Neo4JGraph graph,
                                @Nonnull Iterable<String> labels);
 
@@ -66,4 +63,10 @@ public interface Neo4JElementScope<T extends Neo4JElement> extends RollbackAndCo
      * Flushes the scope
      */
     void flush();
+
+    /**
+     * @return a property factory for the properties created in the scope
+     */
+    AbstractPropertyFactory<? extends Neo4JProperty<T, ?>> getPropertyFactory();
+
 }
