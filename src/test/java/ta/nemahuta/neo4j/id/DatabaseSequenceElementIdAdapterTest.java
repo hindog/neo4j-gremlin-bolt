@@ -53,11 +53,8 @@ class DatabaseSequenceElementIdAdapterTest {
     }
 
     @Test
-    void illegalNullConstructorParms() {
-        assertThrows(RuntimeException.class, () -> new DatabaseSequenceElementIdAdapter(null, 0l, null, null));
-        assertThrows(RuntimeException.class, () -> new DatabaseSequenceElementIdAdapter(driver, 0l, null, null));
-        assertThrows(RuntimeException.class, () -> new DatabaseSequenceElementIdAdapter(driver, 100l, null, null));
-        assertThrows(RuntimeException.class, () -> new DatabaseSequenceElementIdAdapter(driver, 100l, "field", null));
+    void illegalPoolSize() {
+        assertThrows(IllegalArgumentException.class, () -> new DatabaseSequenceElementIdAdapter(driver, 0l, "field", "label"));
     }
 
     @Test

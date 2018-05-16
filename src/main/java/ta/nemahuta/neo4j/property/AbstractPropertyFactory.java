@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.javatuples.Pair;
 import org.neo4j.driver.internal.types.TypeConstructor;
@@ -20,6 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @RequiredArgsConstructor
+@Slf4j
 public abstract class AbstractPropertyFactory<T extends Neo4JProperty<? extends Neo4JElement, ?>> {
 
     protected final ImmutableSet<String> excludedKeys;
@@ -104,8 +106,7 @@ public abstract class AbstractPropertyFactory<T extends Neo4JProperty<? extends 
     protected Object readUsingType(@Nonnull @NonNull final Value value) {
         final TypeRepresentation type = (TypeRepresentation) value.type();
         final TypeConstructor typeConstructor = type.constructor();
-        switch (Optional.ofNullable(typeConstructor)
-                .orElseThrow(() -> new IllegalArgumentException("Encountered a null typed property"))) {
+        switch (Optional.ofNullable(typeConstructor).orElse(TypeConstructor.ANY_TyCon)) {
             case LIST_TyCon:
                 return value.asList();
             case BOOLEAN_TyCon:
@@ -115,15 +116,17 @@ public abstract class AbstractPropertyFactory<T extends Neo4JProperty<? extends 
             case FLOAT_TyCon:
                 return value.asFloat();
             case INTEGER_TyCon:
-                return value.asObject();
+                return value.asInt();
             case NUMBER_TyCon:
                 return value.asNumber();
             case STRING_TyCon:
                 return value.asString();
+            case ANY_TyCon:
+                return value.asObject();
+            default:
+                log.warn("Could not convert property of type {}", typeConstructor);
             case NULL_TyCon:
                 return null;
-            default:
-                throw new IllegalArgumentException("Determined unhandled type: " + typeConstructor.typeName());
         }
     }
 
@@ -132,8 +135,6 @@ public abstract class AbstractPropertyFactory<T extends Neo4JProperty<? extends 
             return new Pair<>(VertexProperty.Cardinality.set, ImmutableSet.copyOf((Set) value));
         } else if (value instanceof Iterable) {
             return new Pair<>(VertexProperty.Cardinality.list, ImmutableList.copyOf((Iterable) value));
-        } else if (value.getClass().isArray()) {
-            return new Pair<>(VertexProperty.Cardinality.list, ImmutableList.copyOf((Object[]) value));
         } else {
             return new Pair<>(VertexProperty.Cardinality.single, ImmutableSet.of(value));
         }

@@ -46,7 +46,7 @@ public abstract class Neo4JProperty<P extends Neo4JElement, T> implements Proper
         this.parent = parent;
         this.key = key;
         this.wrapped = wrapped;
-        if (!wrapped.iterator().hasNext()) {
+        if (!wrapped.iterator().hasNext() && VertexProperty.Cardinality.single.equals(cardinality)) {
             throw new IllegalArgumentException("No value specified.");
         }
         this.cardinality = cardinality;
