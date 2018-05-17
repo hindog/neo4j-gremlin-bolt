@@ -106,20 +106,22 @@ public abstract class AbstractNeo4JElementScope<T extends Neo4JElement> implemen
             // Copy the elements found in the current element map to the result map and remove the ids afterwards
             final Set<Neo4JElementId<?>> idsToBeLoaded = new HashSet<>(idList);
             idList.forEach(id -> Optional.ofNullable(loadedElements.get(id)).ifPresent(loadedElement -> {
-                idsToBeLoaded.remove(loadedElement.id());
+                idsToBeLoaded.remove(id);
                 resultMap.put(id, loadedElement);
             }));
 
             log.debug("Found {} item(s) already in the scope, loading another {}", resultMap.size(), idsToBeLoaded.size());
             // Now for all the remaining: load them and store them to the new session scope
-            load(graph, idsToBeLoaded).filter(Objects::nonNull).forEach(elemFromLoad -> {
-                resultMap.put(elemFromLoad.id(), elemFromLoad);
-                newLoadedElementsBuilder.put(elemFromLoad.id(), elemFromLoad);
-            });
+            if (!idsToBeLoaded.isEmpty()) {
+                load(graph, idsToBeLoaded).filter(Objects::nonNull).forEach(elemFromLoad -> {
+                    resultMap.put(elemFromLoad.id(), elemFromLoad);
+                    newLoadedElementsBuilder.put(elemFromLoad.id(), elemFromLoad);
+                });
+            }
 
             return newLoadedElementsBuilder.build();
         });
-        return idList.stream().map(resultMap::get);
+        return idList.stream().map(resultMap::get).filter(Objects::nonNull);
     }
 
     @Override

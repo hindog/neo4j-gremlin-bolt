@@ -200,7 +200,8 @@ public class DefaultNeo4JEdgeScope extends AbstractNeo4JElementScope<Neo4JEdge> 
                                                    @Nonnull @NonNull final Neo4JElementId<?> id) {
         return VertexOnEdgeSupplier.wrap(
                 () -> id,
-                () -> vertexScope.getOrLoad(graph, Collections.singleton(id).iterator()).findAny().orElse(null)
+                () -> vertexScope.getOrLoad(graph, Collections.singleton(id).iterator()).findAny()
+                        .orElseThrow(() -> new IllegalStateException("Could not find vertex with id: " + id))
         );
     }
 
@@ -215,9 +216,9 @@ public class DefaultNeo4JEdgeScope extends AbstractNeo4JElementScope<Neo4JEdge> 
     private Neo4JEdge createEdge(@Nonnull @NonNull final Neo4JGraph graph,
                                  @Nonnull @NonNull final Record record) {
 
-        final Neo4JElementId<?> outId = vertexScope.getIdAdapter().convert(record.get(0).asObject());
+        final Neo4JElementId<?> inId = vertexScope.getIdAdapter().convert(record.get(0).asObject());
         final Relationship relationship = record.get(1).asRelationship();
-        final Neo4JElementId<?> inId = vertexScope.getIdAdapter().convert(record.get(2).asObject());
+        final Neo4JElementId<?> outId = vertexScope.getIdAdapter().convert(record.get(2).asObject());
         final Neo4JElementId<?> elementId = getIdAdapter().retrieveId(relationship);
 
         return new Neo4JEdge(graph, elementId, ImmutableSet.of(relationship.type()), Optional.of(relationship),

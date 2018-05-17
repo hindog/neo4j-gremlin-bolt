@@ -5,19 +5,30 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.javatuples.Pair;
+import org.neo4j.driver.internal.types.TypeConstructor;
 import org.neo4j.driver.internal.types.TypeRepresentation;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.types.MapAccessor;
 import org.neo4j.driver.v1.types.Node;
+import org.neo4j.driver.v1.types.Relationship;
 import ta.nemahuta.neo4j.property.AbstractPropertyFactory;
 import ta.nemahuta.neo4j.structure.Neo4JElement;
 import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.neo4j.driver.internal.types.TypeConstructor.*;
@@ -47,6 +58,42 @@ public class MockUtils {
         addProperties(node, props);
         when(node.id()).thenReturn(id);
         return node;
+    }
+
+    public static Relationship mockRelationship(final long id, final String label, final Map<String, Object> props) {
+        final Relationship relationship = mock(Relationship.class);
+        when(relationship.type()).thenReturn(label);
+        addProperties(relationship, props);
+        when(relationship.id()).thenReturn(id);
+        return relationship;
+    }
+
+    public static StatementResult mockStatementResult(@Nonnull final Record... records) {
+        final StatementResult statementResult = mock(StatementResult.class);
+        final Iterator<Record> iter = Stream.of(records).iterator();
+        when(statementResult.hasNext()).then(i -> iter.hasNext());
+        when(statementResult.next()).then(i -> iter.next());
+        doAnswer(i -> {
+            iter.forEachRemaining(i.<Consumer<? super Record>>getArgument(0));
+            return null;
+        }).when(statementResult).forEachRemaining(any());
+        return statementResult;
+    }
+
+    public static Record mockRecord(@Nonnull final Value... values) {
+        final Record record = mock(Record.class);
+        when(record.get(anyInt())).then(i -> values[i.<Integer>getArgument(0)]);
+        return record;
+    }
+
+    public static <T, R extends T> Value mockValue(@Nonnull final Function<Value, T> fun,
+                                                   final TypeConstructor typeConstructor, final R ret) {
+        final Value value = mock(Value.class);
+        if (typeConstructor != null) {
+            when(value.type()).thenReturn(new TypeRepresentation(typeConstructor));
+        }
+        when(fun.apply(value)).thenReturn(ret);
+        return value;
     }
 
     public static void addProperties(final MapAccessor mapAccessor, final Map<String, Object> props) {
