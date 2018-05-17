@@ -1,6 +1,8 @@
 package ta.nemahuta.neo4j.async;
 
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+import lombok.ToString;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -16,6 +18,8 @@ import java.util.function.Function;
  * @param <T> the type of the wrapped value
  * @author Christian Heike (christian.heike@icloud.com)
  */
+@EqualsAndHashCode(of = "wrapped")
+@ToString(of = "wrapped")
 public class AsyncAccess<T> {
 
     /**

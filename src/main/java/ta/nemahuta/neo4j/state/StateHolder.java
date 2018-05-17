@@ -1,7 +1,9 @@
 package ta.nemahuta.neo4j.state;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
@@ -12,6 +14,8 @@ import java.util.Objects;
  * @param <S> the type of the value to be held
  * @author Christian Heike (christian.heike@icloud.com)
  */
+@EqualsAndHashCode
+@ToString
 public class StateHolder<S> {
 
     /**

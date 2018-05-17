@@ -96,35 +96,30 @@ public abstract class AbstractNeo4JElementScope<T extends Neo4JElement> implemen
                                @Nonnull @NonNull final Iterator<? extends Neo4JElementId<?>> ids) {
 
         final List<? extends Neo4JElementId<?>> idList = ImmutableList.copyOf(ids);
-        final Map<Neo4JElementId<?>, T> loadedMap = new HashMap<>();
+        final Map<Neo4JElementId<?>, T> resultMap = new HashMap<>();
         log.debug("Loading {} item(s)...", idList.size());
-        elements.update(loaded -> {
-            // This builds the new session scope
-            final ImmutableMap.Builder<Neo4JElementId<?>, T> resultBuilder = ImmutableMap.builder();
-            resultBuilder.putAll(loaded);
+        elements.update(loadedElements -> {
+            // This builds the new session scope element map
+            final ImmutableMap.Builder<Neo4JElementId<?>, T> newLoadedElementsBuilder =
+                    ImmutableMap.<Neo4JElementId<?>, T>builder().putAll(loadedElements);
 
-            final Set<Neo4JElementId<?>> idsToBeLoaded = new HashSet<>();
-            // Iterate through all ids to retrieveId them from the scope
-            for (final Neo4JElementId<?> id : idList) {
-                final T elemFromScope = loaded.get(id);
-                if (elemFromScope == null) {
-                    // If we have the id in the scope add it to the loadedMap
-                    loadedMap.put(id, elemFromScope);
-                } else {
-                    // Otherwise we nee to load it
-                    idsToBeLoaded.add(id);
-                }
-            }
-            log.debug("Found {} item(s) already in the scope, loading another {}", loadedMap.size(), idsToBeLoaded.size());
+            // Copy the elements found in the current element map to the result map and remove the ids afterwards
+            final Set<Neo4JElementId<?>> idsToBeLoaded = new HashSet<>(idList);
+            idList.forEach(id -> Optional.ofNullable(loadedElements.get(id)).ifPresent(loadedElement -> {
+                idsToBeLoaded.remove(loadedElement.id());
+                resultMap.put(id, loadedElement);
+            }));
+
+            log.debug("Found {} item(s) already in the scope, loading another {}", resultMap.size(), idsToBeLoaded.size());
             // Now for all the remaining: load them and store them to the new session scope
-            load(graph, idsToBeLoaded).forEach(elemFromLoad -> {
-                loadedMap.put(elemFromLoad.id(), elemFromLoad);
-                resultBuilder.put(elemFromLoad.id(), elemFromLoad);
+            load(graph, idsToBeLoaded).filter(Objects::nonNull).forEach(elemFromLoad -> {
+                resultMap.put(elemFromLoad.id(), elemFromLoad);
+                newLoadedElementsBuilder.put(elemFromLoad.id(), elemFromLoad);
             });
 
-            return resultBuilder.build();
+            return newLoadedElementsBuilder.build();
         });
-        return idList.stream().filter(Objects::nonNull).map(loadedMap::get);
+        return idList.stream().map(resultMap::get);
     }
 
     @Override

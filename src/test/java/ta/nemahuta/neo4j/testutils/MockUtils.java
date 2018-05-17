@@ -8,12 +8,14 @@ import org.javatuples.Pair;
 import org.neo4j.driver.internal.types.TypeRepresentation;
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.types.MapAccessor;
+import org.neo4j.driver.v1.types.Node;
 import ta.nemahuta.neo4j.property.AbstractPropertyFactory;
 import ta.nemahuta.neo4j.structure.Neo4JElement;
 import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -34,10 +36,22 @@ public class MockUtils {
     }
 
     public static MapAccessor mockMapAccessor(final Map<String, Object> props) {
-        final MapAccessor[] result = {mock(MapAccessor.class)};
-        when(result[0].keys()).thenReturn(props.keySet());
-        when(result[0].get(anyString())).thenAnswer(i -> mockValue(props.get(i.getArgument(0))));
-        return result[0];
+        final MapAccessor result = mock(MapAccessor.class);
+        addProperties(result, props);
+        return result;
+    }
+
+    public static Node mockNode(final long id, final Set<String> labels, final Map<String, Object> props) {
+        final Node node = mock(Node.class);
+        when(node.labels()).thenReturn(labels);
+        addProperties(node, props);
+        when(node.id()).thenReturn(id);
+        return node;
+    }
+
+    public static void addProperties(final MapAccessor mapAccessor, final Map<String, Object> props) {
+        when(mapAccessor.keys()).thenReturn(props.keySet());
+        when(mapAccessor.get(anyString())).thenAnswer(i -> mockValue(props.get(i.getArgument(0))));
     }
 
     @Nonnull
