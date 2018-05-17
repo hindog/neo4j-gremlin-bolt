@@ -4,7 +4,7 @@ import lombok.NonNull;
 import org.neo4j.driver.v1.types.Entity;
 
 import javax.annotation.Nonnull;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Optional;
 
 /**
  * {@link AbstractNeo4JElementIdAdapter} implementation based which will used generated ids until the elements have been persisted.
@@ -26,8 +26,8 @@ public class Neo4JNativeElementIdAdapter extends AbstractNeo4JElementIdAdapter {
      * @return The field name used for {@link Entity} identifier or <code>null</code> if not using field for identifier.
      */
     @Override
-    public String propertyName() {
-        return PROPERTY_NAME;
+    public Optional<String> propertyName() {
+        return Optional.empty();
     }
 
     /**

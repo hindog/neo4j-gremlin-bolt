@@ -13,7 +13,7 @@ import javax.annotation.Nonnull;
 public class Neo4JEdgePropertyFactory extends AbstractPropertyFactory<Neo4JEdgeProperty<?>> {
 
     public Neo4JEdgePropertyFactory(@Nonnull @NonNull final Neo4JElementIdAdapter<?> adapter) {
-        super(ImmutableSet.of(adapter.propertyName()));
+        super(adapter.propertyName().map(ImmutableSet::of).orElse(ImmutableSet.of()));
     }
 
     @Nonnull

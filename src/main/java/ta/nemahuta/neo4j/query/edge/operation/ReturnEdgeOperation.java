@@ -46,11 +46,11 @@ public class ReturnEdgeOperation implements EdgeOperation {
     public void append(@Nonnull @NonNull final StringBuilder queryBuilder,
                        @Nonnull @NonNull final Map<String, Object> parameters) {
         queryBuilder.append("RETURN ")
-                .append(lhsAlias).append(".").append(vertexIdAdapter.propertyName())
+                .append(vertexIdAdapter.idExpression(lhsAlias))
                 .append(", ")
                 .append(relationAlias)
                 .append(", ")
-                .append(rhsAlias).append(".").append(vertexIdAdapter.propertyName());
+                .append(vertexIdAdapter.idExpression(rhsAlias));
     }
 
 }

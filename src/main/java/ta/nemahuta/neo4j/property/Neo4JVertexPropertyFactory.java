@@ -17,7 +17,7 @@ public class Neo4JVertexPropertyFactory extends AbstractPropertyFactory<Neo4JVer
     private final Neo4JElementIdGenerator<?> idGenerator;
 
     public Neo4JVertexPropertyFactory(@Nonnull @NonNull final Neo4JElementIdAdapter<?> idAdapter) {
-        super(ImmutableSet.of(idAdapter.propertyName()));
+        super(idAdapter.propertyName().map(ImmutableSet::of).orElse(ImmutableSet.of()));
         this.idGenerator = new Neo4JTransientElementIdGenerator();
     }
 

@@ -18,6 +18,6 @@ class ReturnEdgeOperationTest extends AbstractStatementBuilderTest {
 
     @Test
     void append() {
-        assertBuildsStatement("RETURN n.id, r, m.id", ImmutableMap.of(), sut);
+        assertBuildsStatement("RETURN ID(n), r, ID(m)", ImmutableMap.of(), sut);
     }
 }

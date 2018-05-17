@@ -15,8 +15,6 @@ import org.mockito.quality.Strictness;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ta.nemahuta.neo4j.id.*;
 import ta.nemahuta.neo4j.partition.Neo4JLabelGraphPartition;
 import ta.nemahuta.neo4j.session.Neo4JElementScope;
@@ -39,8 +37,6 @@ import static ta.nemahuta.neo4j.testutils.MockUtils.*;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class DefaultNeo4JEdgeScopeTest {
-
-    private static final Logger log = LoggerFactory.getLogger(DefaultNeo4JEdgeScopeTest.class);
 
     @Mock
     private Neo4JGraph graph;
@@ -124,7 +120,7 @@ class DefaultNeo4JEdgeScopeTest {
         // setup: 'the edge match id operation'
         stubVertexAndEdgeIdFindInBound(2l);
         // and: 'the edge load operation'
-        stubEdgeLoad("MATCH (n:`graphName`)-[r]->(m:`graphName`) WHERE r.id={edgeId1} RETURN n.id, r, m.id", ImmutableMap.of("edgeId1", 2l));
+        stubEdgeLoad("MATCH (n:`graphName`)-[r]->(m:`graphName`) WHERE ID(r)={edgeId1} RETURN ID(n), r, ID(m)", ImmutableMap.of("edgeId1", 2l));
         // when: 'getting the in edges of vertex 2'
         final Stream<Neo4JEdge> actual = sut.inEdgesOf(graph, vertex2, ImmutableSet.of("a", "b"));
         // then: 'the loaded edge is built correctly'
@@ -136,7 +132,7 @@ class DefaultNeo4JEdgeScopeTest {
         // setup: 'the edge match id operation'
         stubVertexAndEdgeIdFindOutBound(2l);
         // and: 'the edge load operation'
-        stubEdgeLoad("MATCH (n:`graphName`)-[r]->(m:`graphName`) WHERE r.id={edgeId1} RETURN n.id, r, m.id", ImmutableMap.of("edgeId1", 2l));
+        stubEdgeLoad("MATCH (n:`graphName`)-[r]->(m:`graphName`) WHERE ID(r)={edgeId1} RETURN ID(n), r, ID(m)", ImmutableMap.of("edgeId1", 2l));
         // when: 'getting the in edges of vertex 2'
         final Stream<Neo4JEdge> actual = sut.outEdgesOf(graph, vertex2, ImmutableSet.of("a", "b"));
         // then: 'the loaded edge is built correctly'
@@ -149,7 +145,7 @@ class DefaultNeo4JEdgeScopeTest {
         stubVertexAndEdgeIdFindOutBound(null);
         stubVertexAndEdgeIdFindInBound(null);
         // and: 'the edge load operation'
-        stubEdgeLoad("MATCH (n:`graphName`)-[r]->(m:`graphName`) WHERE r.id={edgeId1} RETURN n.id, r, m.id", ImmutableMap.of("edgeId1", 2l));
+        stubEdgeLoad("MATCH (n:`graphName`)-[r]->(m:`graphName`) WHERE ID(r)={edgeId1} RETURN ID(n), r, ID(m)", ImmutableMap.of("edgeId1", 2l));
         // when: 'getting the in edges of vertex 2'
         final Stream<Neo4JEdge> actual = sut.getOrLoadLabelIn(graph, ImmutableSet.of("a", "b"));
         // then: 'the loaded edge is built correctly'
@@ -159,7 +155,7 @@ class DefaultNeo4JEdgeScopeTest {
     @Test
     void loadEdge() {
         // setup: 'the edge load operation'
-        stubEdgeLoad("MATCH (n:`graphName`)-[r]->(m:`graphName`) WHERE r.id={edgeId1} RETURN n.id, r, m.id", ImmutableMap.of("edgeId1", 2l));
+        stubEdgeLoad("MATCH (n:`graphName`)-[r]->(m:`graphName`) WHERE ID(r)={edgeId1} RETURN ID(n), r, ID(m)", ImmutableMap.of("edgeId1", 2l));
         // when: 'loading the remote edge'
         final Stream<Neo4JEdge> actual = sut.getOrLoad(graph, Stream.of(new Neo4JPersistentElementId<>(2l)).iterator());
         // then: 'the loaded edge is built correctly'
@@ -171,7 +167,7 @@ class DefaultNeo4JEdgeScopeTest {
         // setup: 'the synchronized element in the scope being modified'
         sut.add(edgeTransient);
         edgeTransient.property("x", "y");
-        stubStatementExecution("MATCH (n:`graphName`), (m:`graphName`) WHERE n.id={vertexId1} AND m.id={vertexId2} CREATE (n)-[r:`transient`={edgeProps1}]->(m) RETURN r.id",
+        stubStatementExecution("MATCH (n:`graphName`), (m:`graphName`) WHERE ID(n)={vertexId1} AND ID(m)={vertexId2} CREATE (n)-[r:`transient`={edgeProps1}]->(m) RETURN ID(r)",
                 ImmutableMap.of("vertexId2", 2l, "vertexId1", 1l, "edgeProps1", ImmutableMap.of("x", "y")),
                 mockStatementResult(mockRecord(mockValue(Value::asObject, null, 3l)))
         );
@@ -189,11 +185,8 @@ class DefaultNeo4JEdgeScopeTest {
         sut.add(edgeSync);
         edgeSync.property("a").remove();
         edgeSync.property("c", "d");
-        final Map<String, Object> props = new HashMap<>();
-        props.put("a", null);
-        props.put("c", "d");
-        stubStatementExecution("MATCH (n:`graphName`)-[r]-(m:`graphName`) WHERE n.id={vertexId1} AND m.id={vertexId2} AND r.id={edgeId1} SET r={edgeProps1}",
-                ImmutableMap.of("vertexId2", 2l, "vertexId1", 1l, "edgeId1", 1l, "edgeProps1", props), mock(StatementResult.class));
+        stubStatementExecution("MATCH (n:`graphName`)-[r]-(m:`graphName`) WHERE ID(n)={vertexId1} AND ID(m)={vertexId2} AND ID(r)={edgeId1} SET r={edgeProps1}",
+                ImmutableMap.of("vertexId2", 2l, "vertexId1", 1l, "edgeId1", 1l, "edgeProps1", ImmutableMap.of("c", "d")), mock(StatementResult.class));
         // when: 'committing the scope'
         sut.commit();
         // then: 'the statement should be executed'
@@ -205,7 +198,7 @@ class DefaultNeo4JEdgeScopeTest {
         // setup: 'the synchronized element in the scope being modified'
         sut.add(edgeSync);
         edgeSync.remove();
-        stubStatementExecution("MATCH (n:`graphName`)-[r:`sync`]-(m:`graphName`) WHERE n.id={vertexId1} AND m.id={vertexId2} AND r.id={edgeId1} DETACH DELETE r",
+        stubStatementExecution("MATCH (n:`graphName`)-[r:`sync`]-(m:`graphName`) WHERE ID(n)={vertexId1} AND ID(m)={vertexId2} AND ID(r)={edgeId1} DETACH DELETE r",
                 ImmutableMap.of("vertexId2", 2l, "vertexId1", 1l, "edgeId1", 1l), mock(StatementResult.class));
         // when: 'committing the scope'
         sut.commit();
@@ -214,12 +207,12 @@ class DefaultNeo4JEdgeScopeTest {
     }
 
     private void stubVertexAndEdgeIdFindOutBound(Long id) {
-        stubVertexAndEdgeIdFind("MATCH (n:`graphName`)-[r:`a`|:`b`]->(m:`graphName`) " + (id != null ? "WHERE n.id={vertexId1} " : "") + "RETURN r.id",
+        stubVertexAndEdgeIdFind("MATCH (n:`graphName`)-[r:`a`|:`b`]->(m:`graphName`) " + (id != null ? "WHERE ID(n)={vertexId1} " : "") + "RETURN ID(r)",
                 id != null ? ImmutableMap.of("vertexId1", 2l) : ImmutableMap.of());
     }
 
     private void stubVertexAndEdgeIdFindInBound(Long id) {
-        stubVertexAndEdgeIdFind("MATCH (n:`graphName`)<-[r:`a`|:`b`]-(m:`graphName`) " + (id != null ? "WHERE n.id={vertexId1} " : "") + "RETURN r.id",
+        stubVertexAndEdgeIdFind("MATCH (n:`graphName`)<-[r:`a`|:`b`]-(m:`graphName`) " + (id != null ? "WHERE ID(n)={vertexId1} " : "") + "RETURN ID(r)",
                 id != null ? ImmutableMap.of("vertexId1", 2l) : ImmutableMap.of());
     }
 

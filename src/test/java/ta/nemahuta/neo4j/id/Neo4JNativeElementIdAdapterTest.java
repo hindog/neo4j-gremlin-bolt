@@ -7,6 +7,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.neo4j.driver.v1.types.Entity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,7 +26,7 @@ class Neo4JNativeElementIdAdapterTest {
 
     @Test
     void propertyName() {
-        assertEquals(sut.propertyName(), "id");
+        assertEquals(sut.propertyName(), Optional.empty());
     }
 
 

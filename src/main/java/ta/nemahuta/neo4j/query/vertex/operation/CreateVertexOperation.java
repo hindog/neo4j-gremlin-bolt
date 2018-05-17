@@ -66,9 +66,9 @@ public class CreateVertexOperation implements VertexOperation {
         queryBuilder.append("={").append(propertiesParam).append("})");
         final Map<String, Object> properties = QueryUtils.computeProperties(Collections.emptyMap(), this.properties);
         if (id.isRemote()) {
-            properties.put(idAdapter.propertyName(), id.getId());
+            idAdapter.propertyName().ifPresent(p -> properties.put(p, id.getId()));
         } else {
-            queryBuilder.append(" RETURN ").append(alias).append(".").append(idAdapter.propertyName());
+            queryBuilder.append(" RETURN ").append(idAdapter.idExpression(alias));
         }
         parameters.put(propertiesParam, properties);
     }

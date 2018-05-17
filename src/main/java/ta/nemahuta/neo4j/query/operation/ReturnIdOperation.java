@@ -37,6 +37,6 @@ public class ReturnIdOperation implements EdgeOperation, VertexOperation {
     @Override
     public void append(@Nonnull @NonNull final StringBuilder queryBuilder,
                        @Nonnull @NonNull final Map<String, Object> parameters) {
-        queryBuilder.append("RETURN ").append(alias).append(".").append(idAdapter.propertyName());
+        queryBuilder.append("RETURN ").append(idAdapter.idExpression(alias));
     }
 }

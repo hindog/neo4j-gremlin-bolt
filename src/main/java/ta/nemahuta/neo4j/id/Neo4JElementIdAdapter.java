@@ -3,6 +3,7 @@ package ta.nemahuta.neo4j.id;
 import org.neo4j.driver.v1.types.Entity;
 
 import javax.annotation.Nonnull;
+import java.util.Optional;
 
 /**
  * Interface for the adapter of {@link Neo4JElementId}s.
@@ -12,10 +13,20 @@ import javax.annotation.Nonnull;
 public interface Neo4JElementIdAdapter<T> extends Neo4JElementIdGenerator<T> {
 
     /**
-     * @return the property name used to store the identifier of an {@link Entity}.
+     * @return the property name used to store the identifier of an {@link Entity}, or {@link Optional#empty} in case the adapter does not use one.
      */
     @Nonnull
-    String propertyName();
+    Optional<String> propertyName();
+
+    /**
+     * Obtain the identifier expression for an element.
+     *
+     * @param alias the alias of the element
+     * @return the expression to obtain the identifier of an element with the provided alias
+     */
+    default String idExpression(final String alias) {
+        return propertyName().map(p -> alias + "." + p).orElse("ID(" + alias + ")");
+    }
 
     /**
      * Retrieves the {@link Neo4JElementId} from an {@link Entity}.

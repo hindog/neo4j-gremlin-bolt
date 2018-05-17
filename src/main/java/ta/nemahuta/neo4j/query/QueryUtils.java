@@ -8,7 +8,9 @@ import ta.nemahuta.neo4j.structure.Neo4JElement;
 import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Utilities being used to create queries.
@@ -41,20 +43,7 @@ public class QueryUtils {
     public static Map<String, Object> computeProperties(@Nonnull @NonNull final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> committedProperties,
                                                         @Nonnull @NonNull final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> currentProperties) {
         final Map<String, Object> properties = new HashMap<>();
-        // process current properties
-        currentProperties.entrySet().stream()
-                .filter(e -> !Objects.equals(e.getValue().value(),
-                        Optional.ofNullable(committedProperties.get(e.getKey())).map(Neo4JProperty::value).orElse(null))
-                )
-                .forEach(e -> {
-                    if (!Objects.equals(e.getValue(), committedProperties.get(e.getKey()))) {
-                        properties.put(e.getKey(), e.getValue().value());
-                    }
-                });
-        // removed properties are computed by subtracting the current properties from the committed ones and setting them to null
-        committedProperties.keySet().stream()
-                .filter(k -> !currentProperties.keySet().contains(k))
-                .forEach(k -> properties.put(k, null));
+        currentProperties.entrySet().stream().forEach(e -> properties.put(e.getKey(), e.getValue().value()));
         return properties;
     }
 

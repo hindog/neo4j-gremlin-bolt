@@ -8,6 +8,7 @@ import org.neo4j.driver.v1.types.Entity;
 import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -55,8 +56,8 @@ public class DatabaseSequenceElementIdAdapter extends AbstractNeo4JElementIdAdap
 
     @Override
     @Nonnull
-    public String propertyName() {
-        return idFieldName;
+    public Optional<String> propertyName() {
+        return Optional.of(idFieldName);
     }
 
     @Override

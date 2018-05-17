@@ -13,6 +13,7 @@ import org.neo4j.driver.v1.types.Entity;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -59,7 +60,7 @@ class DatabaseSequenceElementIdAdapterTest {
 
     @Test
     void propertyName() {
-        assertEquals(sut.propertyName(), "id");
+        assertEquals(sut.propertyName(), Optional.of("id"));
     }
 
     @Test
@@ -68,7 +69,7 @@ class DatabaseSequenceElementIdAdapterTest {
         final long id = 666l;
         final Value value = mock(Value.class);
         when(value.asLong()).thenReturn(id);
-        when(entity.get(sut.propertyName())).thenReturn(value);
+        when(entity.get(sut.propertyName().get())).thenReturn(value);
         // when: 'retrieving the identifier from the entity'
         final Neo4JElementId<?> actual = sut.retrieveId(entity);
         // then: 'the id is wrapped into a persistent element id'

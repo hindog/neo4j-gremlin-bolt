@@ -10,8 +10,6 @@ import ta.nemahuta.neo4j.partition.Neo4JLabelGraphPartition;
 import ta.nemahuta.neo4j.query.AbstractStatementBuilderTest;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import static ta.nemahuta.neo4j.testutils.MockUtils.mockProperties;
 
@@ -19,7 +17,7 @@ class VertexQueryBuilderTest extends AbstractStatementBuilderTest {
 
     @Test
     void buildWhereIdAndLabelsReturnVertex() {
-        assertBuildsStatement("MATCH (v:`x`:`y`) WHERE v.id={vertexId1} RETURN v",
+        assertBuildsStatement("MATCH (v:`x`:`y`) WHERE ID(v)={vertexId1} RETURN v",
                 ImmutableMap.of("vertexId1", 1l),
                 query()
                         .match(q -> q.labelsMatch(ImmutableSet.of("x", "y")))
@@ -30,7 +28,7 @@ class VertexQueryBuilderTest extends AbstractStatementBuilderTest {
 
     @Test
     void createVertexAndReturnId() {
-        assertBuildsStatement("CREATE (v:`x`:`y`={vertexProps1}) RETURN v.id",
+        assertBuildsStatement("CREATE (v:`x`:`y`={vertexProps1}) RETURN ID(v)",
                 ImmutableMap.of("vertexProps1", ImmutableMap.of("a", "b")),
                 query()
                         .andThen(q -> q.create(new Neo4JTransientElementId<>(2l), ImmutableSet.of("x", "y"), mockProperties(ImmutableMap.of("a", "b"))))
@@ -40,7 +38,7 @@ class VertexQueryBuilderTest extends AbstractStatementBuilderTest {
     @Test
     void createVertexAndUseId() {
         assertBuildsStatement("CREATE (v:`x`:`y`={vertexProps1})",
-                ImmutableMap.of("vertexProps1", ImmutableMap.of("a", "b", "id", 2l)),
+                ImmutableMap.of("vertexProps1", ImmutableMap.of("a", "b")),
                 query()
                         .andThen(q -> q.create(new Neo4JPersistentElementId<>(2l), ImmutableSet.of("x", "y"), mockProperties(ImmutableMap.of("a", "b"))))
         );
@@ -48,7 +46,7 @@ class VertexQueryBuilderTest extends AbstractStatementBuilderTest {
 
     @Test
     void deleteVertexById() {
-        assertBuildsStatement("MATCH (v) WHERE v.id={vertexId1} DETACH DELETE v",
+        assertBuildsStatement("MATCH (v) WHERE ID(v)={vertexId1} DETACH DELETE v",
                 ImmutableMap.of("vertexId1", 1l),
                 query()
                         .match(v -> v.labelsMatch(Collections.emptySet()))
@@ -59,7 +57,7 @@ class VertexQueryBuilderTest extends AbstractStatementBuilderTest {
 
     @Test
     void returnVertexById() {
-        assertBuildsStatement("MATCH (v) WHERE v.id={vertexId1} RETURN v",
+        assertBuildsStatement("MATCH (v) WHERE ID(v)={vertexId1} RETURN v",
                 ImmutableMap.of("vertexId1", 1l),
                 query()
                         .match(v -> v.labelsMatch(Collections.emptySet()))
@@ -70,7 +68,7 @@ class VertexQueryBuilderTest extends AbstractStatementBuilderTest {
 
     @Test
     void returnVertexIdByLabels() {
-        assertBuildsStatement("MATCH (v:`a`:`b`) RETURN v.id",
+        assertBuildsStatement("MATCH (v:`a`:`b`) RETURN ID(v)",
                 ImmutableMap.of(),
                 query()
                         .match(v -> v.labelsMatch(ImmutableSet.of("a", "b")))
@@ -80,10 +78,8 @@ class VertexQueryBuilderTest extends AbstractStatementBuilderTest {
 
     @Test
     void updateVertexById() {
-        final Map<String, Object> properties = new HashMap<>(ImmutableMap.of("a", "c", "e", "f"));
-        properties.put("u", null);
-        assertBuildsStatement("MATCH (v:`x`) WHERE v.id={vertexId1} SET v:`y`:`z` REMOVE v:`x` SET v={vertexProps1}",
-                ImmutableMap.of("vertexId1", 1l, "vertexProps1", properties),
+        assertBuildsStatement("MATCH (v:`x`) WHERE ID(v)={vertexId1} SET v:`y`:`z` REMOVE v:`x` SET v={vertexProps1}",
+                ImmutableMap.of("vertexId1", 1l, "vertexProps1", ImmutableMap.of("a", "c", "e", "f")),
                 query()
                         .match(b -> b.labelsMatch(ImmutableSet.of("x")))
                         .where(b -> b.id(new Neo4JPersistentElementId<>(1l)))
