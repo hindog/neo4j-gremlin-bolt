@@ -9,7 +9,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactoryClass;
-import ta.nemahuta.neo4j.features.Neo4Features;
+import ta.nemahuta.neo4j.features.Neo4JFeatures;
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
 import ta.nemahuta.neo4j.session.Neo4JSession;
 import ta.nemahuta.neo4j.session.Neo4JTransaction;
@@ -92,6 +92,6 @@ public class Neo4JGraph implements Graph, AutoCloseable {
 
     @Override
     public Features features() {
-        return Neo4Features.INSTANCE;
+        return Neo4JFeatures.INSTANCE;
     }
 }

@@ -24,6 +24,7 @@ import ta.nemahuta.neo4j.structure.Neo4JGraph;
 import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -95,7 +96,7 @@ public abstract class AbstractNeo4JElementScope<T extends Neo4JElement> implemen
     public Stream<T> getOrLoad(@Nonnull @NonNull final Neo4JGraph graph,
                                @Nonnull @NonNull final Iterator<? extends Neo4JElementId<?>> ids) {
 
-        final List<? extends Neo4JElementId<?>> idList = ImmutableList.copyOf(ids);
+        final List<? extends Neo4JElementId<?>> idList = ImmutableList.copyOf(ids).stream().distinct().collect(Collectors.toList());
         final Map<Neo4JElementId<?>, T> resultMap = new HashMap<>();
         log.debug("Loading {} item(s)...", idList.size());
         elements.update(loadedElements -> {

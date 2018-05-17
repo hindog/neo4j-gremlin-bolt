@@ -1,6 +1,7 @@
 package ta.nemahuta.neo4j.testutils;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.javatuples.Pair;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
@@ -52,13 +53,30 @@ public class StatementExecutorStub implements StatementExecutor {
 
     public void stubEdgeLoad(final String text, final Map<String, Object> params, final Neo4JElementId<?> indId, final Neo4JElementId<?> outId) {
         stubStatementExecution(text, params, mockStatementResult(mockRecord(
-                mockValue(Value::asObject, null, outId),
+                mockValue(Value::asObject, null, outId.getId()),
                 mockValue(Value::asRelationship, null, mockRelationship(2l, "remote", ImmutableMap.of("x", "y"))),
-                mockValue(Value::asObject, null, indId)
+                mockValue(Value::asObject, null, indId.getId())
         )));
     }
 
     public void stubStatementExecution(final String text, final Map<String, Object> params, final StatementResult statementResult) {
         statementStubs.put(new Pair<>(text, params), statementResult);
     }
+
+    public void stubVertexIdForLabel(final String label) {
+        stubVertexIdFind("MATCH (v:`" + label + "`:`graphName`) RETURN ID(v)", ImmutableMap.of());
+    }
+
+    private void stubVertexIdFind(final String text, final ImmutableMap<String, Object> params) {
+        stubStatementExecution(text, params, mockStatementResult(mockRecord(
+                mockValue(Value::asObject, null, 2l)
+        )));
+    }
+
+    public void stubVertexLoad(final String text, final Map<String, Object> params) {
+        stubStatementExecution(text, params, mockStatementResult(mockRecord(
+                mockValue(Value::asNode, null, mockNode(2l, ImmutableSet.of("remote"), ImmutableMap.of("x", "y")))
+        )));
+    }
+
 }

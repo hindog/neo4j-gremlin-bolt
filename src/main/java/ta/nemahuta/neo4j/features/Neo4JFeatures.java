@@ -11,9 +11,9 @@ import javax.annotation.Nonnull;
  * @author Rogelio J. Baucells
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class Neo4Features implements Graph.Features {
+public final class Neo4JFeatures implements Graph.Features {
 
-    public static final Neo4Features INSTANCE = new Neo4Features();
+    public static final Neo4JFeatures INSTANCE = new Neo4JFeatures();
 
     private final GraphFeatures graphFeatures = new Neo4JGraphFeatures();
     private final VertexFeatures vertexFeatures = new Neo4JVertexFeatures();

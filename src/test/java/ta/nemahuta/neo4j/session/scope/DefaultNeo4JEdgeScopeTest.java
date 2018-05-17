@@ -15,6 +15,7 @@ import org.neo4j.driver.v1.Value;
 import ta.nemahuta.neo4j.id.*;
 import ta.nemahuta.neo4j.partition.Neo4JLabelGraphPartition;
 import ta.nemahuta.neo4j.session.Neo4JElementScope;
+import ta.nemahuta.neo4j.session.Neo4JSession;
 import ta.nemahuta.neo4j.structure.Neo4JEdge;
 import ta.nemahuta.neo4j.structure.Neo4JGraph;
 import ta.nemahuta.neo4j.structure.Neo4JVertex;
@@ -199,7 +200,6 @@ class DefaultNeo4JEdgeScopeTest {
         assertEquals("y", actual.property("x").value());
         assertEquals(vertex1, actual.inVertex());
         assertEquals(vertex2, actual.outVertex());
-
     }
 
 }

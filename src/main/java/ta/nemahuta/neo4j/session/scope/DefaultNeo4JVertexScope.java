@@ -131,7 +131,7 @@ public class DefaultNeo4JVertexScope extends AbstractNeo4JElementScope<Neo4JVert
     private Neo4JVertex createVertex(@Nonnull @NonNull final Neo4JGraph graph,
                                      @Nonnull @NonNull final Record record) {
 
-        final Node node = record.get(1).asNode();
+        final Node node = record.get(0).asNode();
         final Neo4JElementId<?> elementId = getIdAdapter().retrieveId(node);
         return new Neo4JVertex(graph, elementId, ImmutableSet.copyOf(node.labels()), Optional.of(node),
                 propertyFactory, graph.getSession().inEdgeProviderFactory(),
