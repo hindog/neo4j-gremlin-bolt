@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReturnEdgeOperationTest extends AbstractStatementBuilderTest {
 
-
     private final ReturnEdgeOperation sut = new ReturnEdgeOperation("n", "r", "m", new Neo4JNativeElementIdAdapter());
 
     @Test

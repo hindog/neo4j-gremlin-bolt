@@ -3,6 +3,7 @@ package ta.nemahuta.neo4j.session.scope;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
+import org.javatuples.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,8 +12,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ta.nemahuta.neo4j.id.*;
 import ta.nemahuta.neo4j.partition.Neo4JLabelGraphPartition;
 import ta.nemahuta.neo4j.session.Neo4JElementScope;
@@ -23,10 +27,7 @@ import ta.nemahuta.neo4j.structure.Neo4JVertex;
 import ta.nemahuta.neo4j.structure.VertexOnEdgeSupplier;
 import ta.nemahuta.neo4j.testutils.MockUtils;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,6 +40,8 @@ import static ta.nemahuta.neo4j.testutils.MockUtils.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class DefaultNeo4JEdgeScopeTest {
 
+    private static final Logger log = LoggerFactory.getLogger(DefaultNeo4JEdgeScopeTest.class);
+
     @Mock
     private Neo4JGraph graph;
 
@@ -48,6 +51,8 @@ class DefaultNeo4JEdgeScopeTest {
     @Mock(answer = Answers.CALLS_REAL_METHODS)
     private StatementExecutor statementExecutor;
 
+    private final Map<Pair<String, Map<String, Object>>, StatementResult> statementStubs = new HashMap<>();
+
     @Mock
     private Neo4JElementScope<Neo4JVertex> vertexScope;
 
@@ -56,7 +61,8 @@ class DefaultNeo4JEdgeScopeTest {
 
     private DefaultNeo4JEdgeScope sut;
 
-    private Neo4JEdge edgeSync, edgeTransient, edgeRemote;
+    private Neo4JEdge edgeSync, edgeTransient;
+
     private final Neo4JElementId<?> vertex1Id = new Neo4JPersistentElementId<>(1l),
             vertex2Id = new Neo4JPersistentElementId<>(2l);
 
@@ -65,9 +71,7 @@ class DefaultNeo4JEdgeScopeTest {
         sut = new DefaultNeo4JEdgeScope(new Neo4JNativeElementIdAdapter(), statementExecutor, Neo4JLabelGraphPartition.allLabelsOf("graphName"), vertexScope);
 
         when(vertex1.id()).thenReturn((Neo4JElementId) vertex1Id);
-//        when(vertex1.toString()).thenReturn("vertex 1");
         when(vertex2.id()).thenReturn((Neo4JElementId) vertex2Id);
-//        when(vertex2.toString()).thenReturn("vertex 2");
         edgeSync = new Neo4JEdge(graph, new Neo4JPersistentElementId<>(1l),
                 ImmutableSet.of("sync"),
                 Optional.of(MockUtils.mockMapAccessor(ImmutableMap.of("a", "b"))),
@@ -82,16 +86,25 @@ class DefaultNeo4JEdgeScopeTest {
                 VertexOnEdgeSupplier.wrap(vertex1),
                 VertexOnEdgeSupplier.wrap(vertex2)
         );
-        edgeRemote = new Neo4JEdge(graph, new Neo4JPersistentElementId<>(2l),
-                ImmutableSet.of("remote"),
-                Optional.of(MockUtils.mockMapAccessor(ImmutableMap.of("a", "b"))),
-                sut.getPropertyFactory(),
-                sut.createVertexGet(graph, vertex2.id()),
-                sut.createVertexGet(graph, vertex1.id())
-        );
         final Neo4JNativeElementIdAdapter vertexIdAdapter = new Neo4JNativeElementIdAdapter();
         when(vertexScope.getIdAdapter()).thenReturn((Neo4JElementIdAdapter) vertexIdAdapter);
         when(graph.tx()).thenReturn(transaction);
+        final Map<Neo4JElementId<?>, List<Neo4JVertex>> vertexMap = Stream.of(vertex1, vertex2).collect(Collectors.groupingBy(njv -> njv.id()));
+        when(vertexScope.getOrLoad(eq(graph), any(Iterator.class)))
+                .thenAnswer(i -> vertexMap.get((i.<Iterator<Neo4JElementId<?>>>getArgument(1)).next()).stream());
+        when(statementExecutor.executeStatement(any())).then(i -> {
+            final Statement stmt = i.getArgument(0);
+            if (stmt == null) {
+                return null; // While stubbing, we obviously get nulls, yeah
+            }
+            final Pair<String, Object> key = new Pair<>(stmt.text(), stmt.parameters().asObject());
+            return Optional.ofNullable(statementStubs.get(key))
+                    .orElseThrow(() -> new IllegalStateException("No stub exists for statement:\n" +
+                            key +
+                            "\nin\n - " +
+                            statementStubs.keySet().stream().map(Object::toString).collect(Collectors.joining("\n - "))));
+        });
+
     }
 
     @Test
@@ -107,27 +120,136 @@ class DefaultNeo4JEdgeScopeTest {
     }
 
     @Test
-    void loadEdge() {
-        // setup: 'stubbing loading the elements'
-        final Map<Neo4JElementId<?>, List<Neo4JVertex>> vertexMap = Stream.of(vertex1, vertex2).collect(Collectors.groupingBy(njv -> njv.id()));
-        when(vertexScope.getOrLoad(eq(graph), any(Iterator.class)))
-                .thenAnswer(i -> vertexMap.get((i.<Iterator<Neo4JElementId<?>>>getArgument(1)).next()).stream());
-        final StatementResult statementResult = mockStatementResult(mockRecord(
-                mockValue(Value::asObject, null, vertex1Id),
-                mockValue(Value::asRelationship, null, mockRelationship(2l, "remote", ImmutableMap.of("x", "y"))),
-                mockValue(Value::asObject, null, vertex2Id)
-        ));
-        when(statementExecutor.executeStatement(argThat(a ->
-                a.text().equals("MATCH (n:`graphName`)-[r]->(m:`graphName`) WHERE r.id={edgeId1} RETURN n.id, r, m.id") && a.parameters().asMap().equals(ImmutableMap.of("edgeId1", 2l))
-        ))).thenReturn(statementResult);
+    void inEdgeOf() {
+        // setup: 'the edge match id operation'
+        stubVertexAndEdgeIdFindInBound(2l);
+        // and: 'the edge load operation'
+        stubEdgeLoad("MATCH (n:`graphName`)-[r]->(m:`graphName`) WHERE r.id={edgeId1} RETURN n.id, r, m.id", ImmutableMap.of("edgeId1", 2l));
+        // when: 'getting the in edges of vertex 2'
+        final Stream<Neo4JEdge> actual = sut.inEdgesOf(graph, vertex2, ImmutableSet.of("a", "b"));
+        // then: 'the loaded edge is built correctly'
+        assertLoadedEdge(actual);
+    }
 
-        final List<Neo4JEdge> actuals = sut.getOrLoad(graph, Stream.of(edgeRemote.id()).iterator()).collect(Collectors.toList());
+    @Test
+    void outEdgeOf() {
+        // setup: 'the edge match id operation'
+        stubVertexAndEdgeIdFindOutBound(2l);
+        // and: 'the edge load operation'
+        stubEdgeLoad("MATCH (n:`graphName`)-[r]->(m:`graphName`) WHERE r.id={edgeId1} RETURN n.id, r, m.id", ImmutableMap.of("edgeId1", 2l));
+        // when: 'getting the in edges of vertex 2'
+        final Stream<Neo4JEdge> actual = sut.outEdgesOf(graph, vertex2, ImmutableSet.of("a", "b"));
+        // then: 'the loaded edge is built correctly'
+        assertLoadedEdge(actual);
+    }
+
+    @Test
+    void getOrLoadLabelIn() {
+        // setup: 'the edge match id operation'
+        stubVertexAndEdgeIdFindOutBound(null);
+        stubVertexAndEdgeIdFindInBound(null);
+        // and: 'the edge load operation'
+        stubEdgeLoad("MATCH (n:`graphName`)-[r]->(m:`graphName`) WHERE r.id={edgeId1} RETURN n.id, r, m.id", ImmutableMap.of("edgeId1", 2l));
+        // when: 'getting the in edges of vertex 2'
+        final Stream<Neo4JEdge> actual = sut.getOrLoadLabelIn(graph, ImmutableSet.of("a", "b"));
+        // then: 'the loaded edge is built correctly'
+        assertLoadedEdge(actual);
+    }
+
+    @Test
+    void loadEdge() {
+        // setup: 'the edge load operation'
+        stubEdgeLoad("MATCH (n:`graphName`)-[r]->(m:`graphName`) WHERE r.id={edgeId1} RETURN n.id, r, m.id", ImmutableMap.of("edgeId1", 2l));
+        // when: 'loading the remote edge'
+        final Stream<Neo4JEdge> actual = sut.getOrLoad(graph, Stream.of(new Neo4JPersistentElementId<>(2l)).iterator());
+        // then: 'the loaded edge is built correctly'
+        assertLoadedEdge(actual);
+    }
+
+    @Test
+    void commitTransient() {
+        // setup: 'the synchronized element in the scope being modified'
+        sut.add(edgeTransient);
+        edgeTransient.property("x", "y");
+        stubStatementExecution("MATCH (n:`graphName`), (m:`graphName`) WHERE n.id={vertexId1} AND m.id={vertexId2} CREATE (n)-[r:`transient`={edgeProps1}]->(m) RETURN r.id",
+                ImmutableMap.of("vertexId2", 2l, "vertexId1", 1l, "edgeProps1", ImmutableMap.of("x", "y")),
+                mockStatementResult(mockRecord(mockValue(Value::asObject, null, 3l)))
+        );
+        // when: 'committing the scope'
+        sut.commit();
+        // then: 'the statement should be executed'
+        verify(statementExecutor).executeStatement(any());
+        // and: 'the identifier has changed'
+        assertEquals(new Neo4JPersistentElementId<>(3l), edgeTransient.id());
+    }
+
+    @Test
+    void commitModified() {
+        // setup: 'the synchronized element in the scope being modified'
+        sut.add(edgeSync);
+        edgeSync.property("a").remove();
+        edgeSync.property("c", "d");
+        final Map<String, Object> props = new HashMap<>();
+        props.put("a", null);
+        props.put("c", "d");
+        stubStatementExecution("MATCH (n:`graphName`)-[r]-(m:`graphName`) WHERE n.id={vertexId1} AND m.id={vertexId2} AND r.id={edgeId1} SET r={edgeProps1}",
+                ImmutableMap.of("vertexId2", 2l, "vertexId1", 1l, "edgeId1", 1l, "edgeProps1", props), mock(StatementResult.class));
+        // when: 'committing the scope'
+        sut.commit();
+        // then: 'the statement should be executed'
+        verify(statementExecutor).executeStatement(any());
+    }
+
+    @Test
+    void commitDeleted() {
+        // setup: 'the synchronized element in the scope being modified'
+        sut.add(edgeSync);
+        edgeSync.remove();
+        stubStatementExecution("MATCH (n:`graphName`)-[r:`sync`]-(m:`graphName`) WHERE n.id={vertexId1} AND m.id={vertexId2} AND r.id={edgeId1} DETACH DELETE r",
+                ImmutableMap.of("vertexId2", 2l, "vertexId1", 1l, "edgeId1", 1l), mock(StatementResult.class));
+        // when: 'committing the scope'
+        sut.commit();
+        // then: 'the statement should be executed'
+        verify(statementExecutor).executeStatement(any());
+    }
+
+    private void stubVertexAndEdgeIdFindOutBound(Long id) {
+        stubVertexAndEdgeIdFind("MATCH (n:`graphName`)-[r:`a`|:`b`]->(m:`graphName`) " + (id != null ? "WHERE n.id={vertexId1} " : "") + "RETURN r.id",
+                id != null ? ImmutableMap.of("vertexId1", 2l) : ImmutableMap.of());
+    }
+
+    private void stubVertexAndEdgeIdFindInBound(Long id) {
+        stubVertexAndEdgeIdFind("MATCH (n:`graphName`)<-[r:`a`|:`b`]-(m:`graphName`) " + (id != null ? "WHERE n.id={vertexId1} " : "") + "RETURN r.id",
+                id != null ? ImmutableMap.of("vertexId1", 2l) : ImmutableMap.of());
+    }
+
+    private void assertLoadedEdge(final Stream<Neo4JEdge> actualStream) {
+        final List<Neo4JEdge> actuals = actualStream.collect(Collectors.toList());
         assertEquals(1, actuals.size());
         final Neo4JEdge actual = actuals.iterator().next();
         assertEquals("remote", actual.label());
         assertEquals("y", actual.property("x").value());
         assertEquals(vertex1, actual.inVertex());
         assertEquals(vertex2, actual.outVertex());
+
+    }
+
+    private void stubVertexAndEdgeIdFind(final String text, final Map<String, Object> params) {
+        stubStatementExecution(text, params, mockStatementResult(mockRecord(
+                mockValue(Value::asObject, null, 2l)
+        )));
+    }
+
+    private void stubEdgeLoad(final String text, final Map<String, Object> params) {
+        stubStatementExecution(text, params, mockStatementResult(mockRecord(
+                mockValue(Value::asObject, null, vertex1Id),
+                mockValue(Value::asRelationship, null, mockRelationship(2l, "remote", ImmutableMap.of("x", "y"))),
+                mockValue(Value::asObject, null, vertex2Id)
+        )));
+    }
+
+    private void stubStatementExecution(final String text, final Map<String, Object> params, final StatementResult statementResult) {
+        statementStubs.put(new Pair<>(text, params), statementResult);
     }
 
 }

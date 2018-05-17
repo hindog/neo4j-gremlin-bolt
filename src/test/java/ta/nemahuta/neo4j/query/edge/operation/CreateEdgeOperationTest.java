@@ -16,7 +16,6 @@ import static ta.nemahuta.neo4j.testutils.MockUtils.mockProperties;
 
 class CreateEdgeOperationTest extends AbstractStatementBuilderTest {
 
-
     @Nonnull
     private CreateEdgeOperation createOperation(final Neo4JElementId<?> id) {
         return new CreateEdgeOperation("n", "r", "m",

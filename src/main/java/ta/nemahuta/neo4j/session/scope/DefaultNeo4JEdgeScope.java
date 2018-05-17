@@ -134,7 +134,7 @@ public class DefaultNeo4JEdgeScope extends AbstractNeo4JElementScope<Neo4JEdge> 
         return query()
                 .direction(Direction.BOTH)
                 .labels(Collections.singleton(element.label()))
-                .where(b -> b.getLhs().id(element.getInSupplier().getVertexId()).and(b.getRhs().id(element.getOutSupplier().getVertexId())))
+                .where(b -> b.getLhs().id(element.getInSupplier().getVertexId()).and(b.getRhs().id(element.getOutSupplier().getVertexId())).and(b.whereId(element.id())))
                 .andThen(b -> b.deleteEdge())
                 .build();
     }
