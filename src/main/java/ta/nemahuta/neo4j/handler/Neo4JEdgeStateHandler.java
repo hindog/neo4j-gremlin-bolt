@@ -15,10 +15,10 @@ import ta.nemahuta.neo4j.session.StatementExecutor;
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 
 import javax.annotation.Nonnull;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.Collections;
+import java.util.Set;
 
-public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4JEdgeState> implements RelationProvider {
+public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4JEdgeState> {
 
     private final Neo4JGraphPartition readPartition;
 
@@ -26,34 +26,6 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
                                  @Nonnull @NonNull final Neo4JGraphPartition readPartition) {
         super(statementExecutor);
         this.readPartition = readPartition;
-    }
-
-    @Override
-    public Map<String, Set<Long>> loadRelatedIds(final long lhsId,
-                                                 @Nonnull @NonNull final Direction direction,
-                                                 @Nonnull @NonNull final Set<String> labels) {
-        final Map<String, Set<Long>> result = new HashMap<>();
-        query()
-                .labels(ImmutableSet.copyOf(labels))
-                .direction(direction)
-                .where(b -> b.getLhs().id(lhsId))
-                .andThen(b -> b.returnEdge())
-                .build()
-                .map(statementExecutor::retrieveRecords)
-                .orElseGet(Stream::empty)
-                .forEach(r -> addRelation(r, result));
-        return result;
-    }
-
-    private void addRelation(@Nonnull @NonNull final Record r,
-                             @Nonnull @NonNull final Map<String, Set<Long>> result) {
-        final Relationship v = r.get(0).asRelationship();
-        Optional.ofNullable(result.get(v.type()))
-                .orElseGet(() -> {
-                    final Set<Long> newEntry = new HashSet<>();
-                    result.put(v.type(), newEntry);
-                    return newEntry;
-                }).add(v.endNodeId());
     }
 
     @Override

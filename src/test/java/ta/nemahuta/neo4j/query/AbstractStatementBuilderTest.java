@@ -33,13 +33,15 @@ public abstract class AbstractStatementBuilderTest {
         final Optional<Statement> stmtOpt = builder.build();
         if (text != null) {
             assertTrue(stmtOpt.isPresent());
-            stmtOpt.ifPresent(stmt -> {
-                assertEquals(text, stmt.text());
-                assertEquals(transformParameters(parameters), transformParameters(stmt.parameters().asMap()));
-            });
+            stmtOpt.ifPresent(stmt -> assertStatement(text, parameters, stmt));
         } else {
             assertFalse(stmtOpt.isPresent());
         }
+    }
+
+    public static void assertStatement(@Nonnull final String text, final @Nullable Map<String, Object> parameters, final Statement stmt) {
+        assertEquals(text, stmt.text());
+        assertEquals(transformParameters(parameters), transformParameters(stmt.parameters().asMap()));
     }
 
     @Nonnull

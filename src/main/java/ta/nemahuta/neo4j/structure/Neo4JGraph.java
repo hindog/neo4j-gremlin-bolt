@@ -15,8 +15,10 @@ import ta.nemahuta.neo4j.cache.SessionCache;
 import ta.nemahuta.neo4j.cache.SessionCacheManager;
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
 import ta.nemahuta.neo4j.features.Neo4JFeatures;
+import ta.nemahuta.neo4j.handler.DefaultRelationProvider;
 import ta.nemahuta.neo4j.handler.Neo4JEdgeStateHandler;
 import ta.nemahuta.neo4j.handler.Neo4JVertexStateHandler;
+import ta.nemahuta.neo4j.handler.RelationProvider;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.partition.Neo4JLabelGraphPartition;
 import ta.nemahuta.neo4j.scope.DefaultNeo4JElementStateScope;
@@ -56,7 +58,7 @@ public class Neo4JGraph implements Graph {
     private final SoftRefMap<Long, Neo4JVertex> vertices = new SoftRefMap<>();
     private final SoftRefMap<Long, Neo4JEdge> edges = new SoftRefMap<>();
 
-    private final Neo4JEdgeStateHandler edgeStateHandler;
+    private final RelationProvider relationProvider;
 
     public Neo4JGraph(@Nonnull @NonNull final Session session,
                       @Nonnull @NonNull final SessionCacheManager sessionCacheManager,
@@ -73,8 +75,8 @@ public class Neo4JGraph implements Graph {
         this.cache = sessionCache;
         this.partition = partition;
         this.transaction = new Neo4JTransaction(this, session, sessionCache);
-        this.edgeStateHandler = new Neo4JEdgeStateHandler(transaction, partition);
-        this.vertexScope = new DefaultNeo4JElementStateScope<>(sessionCache.getVertexCache(), edgeStateHandler);
+        this.relationProvider = new DefaultRelationProvider(transaction, partition);
+        this.vertexScope = new DefaultNeo4JElementStateScope<>(sessionCache.getVertexCache(), new Neo4JEdgeStateHandler(transaction, partition));
         this.edgeScope = new DefaultNeo4JElementStateScope<>(sessionCache.getEdgeCache(), new Neo4JVertexStateHandler(transaction, partition));
         this.configuration = configuration;
     }
@@ -179,8 +181,8 @@ public class Neo4JGraph implements Graph {
 
     private Vertex getOrCreateVertex(final long id, final boolean justCreated) {
         return vertices.getOrCreate(id, () -> {
-            final EdgeProvider inEdgeProvider = new LazyEdgeProvider(labels -> edgeStateHandler.loadRelatedIds(id, Direction.IN, labels), justCreated);
-            final EdgeProvider outEdgeProvider = new LazyEdgeProvider(labels -> edgeStateHandler.loadRelatedIds(id, Direction.OUT, labels), justCreated);
+            final EdgeProvider inEdgeProvider = new LazyEdgeProvider(labels -> relationProvider.loadRelatedIds(id, Direction.IN, labels), justCreated);
+            final EdgeProvider outEdgeProvider = new LazyEdgeProvider(labels -> relationProvider.loadRelatedIds(id, Direction.OUT, labels), justCreated);
             final Neo4JVertex newVertex = new Neo4JVertex(this, id, vertexScope, inEdgeProvider, outEdgeProvider);
             return newVertex;
         });
