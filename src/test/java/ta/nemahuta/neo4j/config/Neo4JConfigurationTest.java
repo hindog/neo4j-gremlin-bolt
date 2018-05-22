@@ -24,8 +24,7 @@ class Neo4JConfigurationTest {
                     .authToken(AuthTokens.basic("x", "y"))
                     .graphName("hoobastank")
                     .hostname("tycho.belt")
-                    .port(1234)
-                    .profilingEnabled(true);
+                    .port(1234);
 
     protected Neo4JConfiguration config() {
         return builder.build();

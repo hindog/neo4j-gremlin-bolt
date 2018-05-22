@@ -6,19 +6,18 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
-import java.util.function.Function;
 
 public interface Neo4JElementStateScope<S extends Neo4JElementState> {
 
     /**
      * Modifies the element state for the element with the provided id.
-     * using a modifier {@link Function}.
+     * using a new state.
      *
      * @param id       the identifier of the element
-     * @param modifier the modifier for the state
+     * @param newState the new state
      */
-    void modify(long id,
-                @Nonnull Function<S, S> modifier);
+    void update(long id,
+                @Nonnull S newState);
 
     /**
      * Deletes the state for the element with the provided ids.

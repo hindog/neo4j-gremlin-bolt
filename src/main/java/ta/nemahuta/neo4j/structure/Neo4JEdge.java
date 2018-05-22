@@ -80,8 +80,4 @@ public class Neo4JEdge extends Neo4JElement<Neo4JEdgeState, Property> implements
         return new Neo4JEdgeProperty(this, key);
     }
 
-    @Override
-    protected Property createEmptyProperty() {
-        return Property.empty();
-    }
 }

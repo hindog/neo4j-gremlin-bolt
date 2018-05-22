@@ -11,7 +11,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -30,13 +29,12 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
     private final Set<Long> deleted = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     @Override
-    public void modify(final long id,
-                       @Nonnull @NonNull final Function<S, S> modifier) {
+    public void update(final long id,
+                       @Nonnull @NonNull final S newState) {
         final S state = getAll(Collections.singleton(id)).get(id);
         if (state == null) {
             throw new IllegalStateException("Could not find entity in scope or remotely: " + id);
         }
-        final S newState = Objects.requireNonNull(modifier.apply(state), "modified state cannot be null");
         if (!Objects.equals(newState, state)) {
             log.debug("Change detected for element with id: {}", id);
             hierarchicalCache.put(id, newState);

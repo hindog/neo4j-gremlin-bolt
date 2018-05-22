@@ -144,8 +144,4 @@ public class Neo4JVertex extends Neo4JElement<Neo4JVertexState, VertexProperty> 
         return new Neo4JVertexProperty(this, key);
     }
 
-    @Override
-    protected VertexProperty createEmptyProperty() {
-        return VertexProperty.empty();
-    }
 }

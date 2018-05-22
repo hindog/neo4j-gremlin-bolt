@@ -75,10 +75,6 @@ public class Neo4JConfiguration {
     @ConfigurationKey
     private final Consumer<Config.ConfigBuilder> additionConfiguration;
 
-    @Getter
-    @ConfigurationKey
-    private final boolean profilingEnabled;
-
     @Nonnull
     public Configuration toApacheConfiguration() {
         final Configuration result = new BaseConfiguration();
