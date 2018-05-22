@@ -65,6 +65,7 @@ public class MockUtils {
     public static Record mockRecord(@Nonnull final Value... values) {
         final Record record = mock(Record.class);
         when(record.get(anyInt())).then(i -> values[i.<Integer>getArgument(0)]);
+        when(record.size()).thenReturn(values.length);
         return record;
     }
 

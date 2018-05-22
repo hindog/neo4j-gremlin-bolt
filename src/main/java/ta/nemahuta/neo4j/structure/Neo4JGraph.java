@@ -75,9 +75,9 @@ public class Neo4JGraph implements Graph {
         this.cache = sessionCache;
         this.partition = partition;
         this.transaction = new Neo4JTransaction(this, session, sessionCache);
+        this.vertexScope = new DefaultNeo4JElementStateScope<>(sessionCache.getVertexCache(), new Neo4JVertexStateHandler(transaction, partition));
+        this.edgeScope = new DefaultNeo4JElementStateScope<>(sessionCache.getEdgeCache(), new Neo4JEdgeStateHandler(transaction, partition));
         this.relationProvider = new DefaultRelationProvider(transaction, partition);
-        this.vertexScope = new DefaultNeo4JElementStateScope<>(sessionCache.getVertexCache(), new Neo4JEdgeStateHandler(transaction, partition));
-        this.edgeScope = new DefaultNeo4JElementStateScope<>(sessionCache.getEdgeCache(), new Neo4JVertexStateHandler(transaction, partition));
         this.configuration = configuration;
     }
 
@@ -94,7 +94,7 @@ public class Neo4JGraph implements Graph {
                 )
         );
         final ImmutableMap<String, Object> properties =
-                ImmutableMap.copyOf(Maps.filterKeys(ElementHelper.asMap(keyValues), k -> !Objects.equals(T.label, k)));
+                ImmutableMap.copyOf(Maps.filterKeys(ElementHelper.asMap(keyValues), k -> !Objects.equals("label", k)));
 
         final long id = vertexScope.create(new Neo4JVertexState(labels, properties));
 
@@ -131,14 +131,12 @@ public class Neo4JGraph implements Graph {
                 .map(id -> (id instanceof Long) && loaded.get(id) == null ? accessor.apply((Long) id) : null).iterator();
     }
 
-    Neo4JEdge addEdge(final String label, final Neo4JVertex outVertex, final Neo4JVertex inVertex, final Object... keyValues) {
+    Neo4JEdge addEdge(@Nonnull @NonNull final String label,
+                      @Nonnull @NonNull final Neo4JVertex outVertex,
+                      @Nonnull @NonNull final Neo4JVertex inVertex, final Object... keyValues) {
 
         ElementHelper.validateLabel(label);
         ElementHelper.legalPropertyKeyValueArray(keyValues);
-
-        if (!(inVertex instanceof Neo4JVertex)) {
-            throw new IllegalArgumentException("Cannot handle a vertex of type: " + inVertex.getClass().getName());
-        }
 
         final ImmutableMap<String, Object> properties =
                 ImmutableMap.copyOf(Maps.filterKeys(ElementHelper.asMap(keyValues), k -> !Objects.equals(T.label, k)));

@@ -76,4 +76,9 @@ public class StatementExecutorStub implements StatementExecutor {
         )));
     }
 
+    public void stubVertexCreate(final String text, final ImmutableMap<String, Object> params, final long id) {
+        stubStatementExecution(text, params, mockStatementResult(mockRecord(
+                mockValue(Value::asLong, null, id)
+        )));
+    }
 }
