@@ -57,21 +57,21 @@ class Neo4JEdgeStateHandlerTest extends AbstractStatementBuilderTest {
         when(relationship.id()).thenReturn(id);
         // when: 'converting the state'
         final Pair<Long, Neo4JEdgeState> state = sut.getIdAndConvertToState(MockUtils.mockRecord(MockUtils.mockValue(Value::asRelationship, null, relationship)));
-        assertEquals(new Pair<>(3l, this.state), state);
+        assertEquals(new Pair<>(id, this.state), state);
     }
 
     @Test
     void createDeleteCommand() {
         assertStatement("MATCH (n:`graphLabel`)-[r]-(m:`graphLabel`) WHERE ID(r) IN {edgeId1} DETACH DELETE r",
-                ImmutableMap.of("edgeId1", Collections.singleton(1l)),
-                sut.createDeleteCommand(1l));
+                ImmutableMap.of("edgeId1", Collections.singleton(id)),
+                sut.createDeleteCommand(id));
     }
 
     @Test
     void createUpdateCommand() {
         assertStatement("MATCH (n:`graphLabel`)-[r]-(m:`graphLabel`) WHERE ID(r) IN {edgeId1} SET r={edgeProps1}",
-                ImmutableMap.of("edgeId1", Collections.singleton(1l), "edgeProps1", newProperties),
-                sut.createUpdateCommand(1l, state, newState));
+                ImmutableMap.of("edgeId1", Collections.singleton(id), "edgeProps1", newProperties),
+                sut.createUpdateCommand(id, state, newState));
     }
 
     @Test
@@ -84,7 +84,7 @@ class Neo4JEdgeStateHandlerTest extends AbstractStatementBuilderTest {
     @Test
     void createLoadCommand() {
         assertStatement("MATCH (n:`graphLabel`)-[r]->(m:`graphLabel`) WHERE ID(r) IN {edgeId1} RETURN r",
-                ImmutableMap.of("edgeId1", ImmutableSet.of(1l, 2l)),
-                sut.createLoadCommand(ImmutableSet.of(1l, 2l)));
+                ImmutableMap.of("edgeId1", ImmutableSet.of(4l, 5l)),
+                sut.createLoadCommand(ImmutableSet.of(4l, 5l)));
     }
 }
