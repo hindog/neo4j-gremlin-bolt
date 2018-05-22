@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 /**
- * Gremlin based wrapper for wrapping the transactions of a {@link Neo4JSession}.
+ * Gremlin based wrapper for wrapping the transactions of a {@link Session}.
  *
  * @author Christian Heike (christian.heike@icloud.com)
  */
@@ -44,20 +44,33 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
     protected void doCommit() throws TransactionException {
         log.debug("Committing all entities in sessions scope of session: {}", session.hashCode());
         sessionCache.commit();
-        wrapped.success();
+        Optional.ofNullable(wrapped)
+                .orElseThrow(org.apache.tinkerpop.gremlin.structure.Transaction.Exceptions::transactionMustBeOpenToReadWrite)
+                .success();
+    }
+
+    @Override
+    protected void doReadWrite() {
+        open();
     }
 
     @Override
     protected void doRollback() throws TransactionException {
         log.debug("Rolling back all entities in sessions scope of session: {}", session.hashCode());
         sessionCache.flush();
-        wrapped.failure();
+        Optional.ofNullable(wrapped)
+                .orElseThrow(org.apache.tinkerpop.gremlin.structure.Transaction.Exceptions::transactionMustBeOpenToReadWrite)
+                .failure();
     }
 
     @Override
     public void close() {
         super.close();
         sessionCache.close();
+        Optional.ofNullable(wrapped)
+                .orElseThrow(org.apache.tinkerpop.gremlin.structure.Transaction.Exceptions::transactionMustBeOpenToReadWrite)
+                .close();
+        this.wrapped = null;
     }
 
     @Override

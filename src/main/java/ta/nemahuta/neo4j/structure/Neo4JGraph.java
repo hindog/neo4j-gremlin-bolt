@@ -11,18 +11,18 @@ import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactoryClass;
 import org.neo4j.driver.v1.Session;
-import ta.nemahuta.neo4j.config.Neo4JConfiguration;
-import ta.nemahuta.neo4j.features.Neo4JFeatures;
-import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
-import ta.nemahuta.neo4j.partition.Neo4JLabelGraphPartition;
-import ta.nemahuta.neo4j.session.LazyEdgeProvider;
-import ta.nemahuta.neo4j.session.Neo4JTransaction;
 import ta.nemahuta.neo4j.cache.SessionCache;
 import ta.nemahuta.neo4j.cache.SessionCacheManager;
-import ta.nemahuta.neo4j.scope.DefaultNeo4JElementStateScope;
-import ta.nemahuta.neo4j.scope.Neo4JElementStateScope;
+import ta.nemahuta.neo4j.config.Neo4JConfiguration;
+import ta.nemahuta.neo4j.features.Neo4JFeatures;
 import ta.nemahuta.neo4j.handler.Neo4JEdgeStateHandler;
 import ta.nemahuta.neo4j.handler.Neo4JVertexStateHandler;
+import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
+import ta.nemahuta.neo4j.partition.Neo4JLabelGraphPartition;
+import ta.nemahuta.neo4j.scope.DefaultNeo4JElementStateScope;
+import ta.nemahuta.neo4j.scope.Neo4JElementStateScope;
+import ta.nemahuta.neo4j.session.LazyEdgeProvider;
+import ta.nemahuta.neo4j.session.Neo4JTransaction;
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
@@ -81,7 +81,6 @@ public class Neo4JGraph implements Graph {
 
     @Override
     public Vertex addVertex(Object... keyValues) {
-        transaction.readWrite();
         ElementHelper.legalPropertyKeyValueArray(keyValues);
 
         if (ElementHelper.getIdValue(keyValues).isPresent())
@@ -123,7 +122,6 @@ public class Neo4JGraph implements Graph {
     private <R, S extends Neo4JElementState> Iterator<R> loadAndReturnFoundElementsOnly(@Nonnull @NonNull final Neo4JElementStateScope<S> scope,
                                                                                         @Nonnull @NonNull final Function<Long, R> accessor,
                                                                                         @Nonnull @NonNull final Object... ids) {
-        transaction.readWrite();
         // Load all elements using the scope
         final Map<Long, S> loaded = scope.getAll(ImmutableList.copyOf(Stream.of(ids).filter(l -> l instanceof Long).map(l -> (Long) l).iterator()));
         // Stream the ids and return those who had long ids and have been found only
