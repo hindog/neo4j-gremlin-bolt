@@ -2,7 +2,6 @@ package ta.nemahuta.neo4j.structure;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.sun.istack.internal.Nullable;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -14,6 +13,7 @@ import ta.nemahuta.neo4j.session.scope.Neo4JElementStateScope;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;

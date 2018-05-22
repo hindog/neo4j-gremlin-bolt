@@ -8,8 +8,8 @@ import lombok.ToString;
 
 import javax.annotation.Nonnull;
 
-@EqualsAndHashCode
-@ToString
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class Neo4JEdgeState extends Neo4JElementState {
 
     @Getter

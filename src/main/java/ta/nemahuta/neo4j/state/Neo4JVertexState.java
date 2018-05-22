@@ -9,8 +9,8 @@ import lombok.ToString;
 
 import javax.annotation.Nonnull;
 
-@EqualsAndHashCode
-@ToString
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class Neo4JVertexState extends Neo4JElementState {
 
     @Getter

@@ -64,7 +64,7 @@ public class Neo4JEdge extends Neo4JElement<Neo4JEdgeState, Property> implements
         return StringFactory.edgeString(this);
     }
 
-    private Long[] idsForDirection(final Direction direction) {
+    private Object[] idsForDirection(final Direction direction) {
         switch (Optional.ofNullable(direction).orElse(Direction.BOTH)) {
             case OUT:
                 return new Long[]{getState().getOutVertexId()};
