@@ -21,13 +21,13 @@ public class DefaultHierarchicalCache<K, V> implements HierarchicalCache<K, V> {
      * The global cache for all sessions
      */
     @NonNull
-    private Cache<K, V> parent;
+    Cache<K, V> parent;
 
     /**
      * The local cache for the session.
      */
     @NonNull
-    private Cache<K, V> child;
+    Cache<K, V> child;
 
     @Override
     public void commit() {

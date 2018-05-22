@@ -21,8 +21,8 @@ public class DefaultSessionCacheManager implements SessionCacheManager {
 
     public DefaultSessionCacheManager(@Nonnull @NonNull final CacheManager cacheManager) {
         this.cacheManager = cacheManager;
-        this.globalEdgeCache = createEdgeCache("global-vertex");
-        this.globalVertexCache = createVertexCache("global-edge");
+        this.globalEdgeCache = createEdgeCache("edge-global");
+        this.globalVertexCache = createVertexCache("vertex-global");
     }
 
     private Cache<Long, Neo4JVertexState> createVertexCache(final String name) {
@@ -41,7 +41,7 @@ public class DefaultSessionCacheManager implements SessionCacheManager {
 
     @Override
     public SessionCache createSessionCache(final Object id) {
-        final String vertexCacheName = "vertex-session" + id;
+        final String vertexCacheName = "vertex-session-" + id;
         final String edgeCacheName = "edge-session-" + id;
         final Cache<Long, Neo4JVertexState> sessionVertexCache = createVertexCache(vertexCacheName);
         final Cache<Long, Neo4JEdgeState> sessionEdgeCache = createEdgeCache(edgeCacheName);
@@ -60,7 +60,7 @@ public class DefaultSessionCacheManager implements SessionCacheManager {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         cacheManager.close();
     }
 }
