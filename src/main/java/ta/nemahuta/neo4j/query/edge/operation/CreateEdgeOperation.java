@@ -3,12 +3,8 @@ package ta.nemahuta.neo4j.query.edge.operation;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.tinkerpop.gremlin.structure.Direction;
-import ta.nemahuta.neo4j.id.Neo4JElementId;
-import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.query.QueryUtils;
 import ta.nemahuta.neo4j.query.edge.EdgeOperation;
-import ta.nemahuta.neo4j.structure.Neo4JElement;
-import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -38,11 +34,6 @@ public class CreateEdgeOperation implements EdgeOperation {
     @NonNull
     private final String rhsAlias;
     /**
-     * the identifier for the relation
-     */
-    @NonNull
-    private final Neo4JElementId<?> id;
-    /**
      * the label for the relation
      */
     @NonNull
@@ -56,17 +47,12 @@ public class CreateEdgeOperation implements EdgeOperation {
      * the properties to be set
      */
     @NonNull
-    private final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> properties;
+    private final Map<String, Object> properties;
     /**
      * the parameter name for the properties
      */
     @NonNull
     private final String paramProperties;
-    /**
-     * the identifier adapter for the relation
-     */
-    @NonNull
-    private final Neo4JElementIdAdapter<?> idAdapter;
 
     @Override
     public boolean isNeedsStatement() {
@@ -77,21 +63,13 @@ public class CreateEdgeOperation implements EdgeOperation {
     public void append(@NonNull @Nonnull final StringBuilder queryBuilder,
                        @NonNull @Nonnull final Map<String, Object> parameters) {
         queryBuilder.append("CREATE (").append(lhsAlias).append(")");
-
         QueryUtils.appendRelationStart(direction, queryBuilder);
         queryBuilder.append(relationAlias);
         QueryUtils.appendLabels(queryBuilder, Collections.singleton(label));
-        queryBuilder.append("={").append(paramProperties).append("}");
         QueryUtils.appendRelationEnd(direction, queryBuilder);
-
         queryBuilder.append("(").append(rhsAlias).append(")");
-
-        final Map<String, Object> properties = QueryUtils.computeProperties(Collections.emptyMap(), this.properties);
-        if (id.isRemote()) {
-            idAdapter.propertyName().ifPresent(p -> properties.put(p, id.getId()));
-        } else {
-            queryBuilder.append(" RETURN ").append(idAdapter.idExpression(relationAlias));
-        }
+        queryBuilder.append(" SET ").append(relationAlias).append("={").append(paramProperties).append("}");
+        queryBuilder.append(" RETURN ").append("ID(").append(relationAlias).append(")");
         parameters.put(paramProperties, properties);
     }
 }

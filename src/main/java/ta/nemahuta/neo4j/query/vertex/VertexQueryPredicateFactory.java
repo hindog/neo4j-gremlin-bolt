@@ -1,8 +1,6 @@
 package ta.nemahuta.neo4j.query.vertex;
 
 import lombok.NonNull;
-import ta.nemahuta.neo4j.id.Neo4JElementId;
-import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.MatchPredicate;
 import ta.nemahuta.neo4j.query.UniqueParamNameGenerator;
@@ -20,12 +18,6 @@ import java.util.Set;
  * @author Christian Heike (christian.heike@icloud.com)
  */
 public abstract class VertexQueryPredicateFactory {
-
-    /**
-     * @return the {@link Neo4JElementIdAdapter} to be used for the identifiers of the vertex
-     */
-    @Nonnull
-    protected abstract Neo4JElementIdAdapter<?> getIdAdapter();
 
     /**
      * @return the alias of the vertex
@@ -46,8 +38,8 @@ public abstract class VertexQueryPredicateFactory {
      * @return the predicate
      */
     @Nonnull
-    public WherePredicate idsInSet(@Nonnull @NonNull final Set<Neo4JElementId<?>> ids) {
-        return new WhereIdInPredicate(getIdAdapter(), ids, getAlias(), getParamNameGenerator().generate("vertexId"));
+    public WherePredicate idsInSet(@Nonnull @NonNull final Set<Long> ids) {
+        return new WhereIdInPredicate(ids, getAlias(), getParamNameGenerator().generate("vertexId"));
     }
 
     /**
@@ -57,8 +49,8 @@ public abstract class VertexQueryPredicateFactory {
      * @return the predicate
      */
     @Nonnull
-    public WherePredicate id(@Nonnull @NonNull final Neo4JElementId<?> id) {
-        return new WhereIdInPredicate(getIdAdapter(), Collections.singleton(id), getAlias(), getParamNameGenerator().generate("vertexId"));
+    public WherePredicate id(final long id) {
+        return new WhereIdInPredicate(Collections.singleton(id), getAlias(), getParamNameGenerator().generate("vertexId"));
     }
 
     /**

@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.neo4j.driver.v1.Statement;
-import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 
 import javax.annotation.Nonnull;
@@ -19,11 +18,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public abstract class AbstractQueryBuilder implements StatementBuilder {
 
-    /**
-     * the adapter for the {@link ta.nemahuta.neo4j.id.Neo4JElementId}s
-     */
-    @NonNull
-    protected final Neo4JElementIdAdapter<?> idAdapter;
     /**
      * the partition for the statement
      */
@@ -88,6 +82,5 @@ public abstract class AbstractQueryBuilder implements StatementBuilder {
         }
         return needsOperation ? Optional.of(new Statement(sb.toString().trim(), parameters)) : Optional.empty();
     }
-
 
 }

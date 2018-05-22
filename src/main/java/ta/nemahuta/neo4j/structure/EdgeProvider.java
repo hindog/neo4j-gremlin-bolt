@@ -1,6 +1,7 @@
 package ta.nemahuta.neo4j.structure;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
 
 /**
  * Interface for an edge provider.
@@ -10,19 +11,19 @@ import javax.annotation.Nonnull;
 public interface EdgeProvider {
 
     /**
-     * Provides the edges matching the orLabelsAnd.
+     * Provides the edge ids matching the labels
      *
      * @param labels the orLabelsAnd, or an empty array for each and every edge
      * @return the edges for the label
      */
     @Nonnull
-    Iterable<Neo4JEdge> provideEdges(@Nonnull String... labels);
+    Collection<Long> provideEdges(@Nonnull String... labels);
 
     /**
      * Registers an edge.
      *
-     * @param edge the edge to be registered
+     * @param label the label of the edge
+     * @param id    the identifier of the edges
      */
-    void registerEdge(@Nonnull Neo4JEdge edge);
-
+    void register(@Nonnull String label, long id);
 }

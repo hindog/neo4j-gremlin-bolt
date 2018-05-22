@@ -3,25 +3,15 @@ package ta.nemahuta.neo4j.query;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import org.apache.tinkerpop.gremlin.structure.VertexProperty;
-import org.javatuples.Pair;
 import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.types.MapAccessor;
-import ta.nemahuta.neo4j.property.AbstractPropertyFactory;
-import ta.nemahuta.neo4j.structure.Neo4JElement;
-import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public abstract class AbstractStatementBuilderTest {
 
@@ -45,11 +35,27 @@ public abstract class AbstractStatementBuilderTest {
             assertTrue(stmtOpt.isPresent());
             stmtOpt.ifPresent(stmt -> {
                 assertEquals(text, stmt.text());
-                assertEquals(Optional.ofNullable(parameters).orElseGet(Collections::emptyMap), stmt.parameters().asMap());
+                assertEquals(transformParameters(parameters), transformParameters(stmt.parameters().asMap()));
             });
         } else {
             assertFalse(stmtOpt.isPresent());
         }
+    }
+
+    @Nonnull
+    private static Map<String, Object> transformParameters(@Nullable final Map<String, Object> source) {
+        if (source == null) {
+            return ImmutableMap.of();
+        }
+        return ImmutableMap.copyOf(Maps.transformValues(source, e -> {
+            if (e instanceof Iterable) {
+                return ImmutableSet.copyOf((Iterable) e);
+            } else if (e instanceof Map) {
+                return ImmutableMap.copyOf((Map) e);
+            } else {
+                return e;
+            }
+        }));
     }
 
 }

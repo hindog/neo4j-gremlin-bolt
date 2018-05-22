@@ -1,84 +1,98 @@
 package ta.nemahuta.neo4j.structure;
 
-import com.google.common.collect.ImmutableSet;
 import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
-import org.neo4j.driver.v1.types.MapAccessor;
-import ta.nemahuta.neo4j.id.Neo4JElementId;
-import ta.nemahuta.neo4j.property.AbstractPropertyFactory;
+import ta.nemahuta.neo4j.session.scope.Neo4JElementStateScope;
+import ta.nemahuta.neo4j.state.Neo4JVertexState;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Neo4J implementation of a {@link Vertex} for gremlin.
  *
  * @author Christian Heike (christian.heike@icloud.com)
  */
-public class Neo4JVertex extends Neo4JElement implements Vertex {
+public class Neo4JVertex extends Neo4JElement<Neo4JVertexState, VertexProperty> implements Vertex {
 
-    public static final String LabelDelimiter = "::";
+    public static final String LABEL_DELIMITER = "::";
 
     private final EdgeProvider inEdgeProvider, outEdgeProvider;
-    private final EdgeFactory edgeFactory;
 
-    public Neo4JVertex(@NonNull @Nonnull final Neo4JGraph graph,
-                       @NonNull @Nonnull final Neo4JElementId<?> id,
-                       @NonNull @Nonnull final ImmutableSet<String> labels,
-                       @NonNull @Nonnull final Optional<MapAccessor> propertyAccessor,
-                       @NonNull @Nonnull final AbstractPropertyFactory<? extends Neo4JProperty<? extends Neo4JElement, ?>> propertyFactory,
-                       @Nonnull @NonNull final Function<Neo4JVertex, EdgeProvider> inEdgeProviderFactory,
-                       @Nonnull @NonNull final Function<Neo4JVertex, EdgeProvider> outEdgeProviderFactory,
-                       @Nonnull @NonNull final EdgeFactory edgeFactory) {
-        super(graph, id, labels, propertyAccessor, propertyFactory);
-        this.inEdgeProvider = inEdgeProviderFactory.apply(this);
-        this.outEdgeProvider = outEdgeProviderFactory.apply(this);
-        this.edgeFactory = edgeFactory;
+    public Neo4JVertex(@Nonnull final Neo4JGraph graph, final long id,
+                       @Nonnull final Neo4JElementStateScope<Neo4JVertexState> scope,
+                       @Nonnull @NonNull final EdgeProvider inEdgeProvider,
+                       @Nonnull @NonNull final EdgeProvider outEdgeProvider) {
+        super(graph, id, scope);
+        this.inEdgeProvider = inEdgeProvider;
+        this.outEdgeProvider = outEdgeProvider;
     }
 
 
     @Override
     public Edge addEdge(final String label, final Vertex inVertex, final Object... keyValues) {
-        final Neo4JEdge result = edgeFactory.createEdge(label, this, inVertex, keyValues);
-        outEdgeProvider.registerEdge(result);
+        if (!(inVertex instanceof Neo4JVertex)) {
+            throw new IllegalArgumentException("Cannot connect a " + getClass().getSimpleName() + " to a " +
+                    Optional.ofNullable(inVertex).map(Object::getClass).map(Class::getSimpleName).orElse(null));
+        }
+        final Neo4JEdge result = graph.addEdge(label, this, (Neo4JVertex) inVertex, keyValues);
+        outEdgeProvider.register(result.label(), result.id());
         return result;
     }
 
     @Override
     public Iterator<Edge> edges(final Direction direction, final String... edgeLabels) {
-        return distinctEdges(direction, edgeLabels).iterator();
-    }
-
-    @Nonnull
-    private Stream<Edge> distinctEdges(@Nonnull @NonNull final Direction direction,
-                                       @Nonnull @NonNull final String... edgeLabels) {
-        return edgeProviderStream(direction)
-                .map(p -> (Edge) p.provideEdges(edgeLabels))
-                .distinct();
+        return graph.edges(edgeIdStream(direction, edgeLabels).collect(Collectors.toSet()).toArray());
     }
 
     @Override
-    public Iterator<Vertex> vertices(final Direction direction, final String... edgeLabels) {
-        return distinctEdges(direction, edgeLabels)
-                .map(e -> vertexOf(direction, e))
-                .reduce(Stream::concat)
-                .orElseGet(Stream::empty)
-                .filter(v -> !Objects.equals(this, v))
+    public Iterator<Vertex> vertices(@Nonnull @NonNull final Direction direction,
+                                     @Nonnull @NonNull final String... edgeLabels) {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(edges(direction, edgeLabels), Spliterator.ORDERED), false)
+                .map(e -> e.inVertex().id() == this.id() ? e.inVertex() : e.outVertex())
                 .iterator();
+    }
+
+    private Stream<Long> edgeIdStream(final Direction direction, final String... edgeLabels) {
+        switch (Optional.ofNullable(direction).orElse(Direction.BOTH)) {
+            case IN:
+                return inEdgeIdStream(edgeLabels);
+            case OUT:
+                return outEdgeIdStream(edgeLabels);
+            case BOTH:
+                return Stream.concat(inEdgeIdStream(edgeLabels), outEdgeIdStream(edgeLabels));
+            default:
+                return throwDirectionNotHandled(direction);
+        }
+    }
+
+    private Stream<Long> inEdgeIdStream(@Nonnull final String... labels) {
+        return inEdgeProvider.provideEdges(labels).stream();
+    }
+
+    private Stream<Long> outEdgeIdStream(@Nonnull final String... labels) {
+        return outEdgeProvider.provideEdges(labels).stream();
+    }
+
+    @Override
+    public String label() {
+        return getState().getLabels().stream().collect(Collectors.joining(LABEL_DELIMITER));
     }
 
     @Override
     public <V> Iterator<VertexProperty<V>> properties(final String... propertyKeys) {
-        return properties(VertexProperty::empty, propertyKeys);
+        return getProperties(propertyKeys).map(p -> (VertexProperty<V>) p).iterator();
     }
 
     @Override
@@ -86,7 +100,7 @@ public class Neo4JVertex extends Neo4JElement implements Vertex {
                                           final String key,
                                           final V value,
                                           final java.lang.Object... keyValues) {
-        final VertexProperty<V> result = property(key, value, VertexProperty::empty);
+        final VertexProperty result = getProperty(key, value);
         ElementHelper.attachProperties(result, keyValues);
         return result;
     }
@@ -125,4 +139,13 @@ public class Neo4JVertex extends Neo4JElement implements Vertex {
     }
 
 
+    @Override
+    protected VertexProperty createNewProperty(final String key) {
+        return new Neo4JVertexProperty(this, key);
+    }
+
+    @Override
+    protected VertexProperty createEmptyProperty() {
+        return VertexProperty.empty();
+    }
 }

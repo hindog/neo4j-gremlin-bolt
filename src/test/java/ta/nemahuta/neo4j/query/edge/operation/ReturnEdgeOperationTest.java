@@ -2,14 +2,13 @@ package ta.nemahuta.neo4j.query.edge.operation;
 
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
-import ta.nemahuta.neo4j.id.Neo4JNativeElementIdAdapter;
 import ta.nemahuta.neo4j.query.AbstractStatementBuilderTest;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReturnEdgeOperationTest extends AbstractStatementBuilderTest {
 
-    private final ReturnEdgeOperation sut = new ReturnEdgeOperation("n", "r", "m", new Neo4JNativeElementIdAdapter());
+    private final ReturnEdgeOperation sut = new ReturnEdgeOperation("n", "r", "m");
 
     @Test
     void isNeedsStatement() {
@@ -18,6 +17,6 @@ class ReturnEdgeOperationTest extends AbstractStatementBuilderTest {
 
     @Test
     void append() {
-        assertBuildsStatement("RETURN ID(n), r, ID(m)", ImmutableMap.of(), sut);
+        assertBuildsStatement("RETURN r", ImmutableMap.of(), sut);
     }
 }

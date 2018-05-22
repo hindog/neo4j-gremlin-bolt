@@ -4,14 +4,9 @@ import com.google.common.collect.ImmutableSet;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import ta.nemahuta.neo4j.structure.EdgeProvider;
-import ta.nemahuta.neo4j.structure.Neo4JEdge;
-import ta.nemahuta.neo4j.structure.Neo4JVertex;
 
 import javax.annotation.Nonnull;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -24,37 +19,35 @@ import java.util.stream.Stream;
  */
 public class LazyEdgeProvider implements EdgeProvider {
 
-    private final ConcurrentMap<String, Set<Neo4JEdge>> cache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Set<Long>> cache = new ConcurrentHashMap<>();
     private final Set<String> loadedLabels = new HashSet<>();
 
-    private final Neo4JVertex vertex;
-    private final Function<Iterable<String>, Stream<Neo4JEdge>> retriever;
+    private final Function<Set<String>, Map<String, Set<Long>>> retriever;
 
     private boolean completelyLoaded;
 
-    public LazyEdgeProvider(@Nonnull @NonNull final Neo4JVertex vertex,
-                            @Nonnull @NonNull final Function<Iterable<String>, Stream<Neo4JEdge>> retriever,
+    public LazyEdgeProvider(@Nonnull @NonNull final Function<Set<String>, Map<String, Set<Long>>> retriever,
                             final boolean completelyLoaded) {
-        this.vertex = vertex;
         this.completelyLoaded = completelyLoaded;
         this.retriever = retriever;
     }
 
     @Override
     @Nonnull
-    public Iterable<Neo4JEdge> provideEdges(@Nonnull @NonNull final String... labels) {
+    public Collection<Long> provideEdges(@Nonnull @NonNull final String... labels) {
         // Load the edges if necessary
         final ImmutableSet<String> labelSet = ImmutableSet.copyOf(labels);
         computeSelectorAndLoad(labelSet);
-        final ImmutableSet.Builder<Neo4JEdge> builder = ImmutableSet.builder();
+        final ImmutableSet.Builder<Long> builder = ImmutableSet.builder();
         fromCache(labelSet).forEach(builder::addAll);
         return builder.build();
     }
 
     @Override
-    public void registerEdge(@Nonnull @NonNull final Neo4JEdge edge) {
-        putToCache(edge);
+    public void register(@Nonnull final String label, final long id) {
+        putToCache(label, Collections.singleton(id));
     }
+
 
     /**
      * Computes the selector and loads the edges for the provided labels, putting them to the cache.
@@ -62,17 +55,14 @@ public class LazyEdgeProvider implements EdgeProvider {
      * @param labelSet the labels to be loaded
      */
     protected void computeSelectorAndLoad(@Nonnull @NonNull final ImmutableSet<String> labelSet) {
-        // Compute the selector
         computeSelector(labelSet).ifPresent(selector -> {
-            // If we have to load edges
-            // Make sure we lock this for writing
-            // Now load the edges by the selector, and only put those who have not been excluded to the set
-            // plus mark their orLabelsAnd as loaded
             retriever.apply(selector.includeLabels)
-                    .filter(e -> !selector.excludeLabels.contains(e.label()))
+                    .entrySet()
+                    .stream()
+                    .filter(e -> !selector.excludeLabels.contains(e.getKey()))
                     .forEach(e -> {
-                        this.putToCache(e);
-                        loadedLabels.add(e.label());
+                        this.loadedLabels.add(e.getKey());
+                        this.putToCache(e.getKey(), e.getValue());
                     });
             if (labelSet.isEmpty()) {
                 // If we had to load every edge, just mark this provider to be completely loaded
@@ -88,7 +78,7 @@ public class LazyEdgeProvider implements EdgeProvider {
      * @param labels the labels to query the edges for
      * @return the stream providing a set of labels from the cache
      */
-    protected Stream<Set<Neo4JEdge>> fromCache(@Nonnull @NonNull final ImmutableSet<String> labels) {
+    protected Stream<Set<Long>> fromCache(@Nonnull @NonNull final ImmutableSet<String> labels) {
         if (labels.isEmpty()) {
             return cache.values().stream();
         } else {
@@ -123,17 +113,16 @@ public class LazyEdgeProvider implements EdgeProvider {
     /**
      * Puts an edge to the cache using its label.
      *
-     * @param edge the edge to put to the cache
+     * @param label the label for the id
+     * @param ids   the ids to put to the cache
      */
-    private void putToCache(@Nonnull @NonNull final Neo4JEdge edge) {
-        final String label = edge.label();
-        final Set<Neo4JEdge> target = Optional.ofNullable(cache.get(label))
+    private void putToCache(final String label, final Collection<Long> ids) {
+        Optional.ofNullable(cache.get(label))
                 .orElseGet(() -> {
-                    final Set<Neo4JEdge> edges = new HashSet<>();
+                    final Set<Long> edges = new HashSet<>();
                     cache.put(label, edges);
                     return edges;
-                });
-        target.add(edge);
+                }).addAll(ids);
     }
 
 

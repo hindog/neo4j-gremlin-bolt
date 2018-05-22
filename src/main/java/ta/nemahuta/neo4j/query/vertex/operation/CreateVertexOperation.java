@@ -2,15 +2,10 @@ package ta.nemahuta.neo4j.query.vertex.operation;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import ta.nemahuta.neo4j.id.Neo4JElementId;
-import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.query.QueryUtils;
 import ta.nemahuta.neo4j.query.vertex.VertexOperation;
-import ta.nemahuta.neo4j.structure.Neo4JElement;
-import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,16 +18,6 @@ import java.util.Set;
 public class CreateVertexOperation implements VertexOperation {
 
     /**
-     * the {@link Neo4JElementIdAdapter} being used for the identifiers
-     */
-    @NonNull
-    private final Neo4JElementIdAdapter<?> idAdapter;
-    /**
-     * the current {@link Neo4JElementId} of the element
-     */
-    @NonNull
-    private final Neo4JElementId<?> id;
-    /**
      * the labels for the new vertex
      */
     @NonNull
@@ -41,7 +26,7 @@ public class CreateVertexOperation implements VertexOperation {
      * the properties to be set for the new vertex
      */
     @NonNull
-    private final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> properties;
+    private final Map<String, Object> properties;
     /**
      * the alias of the vertex from the MATCH clause
      */
@@ -61,15 +46,11 @@ public class CreateVertexOperation implements VertexOperation {
     @Override
     public void append(@Nonnull @NonNull final StringBuilder queryBuilder,
                        @Nonnull @NonNull final Map<String, Object> parameters) {
+
         queryBuilder.append("CREATE (").append(alias);
         QueryUtils.appendLabels(queryBuilder, labels);
-        queryBuilder.append("={").append(propertiesParam).append("})");
-        final Map<String, Object> properties = QueryUtils.computeProperties(Collections.emptyMap(), this.properties);
-        if (id.isRemote()) {
-            idAdapter.propertyName().ifPresent(p -> properties.put(p, id.getId()));
-        } else {
-            queryBuilder.append(" RETURN ").append(idAdapter.idExpression(alias));
-        }
+        queryBuilder.append(") SET ").append(alias).append("={").append(propertiesParam).append("}")
+                .append(" RETURN ID(").append(alias).append(")");
         parameters.put(propertiesParam, properties);
     }
 

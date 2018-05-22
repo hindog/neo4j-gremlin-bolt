@@ -6,7 +6,6 @@ import org.javatuples.Pair;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
-import ta.nemahuta.neo4j.id.Neo4JElementId;
 import ta.nemahuta.neo4j.session.StatementExecutor;
 
 import javax.annotation.Nonnull;
@@ -51,11 +50,9 @@ public class StatementExecutorStub implements StatementExecutor {
         )));
     }
 
-    public void stubEdgeLoad(final String text, final Map<String, Object> params, final Neo4JElementId<?> indId, final Neo4JElementId<?> outId) {
+    public void stubEdgeLoad(final String text, final Map<String, Object> params, final long indId, final long outId) {
         stubStatementExecution(text, params, mockStatementResult(mockRecord(
-                mockValue(Value::asObject, null, outId.getId()),
-                mockValue(Value::asRelationship, null, mockRelationship(2l, "remote", ImmutableMap.of("x", "y"))),
-                mockValue(Value::asObject, null, indId.getId())
+                mockValue(Value::asRelationship, null, mockRelationship(2l, "remote", ImmutableMap.of("x", "y"), indId, outId))
         )));
     }
 

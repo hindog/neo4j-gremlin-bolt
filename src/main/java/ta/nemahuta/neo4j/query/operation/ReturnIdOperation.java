@@ -2,7 +2,6 @@ package ta.nemahuta.neo4j.query.operation;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.query.edge.EdgeOperation;
 import ta.nemahuta.neo4j.query.vertex.VertexOperation;
 
@@ -23,12 +22,6 @@ public class ReturnIdOperation implements EdgeOperation, VertexOperation {
     @NonNull
     private final String alias;
 
-    /**
-     * the {@link Neo4JElementIdAdapter} which provides the name of the property holding the id
-     */
-    @NonNull
-    private final Neo4JElementIdAdapter<?> idAdapter;
-
     @Override
     public boolean isNeedsStatement() {
         return true;
@@ -37,6 +30,6 @@ public class ReturnIdOperation implements EdgeOperation, VertexOperation {
     @Override
     public void append(@Nonnull @NonNull final StringBuilder queryBuilder,
                        @Nonnull @NonNull final Map<String, Object> parameters) {
-        queryBuilder.append("RETURN ").append(idAdapter.idExpression(alias));
+        queryBuilder.append("RETURN ID(").append(alias).append(")");
     }
 }

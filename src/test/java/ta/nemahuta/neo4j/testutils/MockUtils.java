@@ -1,10 +1,6 @@
 package ta.nemahuta.neo4j.testutils;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import org.apache.tinkerpop.gremlin.structure.VertexProperty;
-import org.javatuples.Pair;
 import org.neo4j.driver.internal.types.TypeConstructor;
 import org.neo4j.driver.internal.types.TypeRepresentation;
 import org.neo4j.driver.v1.Record;
@@ -13,9 +9,6 @@ import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.types.MapAccessor;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
-import ta.nemahuta.neo4j.property.AbstractPropertyFactory;
-import ta.nemahuta.neo4j.structure.Neo4JElement;
-import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 import java.util.Iterator;
@@ -28,23 +21,10 @@ import java.util.stream.Stream;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.neo4j.driver.internal.types.TypeConstructor.*;
 
 public class MockUtils {
-
-    public static ImmutableMap<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> mockProperties(final Map<String, Object> props) {
-        return ImmutableMap.copyOf(Maps.transformEntries(props, (k, v) -> {
-            final Neo4JProperty result = mock(Neo4JProperty.class);
-            final Pair<VertexProperty.Cardinality, Iterable<?>> params = AbstractPropertyFactory.getCardinalityAndIterable(v);
-            when(result.key()).thenReturn(k);
-            when(result.getCardinality()).thenReturn(params.getValue0());
-            when(result.value()).thenReturn(v);
-            return result;
-        }));
-    }
 
     public static MapAccessor mockMapAccessor(final Map<String, Object> props) {
         final MapAccessor result = mock(MapAccessor.class);
@@ -60,9 +40,11 @@ public class MockUtils {
         return node;
     }
 
-    public static Relationship mockRelationship(final long id, final String label, final Map<String, Object> props) {
+    public static Relationship mockRelationship(final long id, final String label, final Map<String, Object> props, final long inId, final long outId) {
         final Relationship relationship = mock(Relationship.class);
         when(relationship.type()).thenReturn(label);
+        when(relationship.endNodeId()).thenReturn(outId);
+        when(relationship.startNodeId()).thenReturn(inId);
         addProperties(relationship, props);
         when(relationship.id()).thenReturn(id);
         return relationship;

@@ -3,7 +3,6 @@ package ta.nemahuta.neo4j.query.vertex;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
-import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.*;
 
@@ -28,11 +27,6 @@ public class VertexQueryBuilder extends AbstractQueryBuilder {
         private final UniqueParamNameGenerator paramNameGenerator = new UniqueParamNameGenerator();
 
         @Override
-        protected Neo4JElementIdAdapter<?> getIdAdapter() {
-            return VertexQueryBuilder.this.idAdapter;
-        }
-
-        @Override
         protected String getAlias() {
             return ALIAS;
         }
@@ -48,12 +42,10 @@ public class VertexQueryBuilder extends AbstractQueryBuilder {
     /**
      * Create a new builder for the provided parameters.
      *
-     * @param idProvider the identifier provider to be used
-     * @param partition  the readPartition to be used
+     * @param partition the readPartition to be used
      */
-    public VertexQueryBuilder(@Nonnull @NonNull final Neo4JElementIdAdapter<?> idProvider,
-                              @Nonnull @NonNull final Neo4JGraphPartition partition) {
-        super(idProvider, partition);
+    public VertexQueryBuilder(@Nonnull @NonNull final Neo4JGraphPartition partition) {
+        super(partition);
     }
 
     /**

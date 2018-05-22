@@ -1,14 +1,8 @@
 package ta.nemahuta.neo4j.state;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import lombok.EqualsAndHashCode;
-import lombok.NonNull;
-import lombok.ToString;
-import lombok.experimental.Wither;
-import ta.nemahuta.neo4j.id.Neo4JElementId;
+import lombok.*;
 import ta.nemahuta.neo4j.structure.Neo4JElement;
-import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 
@@ -19,35 +13,16 @@ import javax.annotation.Nonnull;
  */
 @EqualsAndHashCode
 @ToString
-@Wither
-public class Neo4JElementState {
+@RequiredArgsConstructor
+public abstract class Neo4JElementState {
 
-    /**
-     * the element id
-     */
-    public final Neo4JElementId<?> id;
-    /**
-     * the orLabelsAnd for the element
-     */
-    public final ImmutableSet<String> labels;
     /**
      * the properties for the element
      */
-    public final ImmutableMap<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> properties;
+    @Getter
+    @NonNull
+    protected final ImmutableMap<String, Object> properties;
 
-    /**
-     * Construct a new state using the provided parameters.
-     *
-     * @param id         the id of the element
-     * @param labels     the orLabelsAnd of the element
-     * @param properties the properties of the elemnt
-     */
-    public Neo4JElementState(@Nonnull @NonNull final Neo4JElementId<?> id,
-                             @Nonnull @NonNull final ImmutableSet<String> labels,
-                             @Nonnull @NonNull final ImmutableMap<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> properties) {
-        this.id = id;
-        this.labels = labels;
-        this.properties = properties;
-    }
+    public abstract Neo4JElementState withProperties(@Nonnull ImmutableMap<String, Object> properties);
 
 }

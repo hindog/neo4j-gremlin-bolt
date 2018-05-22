@@ -37,7 +37,7 @@ public interface StatementExecutor {
         return StreamSupport.stream(
                 Spliterators.spliteratorUnknownSize(executeStatement(statement),
                         Spliterator.NONNULL | Spliterator.IMMUTABLE
-                ), false);
+                ), true);
     }
 
 }

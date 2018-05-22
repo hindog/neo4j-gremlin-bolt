@@ -26,6 +26,7 @@ dependencies {
     final lombokVersion = "1.16.20"
     final mockitoVersion = "2.18.3"
     final junitVersion = "5.2.0"
+    final ehCacheVersion = "3.5.2"
 
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
@@ -33,6 +34,8 @@ dependencies {
     compile(group: 'org.apache.tinkerpop', name: 'gremlin-core', version: '3.3.0') {
         exclude(group: "org.slf4j", module: 'slf4j-log4j12')
     }
+
+    compile group: 'org.ehcache', name: 'ehcache', version: ehCacheVersion
     compile group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '1.4.4'
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
     compile group: 'com.google.guava', name: 'guava', version: '24.1-jre'
@@ -65,7 +68,7 @@ jacoco {
     toolVersion = '0.8.1'
 }
 
-test.jacoco.excludes ['ta.nemahuta.neo4j.features.*']
+test.jacoco.excludes['ta.nemahuta.neo4j.features.*']
 
 jacocoTestReport.reports {
     xml.enabled = true

@@ -4,8 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import lombok.Getter;
 import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Direction;
-import ta.nemahuta.neo4j.id.Neo4JElementId;
-import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.UniqueParamNameGenerator;
 import ta.nemahuta.neo4j.query.WherePredicate;
@@ -16,8 +14,6 @@ import ta.nemahuta.neo4j.query.operation.ReturnIdOperation;
 import ta.nemahuta.neo4j.query.operation.UpdatePropertiesOperation;
 import ta.nemahuta.neo4j.query.predicate.WhereIdInPredicate;
 import ta.nemahuta.neo4j.query.vertex.VertexQueryFactory;
-import ta.nemahuta.neo4j.structure.Neo4JElement;
-import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -49,18 +45,6 @@ public abstract class EdgeQueryFactory {
     protected abstract String getRhsAlias();
 
     /**
-     * @return the adapter for the identifiers being used on edges
-     */
-    @Nonnull
-    protected abstract Neo4JElementIdAdapter<?> getEdgeIdAdapter();
-
-    /**
-     * @return the adapter for the identifiers being used on vertices
-     */
-    @Nonnull
-    protected abstract Neo4JElementIdAdapter<?> getVertexIdAdapter();
-
-    /**
      * @return the partition to be used
      */
     @Nonnull
@@ -69,11 +53,6 @@ public abstract class EdgeQueryFactory {
 
     @Getter(onMethod = @__(@Nonnull))
     private final VertexQueryFactory lhs = new VertexQueryFactory() {
-        @Nonnull
-        @Override
-        protected Neo4JElementIdAdapter<?> getIdAdapter() {
-            return EdgeQueryFactory.this.getEdgeIdAdapter();
-        }
 
         @Nonnull
         @Override
@@ -96,11 +75,6 @@ public abstract class EdgeQueryFactory {
 
     @Getter(onMethod = @__(@Nonnull))
     private final VertexQueryFactory rhs = new VertexQueryFactory() {
-        @Nonnull
-        @Override
-        protected Neo4JElementIdAdapter<?> getIdAdapter() {
-            return EdgeQueryFactory.this.getEdgeIdAdapter();
-        }
 
         @Override
         @Nonnull
@@ -122,25 +96,25 @@ public abstract class EdgeQueryFactory {
     };
 
     /**
-     * Construct a predicate which matches the {@link Neo4JElementId} on a relation in a WHERE clause.
+     * Construct a predicate which matches the identifier on a relation in a WHERE clause.
      *
      * @param id the identifier to be matched
      * @return the predicate matching the id
      */
     @Nonnull
-    public WherePredicate whereId(@Nonnull @NonNull final Neo4JElementId<?> id) {
+    public WherePredicate whereId(@Nonnull @NonNull final Long id) {
         return whereIds(Collections.singleton(id));
     }
 
     /**
-     * Construct a predicate which matches the {@link Neo4JElementId} on any of the given ones in a WHERE clause.
+     * Construct a predicate which matches the identifier on any of the given ones in a WHERE clause.
      *
      * @param ids the identifiers to match
      * @return the predicate matching any of the ids
      */
     @Nonnull
-    public WherePredicate whereIds(@Nonnull @NonNull final Set<Neo4JElementId<?>> ids) {
-        return new WhereIdInPredicate(getEdgeIdAdapter(), ids, getRelationAlias(), getParamNameGenerator().generate("edgeId"));
+    public WherePredicate whereIds(@Nonnull @NonNull final Set<Long> ids) {
+        return new WhereIdInPredicate(ids, getRelationAlias(), getParamNameGenerator().generate("edgeId"));
     }
 
     /**
@@ -148,7 +122,7 @@ public abstract class EdgeQueryFactory {
      */
     @Nonnull
     public EdgeOperation returnEdge() {
-        return new ReturnEdgeOperation(getLhsAlias(), getRelationAlias(), getRhsAlias(), getVertexIdAdapter());
+        return new ReturnEdgeOperation(getLhsAlias(), getRelationAlias(), getRhsAlias());
     }
 
     /**
@@ -156,25 +130,23 @@ public abstract class EdgeQueryFactory {
      */
     @Nonnull
     public EdgeOperation returnId() {
-        return new ReturnIdOperation(getRelationAlias(), getEdgeIdAdapter());
+        return new ReturnIdOperation(getRelationAlias());
     }
 
     /**
      * Create an operation which will create an edge.
      *
-     * @param id         the current identifier of the edge
      * @param direction  the direction of the edge
      * @param label      the label of the edge
      * @param properties the properties of the edge
      * @return the {@link EdgeOperation} which creates the edge
      */
     @Nonnull
-    public EdgeOperation createEdge(@Nonnull @NonNull final Neo4JElementId<?> id,
-                                    @Nonnull @NonNull final Direction direction,
+    public EdgeOperation createEdge(@Nonnull @NonNull final Direction direction,
                                     @Nonnull @NonNull final String label,
-                                    @Nonnull @NonNull final ImmutableMap<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> properties) {
-        return new CreateEdgeOperation(getLhsAlias(), getRelationAlias(), getRhsAlias(), id, label, direction, properties,
-                getParamNameGenerator().generate("edgeProps"), getEdgeIdAdapter());
+                                    @Nonnull @NonNull final ImmutableMap<String, Object> properties) {
+        return new CreateEdgeOperation(getLhsAlias(), getRelationAlias(), getRhsAlias(), label, direction, properties,
+                getParamNameGenerator().generate("edgeProps"));
     }
 
     /**
@@ -193,8 +165,8 @@ public abstract class EdgeQueryFactory {
      * @return the operation
      */
     @Nonnull
-    public EdgeOperation properties(@Nonnull @NonNull final ImmutableMap<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> committedProperties,
-                                    @Nonnull @NonNull final ImmutableMap<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> currentProperties) {
+    public EdgeOperation properties(@Nonnull @NonNull final ImmutableMap<String, Object> committedProperties,
+                                    @Nonnull @NonNull final ImmutableMap<String, Object> currentProperties) {
         return new UpdatePropertiesOperation(committedProperties, currentProperties, getRelationAlias(), getParamNameGenerator().generate("edgeProps"));
     }
 

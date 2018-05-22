@@ -1,27 +1,24 @@
 package ta.nemahuta.neo4j.structure;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import lombok.Getter;
+import com.google.common.collect.Maps;
+import com.sun.istack.internal.Nullable;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
-import org.neo4j.driver.v1.types.MapAccessor;
-import ta.nemahuta.neo4j.id.Neo4JElementId;
-import ta.nemahuta.neo4j.property.AbstractPropertyFactory;
-import ta.nemahuta.neo4j.state.LocalAndRemoteStateHolder;
+import ta.nemahuta.neo4j.session.scope.Neo4JElementStateScope;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
-import ta.nemahuta.neo4j.state.StateHolder;
-import ta.nemahuta.neo4j.state.SyncState;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Iterator;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -30,40 +27,20 @@ import java.util.stream.Stream;
  * @author Christian Heike (christian.heike@icloud.com)
  */
 @ToString
-public abstract class Neo4JElement implements Element {
-
-    @Getter
-    private final LocalAndRemoteStateHolder<Neo4JElementState> state;
+@RequiredArgsConstructor
+public abstract class Neo4JElement<S extends Neo4JElementState, P extends Property>
+        implements Element {
 
     protected final Neo4JGraph graph;
-    protected final AbstractPropertyFactory<? extends Neo4JProperty<? extends Neo4JElement, ?>> propertyFactory;
+    protected final long id;
+    protected final Neo4JElementStateScope<S> scope;
 
-    protected Neo4JElement(@Nonnull @NonNull final Neo4JGraph graph,
-                           @Nonnull @NonNull final Neo4JElementId<?> id,
-                           @Nonnull @NonNull final ImmutableSet<String> labels,
-                           @Nonnull @NonNull final Optional<MapAccessor> propertyAccessor,
-                           @Nonnull @NonNull final AbstractPropertyFactory<? extends Neo4JProperty<? extends Neo4JElement, ?>> propertyFactory) {
-        this.graph = graph;
-        this.propertyFactory = propertyFactory;
-        // The initial sync state is synchronous if the property accessor was provided, otherwise this is a transient element
-        final SyncState initialSyncState = propertyAccessor.map(p -> SyncState.SYNCHRONOUS).orElse(SyncState.TRANSIENT);
-        // In case a property accessor is provided, we create the properties, otherwise we use an empty properties map
-        final ImmutableMap<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> properties = propertyAccessor
-                .map(p -> propertyFactory.create(this, p))
-                .orElse(ImmutableMap.of());
-        final StateHolder<Neo4JElementState> stateHolder = new StateHolder<>(initialSyncState, new Neo4JElementState(id, labels, properties));
-        this.state = new LocalAndRemoteStateHolder<>(stateHolder);
-    }
-
+    private final Map<String, P> propertyMap = new ConcurrentHashMap<>();
 
     @Override
-    public Neo4JElementId<?> id() {
-        return state.current(s -> s.id);
-    }
-
-    @Override
-    public String label() {
-        return state.current(s -> String.join("::", s.labels));
+    @Nonnull
+    public Long id() {
+        return id;
     }
 
     @Override
@@ -71,42 +48,78 @@ public abstract class Neo4JElement implements Element {
         return graph;
     }
 
+    protected P getProperty(@Nonnull @NonNull final String key, final Object value) {
+        ElementHelper.validateProperty(key, value);
+        updateState(state -> computePropertyChangedState(key, value, state));
+        return getProperties(key).findAny().get();
+    }
+
+    protected Stream<P> getProperties(@Nonnull @NonNull final String... propertyKeys) {
+        return (propertyKeys.length == 0 ? getState().getProperties().keySet().stream() : Stream.of(propertyKeys))
+                .map(this::getOrCreateProperty)
+                .filter(Objects::nonNull);
+    }
+
+    @Nullable
+    private P getOrCreateProperty(@Nonnull final String key) {
+        final Object value = getState().getProperties().get(key);
+        if (value == null) {
+            propertyMap.remove(key);
+            return createEmptyProperty();
+        }
+        return Optional.ofNullable(propertyMap.get(key))
+                .orElseGet(() -> {
+                    final P result = createNewProperty(key);
+                    return result;
+                });
+    }
+
+    /**
+     * Create a new property for the provided key.
+     *
+     * @param key the key of the property
+     * @return the property
+     */
+    protected abstract P createNewProperty(final String key);
+
+    /**
+     * @return an empty property
+     */
+    protected abstract P createEmptyProperty();
+
+    private S computePropertyChangedState(final @Nonnull @NonNull String key, final Object value, final S state) {
+        // Build a new map with the propertyMap except the one being set
+        final ImmutableMap.Builder<String, Object> builder =
+                ImmutableMap.<String, Object>builder().putAll(Maps.filterKeys(state.getProperties(), k -> !Objects.equals(k, key)));
+        if (value != null) {
+            // Only set the new property, if it is not null
+            builder.put(key, value);
+        } else {
+            propertyMap.remove(key);
+        }
+        return (S) state.withProperties(builder.build());
+    }
+
     @Override
     public void remove() {
-        state.delete();
+        scope.delete(id);
     }
+
 
     @Override
     public int hashCode() {
         return ElementHelper.hashCode(this);
     }
 
-    protected <V, P extends Property<V>> Iterator<P> properties(@Nonnull @NonNull final Supplier<P> emptySupplier,
-                                                                @Nonnull @NonNull final String... propertyKeys) {
-        return this.getState().current(s ->
-                Stream.of(propertyKeys).map(k ->
-                        Optional.ofNullable((P) s.properties.get(k))
-                                .orElseGet(emptySupplier))
-        ).iterator();
+    /**
+     * @return the state of the element
+     */
+    protected S getState() {
+        return Optional.of(scope.get(id)).orElseThrow(() -> new IllegalStateException("Element has been deleted in the scope: " + id));
     }
 
-    protected <V, P extends Property<V>> P property(@Nonnull @NonNull final String key,
-                                                    @Nullable final V value,
-                                                    @Nonnull @NonNull Supplier<P> emptySupplier) {
-        ElementHelper.validateProperty(key, value);
-        if (value == null) {
-            properties(key).next().remove();
-            return emptySupplier.get();
-        }
-        final Object[] result = new Object[1];
-        this.getState().modify(s -> {
-            final Neo4JProperty<? extends Neo4JElement, ?> property = s.properties.get(key);
-            final Neo4JProperty<? extends Neo4JElement, ?> modifiedProperty = property != null ? property.withValue(value) : propertyFactory.create(this, key, value);
-            result[0] = modifiedProperty;
-            return s.withProperties(ImmutableMap.<String, Neo4JProperty<? extends Neo4JElement, ?>>builder()
-                    .putAll(s.properties).put(key, modifiedProperty).build());
-        });
-        return (P) result[0];
+    protected void updateState(@Nonnull @NonNull final Function<S, S> stateUpdate) {
+        scope.modify(id, stateUpdate);
     }
 
 }

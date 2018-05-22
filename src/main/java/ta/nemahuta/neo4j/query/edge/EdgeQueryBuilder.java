@@ -4,7 +4,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Direction;
-import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.query.MatchPredicate;
@@ -58,16 +57,6 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
             return VERTEX_ALIAS_RHS;
         }
 
-        @Override
-        protected Neo4JElementIdAdapter<?> getEdgeIdAdapter() {
-            return EdgeQueryBuilder.this.idAdapter;
-        }
-
-        @Override
-        protected Neo4JElementIdAdapter<?> getVertexIdAdapter() {
-            return EdgeQueryBuilder.this.vertexIdProvider;
-        }
-
         @Nonnull
         @Override
         protected Neo4JGraphPartition getPartition() {
@@ -76,20 +65,14 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
     };
 
     private final MatchRelationPredicate relationPredicate = new MatchRelationPredicate(VERTEX_ALIAS_LHS, RELATION_ALIAS, VERTEX_ALIAS_RHS, partition);
-    private final Neo4JElementIdAdapter<?> vertexIdProvider;
 
     /**
      * Create a new builder using the provided parameters.
      *
-     * @param edgeIdAdapter   the {@link Neo4JElementIdAdapter} for {@link ta.nemahuta.neo4j.structure.Neo4JEdge}s.
-     * @param partition       the {@link Neo4JGraphPartition} being operated on
-     * @param vertexIdAdapter the {@link Neo4JElementIdAdapter} for {@link ta.nemahuta.neo4j.structure.Neo4JVertex}es.
+     * @param partition the {@link Neo4JGraphPartition} being operated on
      */
-    public EdgeQueryBuilder(@NonNull @Nonnull final Neo4JElementIdAdapter<?> edgeIdAdapter,
-                            @NonNull @Nonnull final Neo4JGraphPartition partition,
-                            @Nonnull @NonNull final Neo4JElementIdAdapter<?> vertexIdAdapter) {
-        super(edgeIdAdapter, partition);
-        this.vertexIdProvider = vertexIdAdapter;
+    public EdgeQueryBuilder(@NonNull @Nonnull final Neo4JGraphPartition partition) {
+        super(partition);
         setMatch(relationPredicate);
     }
 

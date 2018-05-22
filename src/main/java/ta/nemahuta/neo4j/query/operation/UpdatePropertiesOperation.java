@@ -2,11 +2,8 @@ package ta.nemahuta.neo4j.query.operation;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import ta.nemahuta.neo4j.query.QueryUtils;
 import ta.nemahuta.neo4j.query.edge.EdgeOperation;
 import ta.nemahuta.neo4j.query.vertex.VertexOperation;
-import ta.nemahuta.neo4j.structure.Neo4JElement;
-import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -23,12 +20,12 @@ public class UpdatePropertiesOperation implements VertexOperation, EdgeOperation
      * the currently committed properties
      */
     @NonNull
-    private final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> committedProperties;
+    private final Map<String, Object> committedProperties;
     /**
      * the current properties to be committed
      */
     @NonNull
-    private final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> currentProperties;
+    private final Map<String, Object> currentProperties;
     /**
      * the alias of the MATCH the properties should be set on
      */
@@ -49,6 +46,6 @@ public class UpdatePropertiesOperation implements VertexOperation, EdgeOperation
     public void append(@Nonnull @NonNull final StringBuilder queryBuilder,
                        @Nonnull @NonNull final Map<String, Object> parameters) {
         queryBuilder.append("SET ").append(alias).append("={").append(paramName).append("}");
-        parameters.put(paramName, QueryUtils.computeProperties(committedProperties, currentProperties));
+        parameters.put(paramName, currentProperties);
     }
 }

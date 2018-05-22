@@ -8,9 +8,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.neo4j.driver.v1.AuthToken;
 import org.neo4j.driver.v1.Config;
-import org.neo4j.driver.v1.Driver;
-import ta.nemahuta.neo4j.id.Neo4JElementIdAdapter;
-import ta.nemahuta.neo4j.id.Neo4JNativeElementIdAdapter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -19,9 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -45,20 +40,6 @@ public class Neo4JConfiguration {
             .put(int.class, Integer.class)
             .put(long.class, Long.class)
             .build();
-
-    public static final Function<Driver, Neo4JElementIdAdapter<?>> DEFAULT_ID_ADAPTER_FACTORY = driver -> new Neo4JNativeElementIdAdapter();
-
-    /**
-     * the factory for the {@link Neo4JElementIdAdapter} for {@link ta.nemahuta.neo4j.structure.Neo4JVertex}es
-     */
-    @ConfigurationKey
-    private final Function<Driver, Neo4JElementIdAdapter<?>> vertexIdAdapterFactory;
-
-    /**
-     * the factory for the {@link Neo4JElementIdAdapter} for {@link ta.nemahuta.neo4j.structure.Neo4JEdge}s
-     */
-    @ConfigurationKey
-    private final Function<Driver, Neo4JElementIdAdapter<?>> edgeIdAdapterFactory;
 
     /**
      * the host name to be used for connection
@@ -97,28 +78,6 @@ public class Neo4JConfiguration {
     @Getter
     @ConfigurationKey
     private final boolean profilingEnabled;
-
-    /**
-     * Creates the {@link Neo4JElementIdAdapter} for the {@link ta.nemahuta.neo4j.structure.Neo4JVertex}es.
-     *
-     * @param driver the driver to use for creation
-     * @return the adapter
-     */
-    @Nonnull
-    public Neo4JElementIdAdapter<?> createVertexIdAdapter(@Nonnull @NonNull final Driver driver) {
-        return Optional.ofNullable(vertexIdAdapterFactory).orElse(DEFAULT_ID_ADAPTER_FACTORY).apply(driver);
-    }
-
-    /**
-     * Creates the {@link Neo4JElementIdAdapter} for the {@link ta.nemahuta.neo4j.structure.Neo4JVertex}es.
-     *
-     * @param driver the driver to use for creation
-     * @return the adapter
-     */
-    @Nonnull
-    public Neo4JElementIdAdapter<?> createEdgeIdAdapter(@Nonnull @NonNull final Driver driver) {
-        return Optional.ofNullable(edgeIdAdapterFactory).orElse(DEFAULT_ID_ADAPTER_FACTORY).apply(driver);
-    }
 
     @Nonnull
     public Configuration toApacheConfiguration() {
