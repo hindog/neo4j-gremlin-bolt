@@ -4,12 +4,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Direction;
-import ta.nemahuta.neo4j.structure.Neo4JElement;
-import ta.nemahuta.neo4j.structure.Neo4JProperty;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -30,23 +26,6 @@ public class QueryUtils {
                                     @Nonnull @NonNull final Set<String> labels) {
         labels.forEach(label -> appendLabel(sb, label));
     }
-
-
-    /**
-     * Compute a map of properties from the currently set ones
-     *
-     * @param committedProperties the currently committed properties
-     * @param currentProperties   the properties to be committed
-     * @return a map of properties to be added as a parameter
-     */
-    @Nonnull
-    public static Map<String, Object> computeProperties(@Nonnull @NonNull final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> committedProperties,
-                                                        @Nonnull @NonNull final Map<String, ? extends Neo4JProperty<? extends Neo4JElement, ?>> currentProperties) {
-        final Map<String, Object> properties = new HashMap<>();
-        currentProperties.entrySet().stream().forEach(e -> properties.put(e.getKey(), e.getValue().value()));
-        return properties;
-    }
-
 
     /**
      * Append a label to the query builder.
@@ -97,9 +76,8 @@ public class QueryUtils {
             case OUT:
                 return start ? "-[" : "]->";
             case BOTH:
-                return start ? "-[" : "]-";
             default:
-                throw new IllegalArgumentException("Cannot handle direction: " + direction);
+                return start ? "-[" : "]-";
         }
     }
 }
