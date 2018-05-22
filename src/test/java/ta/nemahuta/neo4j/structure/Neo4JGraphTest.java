@@ -2,6 +2,7 @@ package ta.nemahuta.neo4j.structure;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.configuration.Configuration;
+import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,14 +17,17 @@ import org.neo4j.driver.v1.Transaction;
 import ta.nemahuta.neo4j.cache.HierarchicalCache;
 import ta.nemahuta.neo4j.cache.SessionCache;
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
+import ta.nemahuta.neo4j.features.Neo4JFeatures;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.partition.Neo4JLabelGraphPartition;
+import ta.nemahuta.neo4j.session.Neo4JTransaction;
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
 import ta.nemahuta.neo4j.testutils.StatementExecutorStub;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -74,10 +78,12 @@ class Neo4JGraphTest {
 
     @Test
     void compute() {
+        assertThrows(UnsupportedOperationException.class, () -> sut.compute());
     }
 
     @Test
     void compute1() {
+        assertThrows(UnsupportedOperationException.class, () -> sut.compute(GraphComputer.class));
     }
 
     @Test
@@ -90,21 +96,29 @@ class Neo4JGraphTest {
 
     @Test
     void tx() {
+        assertTrue(sut.tx() instanceof Neo4JTransaction);
     }
 
     @Test
     void close() {
+        // when: 'closing the graph'
+        sut.close();
+        // then: 'session is closed'
+        verify(session).close();
     }
 
     @Test
     void variables() {
+        assertThrows(UnsupportedOperationException.class, () -> sut.variables());
     }
 
     @Test
     void configuration() {
+        assertEquals(apacheConfiguration, sut.configuration());
     }
 
     @Test
     void features() {
+        assertEquals(Neo4JFeatures.INSTANCE, sut.features());
     }
 }

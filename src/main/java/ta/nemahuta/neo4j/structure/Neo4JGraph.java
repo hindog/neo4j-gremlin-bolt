@@ -158,7 +158,6 @@ public class Neo4JGraph implements Graph {
             throw Transaction.Exceptions.openTransactionsOnClose();
         }
         cache.close();
-        transaction.close();
         session.close();
     }
 
