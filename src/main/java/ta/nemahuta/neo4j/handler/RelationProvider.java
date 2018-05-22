@@ -1,4 +1,4 @@
-package ta.nemahuta.neo4j.session.sync;
+package ta.nemahuta.neo4j.handler;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 

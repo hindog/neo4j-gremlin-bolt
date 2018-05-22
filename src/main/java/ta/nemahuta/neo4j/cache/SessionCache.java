@@ -1,4 +1,4 @@
-package ta.nemahuta.neo4j.session.cache;
+package ta.nemahuta.neo4j.cache;
 
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;

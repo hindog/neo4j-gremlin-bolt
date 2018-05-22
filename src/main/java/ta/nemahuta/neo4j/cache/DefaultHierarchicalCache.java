@@ -1,4 +1,4 @@
-package ta.nemahuta.neo4j.session.cache;
+package ta.nemahuta.neo4j.cache;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -31,13 +31,15 @@ public class DefaultHierarchicalCache<K, V> implements HierarchicalCache<K, V> {
 
     @Override
     public void commit() {
-        child.forEach(e -> parent.put(e.getKey(), e.getValue()));
-        child.clear();
+        child.forEach(e -> {
+            parent.put(e.getKey(), e.getValue());
+            child.remove(e.getKey());
+        });
     }
 
     @Override
     public V get(final K key) throws CacheLoadingException {
-        return Optional.ofNullable(child.get(key)).orElseGet(() -> child.get(key));
+        return Optional.ofNullable(child.get(key)).orElseGet(() -> parent.get(key));
     }
 
     @Override
@@ -105,9 +107,9 @@ public class DefaultHierarchicalCache<K, V> implements HierarchicalCache<K, V> {
 
     @Override
     public Iterator<Entry<K, V>> iterator() {
-        final Set<Entry<K, V>> result = new HashSet<>();
-        parent.forEach(result::add);
-        child.forEach(result::add);
-        return result.iterator();
+        final Map<K, Entry<K, V>> result = new HashMap<>();
+        parent.iterator().forEachRemaining(e -> result.put(e.getKey(), e));
+        child.iterator().forEachRemaining(e -> result.put(e.getKey(), e));
+        return result.values().iterator();
     }
 }

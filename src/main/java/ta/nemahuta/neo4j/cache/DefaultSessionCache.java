@@ -1,4 +1,4 @@
-package ta.nemahuta.neo4j.session.cache;
+package ta.nemahuta.neo4j.cache;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

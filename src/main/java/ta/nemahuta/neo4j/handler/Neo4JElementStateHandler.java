@@ -1,4 +1,4 @@
-package ta.nemahuta.neo4j.session.sync;
+package ta.nemahuta.neo4j.handler;
 
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 

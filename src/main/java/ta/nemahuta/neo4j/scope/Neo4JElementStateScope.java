@@ -1,4 +1,4 @@
-package ta.nemahuta.neo4j.session.scope;
+package ta.nemahuta.neo4j.scope;
 
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 

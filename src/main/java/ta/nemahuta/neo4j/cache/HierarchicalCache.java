@@ -1,4 +1,4 @@
-package ta.nemahuta.neo4j.session.cache;
+package ta.nemahuta.neo4j.cache;
 
 import org.ehcache.Cache;
 

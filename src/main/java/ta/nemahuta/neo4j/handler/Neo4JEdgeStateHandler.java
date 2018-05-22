@@ -1,4 +1,4 @@
-package ta.nemahuta.neo4j.session.sync;
+package ta.nemahuta.neo4j.handler;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

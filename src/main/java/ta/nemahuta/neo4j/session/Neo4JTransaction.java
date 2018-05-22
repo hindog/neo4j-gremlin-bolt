@@ -8,7 +8,7 @@ import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
-import ta.nemahuta.neo4j.session.cache.SessionCache;
+import ta.nemahuta.neo4j.cache.SessionCache;
 import ta.nemahuta.neo4j.structure.Neo4JGraph;
 
 import javax.annotation.Nonnull;

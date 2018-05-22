@@ -1,10 +1,10 @@
-package ta.nemahuta.neo4j.session.scope;
+package ta.nemahuta.neo4j.scope;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ta.nemahuta.neo4j.session.cache.HierarchicalCache;
-import ta.nemahuta.neo4j.session.sync.Neo4JElementStateHandler;
+import ta.nemahuta.neo4j.cache.HierarchicalCache;
+import ta.nemahuta.neo4j.handler.Neo4JElementStateHandler;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 
 import javax.annotation.Nonnull;

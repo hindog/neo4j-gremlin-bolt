@@ -7,8 +7,8 @@ import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
-import ta.nemahuta.neo4j.session.cache.DefaultSessionCacheManager;
-import ta.nemahuta.neo4j.session.cache.SessionCacheManager;
+import ta.nemahuta.neo4j.cache.DefaultSessionCacheManager;
+import ta.nemahuta.neo4j.cache.SessionCacheManager;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
