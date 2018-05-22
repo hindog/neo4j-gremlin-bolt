@@ -32,5 +32,9 @@ class SoftRefMapTest {
         assertNotNull(internalMap.get("A"));
     }
 
+    @Test
+    void construct() {
+        assertNotNull(new SoftRefMap<String, String>());
+    }
 
 }

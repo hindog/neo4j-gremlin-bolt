@@ -6,15 +6,12 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
+import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import ta.nemahuta.neo4j.scope.Neo4JElementStateScope;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -47,7 +44,7 @@ public class Neo4JVertex extends Neo4JElement<Neo4JVertexState, VertexProperty> 
                     Optional.ofNullable(inVertex).map(Object::getClass).map(Class::getSimpleName).orElse(null));
         }
         final Neo4JEdge result = graph.addEdge(label, this, (Neo4JVertex) inVertex, keyValues);
-        outEdgeProvider.register(result.label(), result.id());
+        outEdgeProvider.register(label, result.id());
         return result;
     }
 
@@ -60,7 +57,7 @@ public class Neo4JVertex extends Neo4JElement<Neo4JVertexState, VertexProperty> 
     public Iterator<Vertex> vertices(@Nonnull @NonNull final Direction direction,
                                      @Nonnull @NonNull final String... edgeLabels) {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(edges(direction, edgeLabels), Spliterator.ORDERED), false)
-                .map(e -> e.inVertex().id() == this.id() ? e.inVertex() : e.outVertex())
+                .map(e -> Objects.equals(e.inVertex().id(), this.id()) ? e.outVertex() : e.inVertex())
                 .iterator();
     }
 
@@ -70,10 +67,9 @@ public class Neo4JVertex extends Neo4JElement<Neo4JVertexState, VertexProperty> 
                 return inEdgeIdStream(edgeLabels);
             case OUT:
                 return outEdgeIdStream(edgeLabels);
+            default:
             case BOTH:
                 return Stream.concat(inEdgeIdStream(edgeLabels), outEdgeIdStream(edgeLabels));
-            default:
-                return throwDirectionNotHandled(direction);
         }
     }
 
@@ -105,43 +101,14 @@ public class Neo4JVertex extends Neo4JElement<Neo4JVertexState, VertexProperty> 
         return result;
     }
 
-    @Nonnull
-    private Stream<EdgeProvider> edgeProviderStream(final Direction direction) {
-        switch (Optional.ofNullable(direction).orElse(Direction.BOTH)) {
-            case IN:
-                return Stream.of(inEdgeProvider);
-            case OUT:
-                return Stream.of(outEdgeProvider);
-            case BOTH:
-                return Stream.of(inEdgeProvider, outEdgeProvider);
-            default:
-                return throwDirectionNotHandled(direction);
-        }
-    }
-
-    @Nonnull
-    private Stream<Vertex> vertexOf(@Nonnull @NonNull final Direction direction,
-                                    @Nonnull @NonNull final Edge edge) {
-        switch (direction) {
-            case IN:
-                return Stream.of(edge.outVertex());
-            case OUT:
-                return Stream.of(edge.inVertex());
-            case BOTH:
-                return Stream.of(edge.inVertex(), edge.outVertex());
-            default:
-                return throwDirectionNotHandled(direction);
-        }
-    }
-
-    private <T> T throwDirectionNotHandled(@Nullable @NonNull final Direction direction) {
-        throw new IllegalStateException("Cannot handle direction: " + direction);
-    }
-
-
     @Override
     protected VertexProperty createNewProperty(final String key) {
         return new Neo4JVertexProperty(this, key);
+    }
+
+    @Override
+    public String toString() {
+        return StringFactory.vertexString(this);
     }
 
 }
