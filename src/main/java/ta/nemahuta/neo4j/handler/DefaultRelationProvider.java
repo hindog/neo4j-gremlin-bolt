@@ -26,7 +26,8 @@ public class DefaultRelationProvider implements RelationProvider {
     @Override
     public Map<String, Set<Long>> loadRelatedIds(final long lhsId, @Nonnull final Direction direction, @Nonnull final Set<String> labels) {
         final Map<String, Set<Long>> result = new HashMap<>();
-        statementExecutor.retrieveRecords(createRelatedIdStatement(lhsId, direction, labels)).forEach(r -> addToResult(r, result));
+        statementExecutor.retrieveRecords(createRelatedIdStatement(lhsId, direction, labels))
+                .forEach(r -> addToResult(r, result));
         return result;
 
     }
@@ -41,7 +42,7 @@ public class DefaultRelationProvider implements RelationProvider {
                 }).add(v.endNodeId());
     }
 
-    protected Statement createRelatedIdStatement(final long lhsId, final Direction direction, final Set<String> labels) {
+    private Statement createRelatedIdStatement(final long lhsId, final Direction direction, final Set<String> labels) {
         return query()
                 .labels(ImmutableSet.copyOf(labels))
                 .direction(direction)
@@ -51,10 +52,10 @@ public class DefaultRelationProvider implements RelationProvider {
     }
 
     /**
-     * @return a new {@link VertexQueryBuilder
+     * @return a new {@link VertexQueryBuilder}
      */
     @Nonnull
-    protected EdgeQueryBuilder query() {
+    private EdgeQueryBuilder query() {
         return new EdgeQueryBuilder(readPartition);
     }
 }

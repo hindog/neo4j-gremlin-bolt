@@ -19,12 +19,12 @@ import static ta.nemahuta.neo4j.testutils.MockUtils.*;
 
 public class StatementExecutorStub implements StatementExecutor {
 
-    private final Map<Pair<String, Map<String, Object>>, StatementResult> statementStubs = new HashMap<>();
+    private final Map<Pair<String, String>, StatementResult> statementStubs = new HashMap<>();
 
     @Nullable
     @Override
     public StatementResult executeStatement(@Nonnull final Statement statement) {
-        final Pair<String, Object> key = new Pair<>(statement.text(), statement.parameters().asObject());
+        final Pair<String, String> key = new Pair<>(statement.text(), statement.parameters().asMap().toString());
         return Optional.ofNullable(statementStubs.get(key))
                 .orElseThrow(() -> new IllegalStateException("No stub exists for statement:\n" +
                         key +
@@ -57,7 +57,7 @@ public class StatementExecutorStub implements StatementExecutor {
     }
 
     public void stubStatementExecution(final String text, final Map<String, Object> params, final StatementResult statementResult) {
-        statementStubs.put(new Pair<>(text, params), statementResult);
+        statementStubs.put(new Pair<>(text, params.toString()), statementResult);
     }
 
     public void stubVertexIdForLabel(final String label) {

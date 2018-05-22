@@ -43,8 +43,8 @@ public class MockUtils {
     public static Relationship mockRelationship(final long id, final String label, final Map<String, Object> props, final long inId, final long outId) {
         final Relationship relationship = mock(Relationship.class);
         when(relationship.type()).thenReturn(label);
-        when(relationship.endNodeId()).thenReturn(outId);
-        when(relationship.startNodeId()).thenReturn(inId);
+        when(relationship.startNodeId()).thenReturn(outId);
+        when(relationship.endNodeId()).thenReturn(inId);
         addProperties(relationship, props);
         when(relationship.id()).thenReturn(id);
         return relationship;
