@@ -37,11 +37,9 @@ public class WhereIdInPredicate implements WherePredicate {
     @Override
     public void append(@Nonnull @NonNull final StringBuilder queryBuilder,
                        @Nonnull @NonNull final Map<String, Object> parameters) {
-        if (!ids.isEmpty()) {
-            // First append the match predicate, in case the partition is limited
-            queryBuilder.append("ID(").append(alias).append(")").append(" IN {").append(paramName).append("}");
-            parameters.put(paramName, ids);
-        }
+        // First append the match predicate, in case the partition is limited
+        queryBuilder.append("ID(").append(alias).append(")").append(" IN {").append(paramName).append("}");
+        parameters.put(paramName, ids);
     }
 
 }

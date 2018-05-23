@@ -39,7 +39,7 @@ public abstract class VertexQueryPredicateFactory {
      */
     @Nonnull
     public WherePredicate idsInSet(@Nonnull @NonNull final Set<Long> ids) {
-        return new WhereIdInPredicate(ids, getAlias(), getParamNameGenerator().generate("vertexId"));
+        return ids.isEmpty() ? WherePredicate.EMPTY : new WhereIdInPredicate(ids, getAlias(), getParamNameGenerator().generate("vertexId"));
     }
 
     /**
@@ -50,7 +50,7 @@ public abstract class VertexQueryPredicateFactory {
      */
     @Nonnull
     public WherePredicate id(final long id) {
-        return new WhereIdInPredicate(Collections.singleton(id), getAlias(), getParamNameGenerator().generate("vertexId"));
+        return idsInSet(Collections.singleton(id));
     }
 
     /**

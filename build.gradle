@@ -22,6 +22,15 @@ repositories {
     jcenter()
 }
 
+sourceSets {
+    integTest {
+        java.srcDir file('src/integTest/java')
+        resources.srcDir file('src/integTest/resources')
+        compileClasspath += sourceSets.main.output + configurations.testRuntime
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
 dependencies {
     final lombokVersion = "1.16.20"
     final mockitoVersion = "2.18.3"
@@ -44,13 +53,37 @@ dependencies {
         testCompile "org.junit.jupiter:${it}:${junitVersion}"
     }
     testCompile 'ch.qos.logback:logback-classic:1.2.3'
+
     ["mockito-core", "mockito-junit-jupiter"].each {
         testCompile "org.mockito:${it}:${mockitoVersion}"
     }
-
     testRuntime "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
     testRuntime 'org.junit.platform:junit-platform-launcher:1.2.0'
+
+    integTestCompile group: 'org.hamcrest', name: 'hamcrest-library', version: '1.3'
+    integTestCompile group: 'org.xmlunit', name: 'xmlunit-matchers', version: '2.6.0'
 }
+
+task integrationTest(type: Test) {
+    description = 'Runs the integration tests.'
+    group = 'verification'
+    testClassesDirs = sourceSets.integTest.output.classesDirs
+    classpath = sourceSets.integTest.runtimeClasspath
+
+    useJUnitPlatform()
+
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+
+    reports {
+        html.enabled = true
+    }
+
+    mustRunAfter test
+}
+
+check.dependsOn integrationTest
 
 test {
     useJUnitPlatform()

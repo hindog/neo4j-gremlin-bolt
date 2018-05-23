@@ -15,14 +15,17 @@ import java.time.Duration;
 
 public class DefaultSessionCacheManager implements SessionCacheManager {
 
+    public static final String CACHE_NAME_EDGE_GLOBAL = "edge-global";
+    public static final String CACHE_NAME_VERTEX_GLOBAL = "vertex-global";
+
     protected final CacheManager cacheManager;
     protected final Cache<Long, Neo4JEdgeState> globalEdgeCache;
     protected final Cache<Long, Neo4JVertexState> globalVertexCache;
 
     public DefaultSessionCacheManager(@Nonnull @NonNull final CacheManager cacheManager) {
         this.cacheManager = cacheManager;
-        this.globalEdgeCache = createEdgeCache("edge-global");
-        this.globalVertexCache = createVertexCache("vertex-global");
+        this.globalEdgeCache = createEdgeCache(CACHE_NAME_EDGE_GLOBAL);
+        this.globalVertexCache = createVertexCache(CACHE_NAME_VERTEX_GLOBAL);
     }
 
     private Cache<Long, Neo4JVertexState> createVertexCache(final String name) {
@@ -51,9 +54,7 @@ public class DefaultSessionCacheManager implements SessionCacheManager {
 
             @Override
             public void close() {
-                sessionVertexCache.clear();
                 cacheManager.removeCache(vertexCacheName);
-                sessionEdgeCache.clear();
                 cacheManager.removeCache(edgeCacheName);
             }
         };
@@ -61,6 +62,8 @@ public class DefaultSessionCacheManager implements SessionCacheManager {
 
     @Override
     public void close() {
+        cacheManager.removeCache(CACHE_NAME_EDGE_GLOBAL);
+        cacheManager.removeCache(CACHE_NAME_VERTEX_GLOBAL);
         cacheManager.close();
     }
 }

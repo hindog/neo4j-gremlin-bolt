@@ -5,6 +5,7 @@ import lombok.*;
 import ta.nemahuta.neo4j.structure.Neo4JElement;
 
 import javax.annotation.Nonnull;
+import java.io.Serializable;
 
 /**
  * Immutable state for a {@link Neo4JElement}. The states includes the id, orLabelsAnd and properties of the element.
@@ -14,7 +15,7 @@ import javax.annotation.Nonnull;
 @EqualsAndHashCode
 @ToString
 @RequiredArgsConstructor
-public abstract class Neo4JElementState {
+public abstract class Neo4JElementState implements Serializable {
 
     /**
      * the properties for the element

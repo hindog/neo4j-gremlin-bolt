@@ -67,11 +67,13 @@ public abstract class AbstractQueryBuilder implements StatementBuilder {
             sb.append("MATCH ");
             m.append(sb, parameters);
         });
-        Optional.ofNullable(getWhere()).ifPresent(w -> {
-            Objects.requireNonNull(getMatch(), "Where without a match is not allowed");
-            sb.append(" WHERE ");
-            w.append(sb, parameters);
-        });
+        Optional.ofNullable(getWhere())
+                .flatMap(w -> w == WherePredicate.EMPTY ? Optional.empty() : Optional.of(w))
+                .ifPresent(w -> {
+                    Objects.requireNonNull(getMatch(), "Where without a match is not allowed");
+                    sb.append(" WHERE ");
+                    w.append(sb, parameters);
+                });
         boolean needsOperation = false;
         for (Operation operation : operations) {
             sb.append(" ");

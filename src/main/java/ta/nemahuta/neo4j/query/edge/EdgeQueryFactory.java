@@ -114,7 +114,8 @@ public abstract class EdgeQueryFactory {
      */
     @Nonnull
     public WherePredicate whereIds(@Nonnull @NonNull final Set<Long> ids) {
-        return new WhereIdInPredicate(ids, getRelationAlias(), getParamNameGenerator().generate("edgeId"));
+        return ids.isEmpty() ? WherePredicate.EMPTY :
+                new WhereIdInPredicate(ids, getRelationAlias(), getParamNameGenerator().generate("edgeId"));
     }
 
     /**

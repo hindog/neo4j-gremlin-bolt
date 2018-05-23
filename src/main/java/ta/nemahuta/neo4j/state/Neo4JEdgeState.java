@@ -7,6 +7,7 @@ import lombok.NonNull;
 import lombok.ToString;
 
 import javax.annotation.Nonnull;
+import java.io.Serializable;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)

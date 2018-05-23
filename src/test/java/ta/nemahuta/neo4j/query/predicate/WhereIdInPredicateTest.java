@@ -13,10 +13,4 @@ class WhereIdInPredicateTest extends AbstractStatementBuilderTest {
                 new WhereIdInPredicate(ImmutableSet.of(1l, 2l, 3l), "x", "ids"));
     }
 
-    @Test
-    void idsEmpty() {
-        assertBuildsStatement("", ImmutableMap.of(),
-                new WhereIdInPredicate(ImmutableSet.of(), "x", "ids"));
-    }
-
 }

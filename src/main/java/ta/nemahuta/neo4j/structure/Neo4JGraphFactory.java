@@ -48,7 +48,7 @@ public class Neo4JGraphFactory implements AutoCloseable, Supplier<Graph> {
     protected Driver createDriver() {
         final Config config = createAdditionalConfiguration(configuration.getAdditionConfiguration());
         final String connectionString = "bolt://" + configuration.getHostname() + ":" + configuration.getPort();
-        return GraphDatabase.driver(connectionString, config);
+        return GraphDatabase.driver(connectionString, configuration.getAuthToken(), config);
     }
 
     @Nonnull

@@ -56,9 +56,7 @@ class DefaultSessionCacheManagerTest {
         // when: 'closing the cache'
         cache.close();
         // then: 'the caches are cleared and removed '
-        verify(sessionEdgeCache, times(1)).clear();
         verify(cacheManager, times(1)).removeCache("edge-session-a");
-        verify(sessionVertexCache, times(1)).clear();
         verify(cacheManager, times(1)).removeCache("vertex-session-a");
     }
 
@@ -68,5 +66,8 @@ class DefaultSessionCacheManagerTest {
         sut.close();
         // then: 'the cache manager has been closed as well'
         verify(cacheManager, times(1)).close();
+        verify(cacheManager, times(1)).removeCache("edge-global");
+        verify(cacheManager, times(1)).removeCache("vertex-global");
+
     }
 }

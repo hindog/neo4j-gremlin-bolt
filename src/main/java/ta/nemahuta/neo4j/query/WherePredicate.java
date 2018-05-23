@@ -11,6 +11,9 @@ import javax.annotation.Nonnull;
  */
 public interface WherePredicate extends QueryPredicate {
 
+    WherePredicate EMPTY = (queryBuilder, parameters) -> {
+    };
+
     /**
      * Joins this predicate and another one with an AND operator.
      *
@@ -18,7 +21,12 @@ public interface WherePredicate extends QueryPredicate {
      * @return the new predicate
      */
     @Nonnull
-    default WherePredicate and(@Nonnull @NonNull final QueryPredicate rhs) {
+    default WherePredicate and(@Nonnull @NonNull final WherePredicate rhs) {
+        if (this == EMPTY) {
+            return rhs;
+        } else if (rhs == EMPTY) {
+            return this;
+        }
         final QueryPredicate lhs = this;
         return (queryBuilder, parameters) -> {
             lhs.append(queryBuilder, parameters);
@@ -34,7 +42,12 @@ public interface WherePredicate extends QueryPredicate {
      * @return the new predicate
      */
     @Nonnull
-    default WherePredicate or(@Nonnull @NonNull final QueryPredicate rhs) {
+    default WherePredicate or(@Nonnull @NonNull final WherePredicate rhs) {
+        if (this == EMPTY) {
+            return rhs;
+        } else if (rhs == EMPTY) {
+            return this;
+        }
         final QueryPredicate lhs = this;
         return (queryBuilder, parameters) -> {
             lhs.append(queryBuilder, parameters);
