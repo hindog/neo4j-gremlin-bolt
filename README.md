@@ -2,7 +2,7 @@
 
 This project allows the use of the [Apache Tinkerpop](http://tinkerpop.apache.org/) Java API with the [neo4j server](http://neo4j.com/) using the [BOLT](https://github.com/neo4j/neo4j-java-driver) protocol.
 
-# Kudos
+## Kudos
 
 I forked this project from [Steelbridge Labs](https://github.com/SteelBridgeLabs/neo4j-gremlin-bolt) and alhough I have nearly re-engineered
 each and every part of the code, I want to acknowledge their work. 
@@ -15,7 +15,7 @@ each and every part of the code, I want to acknowledge their work.
 ## Requirements for building
 
 * Java 8.
-* Gradle 4.6 or newer (use the wrapper, please)
+* Gradle 4.x or newer (use the wrapper, please)
 
 ## Usage
 
@@ -49,69 +49,24 @@ neo4j-gremlin-bolt and it's modules are licensed under the [Apache License v 2.0
 
 # Graph API
 
-## Element ID providers
-**TODO rewrite this section**
-The library supports an open architecture for element ID generation for new Vertices and Edges. The following element ID providers are supported out of the box:
-
-### Neo4J native id() support, see [Neo4JNativeElementIdProvider](https://github.com/SteelBridgeLabs/neo4j-gremlin-bolt/blob/master/src/main/java/com/steelbridgelabs/oss/neo4j/structure/providers/Neo4JNativeElementIdProvider.java) for more information.
-
+## Graph configuration
+The graph configuration will be used to connect to the graph.
+You can use the builder to create one:
 ```java
-    // create id provider
-    Neo4JElementIdProvider<?> provider = new Neo4JNativeElementIdProvider();
-```
-Pros:
-
- * IDs are stored as `java.lang.Long` instances.
- * Fewer database hits on MATCH statements since index lookups are not required at the time of locating an entity by id: `MATCH (n:Label) WHERE ID(n) = {id} RETURN n`
-
-Cons:
-
- * CREATE statements will run slower since the entity id must be retrieved from the database after insertion: `CREATE (n:label{field1: value, ..., fieldN: valueN}) RETURN ID(n)` 
- * Entity IDs in Neo4J are not guaranteed to be the same after a database restart/upgrade. Storing links to Neo4J entities outside the database based on IDs could become invalid after a database restart/upgrade. 
- 
-### Database sequence support, see [DatabaseSequenceElementIdProvider](https://github.com/SteelBridgeLabs/neo4j-gremlin-bolt/blob/master/src/main/java/com/steelbridgelabs/oss/neo4j/structure/providers/DatabaseSequenceElementIdProvider.java) for more information.
-
-```java
-    // create id provider
-    Neo4JElementIdProvider<?> provider = new DatabaseSequenceElementIdProvider(driver);
-```
-Pros:
-
- * IDs are stored as `java.lang.Long` instances.
- * CREATE statements will run faster since there is no need to retrieve the entity after an insert operation: `CREATE (n:label{id: 1, field1: value, ..., fieldN: valueN})` 
- * Entity IDs are guaranteed to be the same after a database restart/upgrade since they are stored as property values. 
-
-Cons:
-
- * A unique index is required for each one of the Labels used in your model.
- * More database hits on MATCH statements since an index lookup is required in order to locate an entity by id: `MATCH (n:Label) WHERE n.id = {id} RETURN n`
-
-### Custom providers, by implementing the [Neo4JElementIdProvider](https://github.com/SteelBridgeLabs/neo4j-gremlin-bolt/blob/master/src/main/java/com/steelbridgelabs/oss/neo4j/structure/Neo4JElementIdProvider.java) interface.
-
-## Connecting to the database
-
-* Create driver instance, see [neo4j-java-driver](https://github.com/neo4j/neo4j-java-driver) for more information.
-
-```java
-    // create driver instance
-    Driver driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "neo4j"));
+    // Create a configuration using basic authentication
+    final Neo4JConfiguration config = Neo4JConfiguration.builder()
+                        .graphName("partitionLabel") // this is optional
+                        .hostname("localhost")
+                        .port(7687)
+                        .authToken(AuthTokens.basic("neo4j", "neo4j123")).build();
 ```
 
-* Create element id provider instances, see [providers](#element-id-providers) for more information. 
-
+## Graph Factory
+The graph factory is being to share a session (including the connection pool of it) and a global cache of loaded elements 
+in an environment.
+To obtain a graph factory just create a new one using the configuration:
 ```java
-    // create id provider instances
-    vertexIdProvider = ...
-    edgeIdProvider = ...
-```
-
-* Create [Graph](http://tinkerpop.apache.org/javadocs/current/core/org/apache/tinkerpop/gremlin/structure/Graph.html) instance.
-
-```java
-    // create graph instance
-    try (Graph graph = new Neo4JGraph(driver, vertexIdProvider, edgeIdProvider)) {
-        
-    }
+    Neo4JGraphFactory graphFactory = new Neo4JGraphFactory(config);
 ```
 
 ## Working with transactions
@@ -120,7 +75,7 @@ Cons:
 
 ```java
     // create graph instance
-    try (Graph graph = new Neo4JGraph(driver, vertexIdProvider, edgeIdProvider)) {
+    try (Graph graph = graphFactory.get()) {
         // begin transaction
         try (Transaction transaction = graph.tx()) {
             // use Graph API to create, update and delete Vertices and Edges
@@ -130,39 +85,6 @@ Cons:
         }
     }
 ```
-
-## Enabling Neo4J profiler
-
-* Set logger INFO level to the package: com.steelbridgelabs.oss.neo4j.structure.summary 
-
-* Enable profiler to the [Graph](http://tinkerpop.apache.org/javadocs/current/core/org/apache/tinkerpop/gremlin/structure/Graph.html) instance.
-
-```java
-    // create graph instance
-    try (Neo4JGraph graph = new Neo4JGraph(driver, vertexIdProvider, edgeIdProvider)) {
-        // enable profiler
-        graph.setProfilerEnabled(true);
-        
-    }
-```
-
-The library will prefix CYPHER statements with the PROFILE clause dumping the output into the log file, example: 
-
-````
-2016-08-26 23:19:42.226  INFO 98760 --- [-f6753a03391b-1] c.s.o.n.s.summary.ResultSummaryLogger    : Profile for CYPHER statement: Statement{text='PROFILE MATCH (n:Person{id: {id}})-[r:HAS_ADDRESS]->(m) RETURN n, r, m', parameters={id: 1306984}}
-
-+----------------------+----------------+------+---------+-----------+
-| Operator             + Estimated Rows + Rows + DB Hits + Variables |
-+----------------------+----------------+------+---------+-----------+
-| +ProduceResults      |              0 |    1 |       0 | m, n, r   |
-| |                    +----------------+------+---------+-----------+
-| +Expand(All)         |              0 |    1 |       2 | m, n, r   |
-| |                    +----------------+------+---------+-----------+
-| +Filter              |              0 |    1 |       1 | n         |
-| |                    +----------------+------+---------+-----------+
-| +NodeUniqueIndexSeek |              0 |    1 |       2 | n         |
-+----------------------+----------------+------+---------+-----------+
-````
 
 ## Working with Vertices and Edges
 
@@ -196,7 +118,7 @@ Create a new [Vertex](http://tinkerpop.apache.org/javadocs/current/core/org/apac
 To compile the code and run all the unit tests:
 
 ````
-mvn clean install
+./gradlew test assemble
 ````
 
 To run the Tinkerpop integration tests you need a running instance of the neo4j
@@ -210,5 +132,5 @@ docker run -d --name neo4j -p 7687:7687 -e NEO4J_AUTH=neo4j/neo4j123 neo4j:3.2-e
 And then execute the integration tests by running the following command:
 
 ````
-mvn test -Pintegration-test
+./gradlew integrationTest
 ````
