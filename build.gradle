@@ -83,6 +83,7 @@ task integrationTest(type: Test) {
     mustRunAfter test
 }
 
+jacocoTestReport.dependsOn integrationTest
 check.dependsOn integrationTest
 
 test {
@@ -103,10 +104,13 @@ jacoco {
 
 test.jacoco.excludes['ta.nemahuta.neo4j.features.*']
 
-jacocoTestReport.reports {
-    xml.enabled = true
-    html.enabled = true
-    xml.destination "${buildDir}/reports/jacoco/report.xml"
+jacocoTestReport {
+    dependsOn test, integrationTest
+    executionData = files(test.jacoco.destinationFile, integrationTest.jacoco.destinationFile)
+    reports {
+        xml.enabled = true
+        xml.destination "${buildDir}/reports/jacoco/report.xml"
+    }
 }
 
 jacocoTestCoverageVerification {
