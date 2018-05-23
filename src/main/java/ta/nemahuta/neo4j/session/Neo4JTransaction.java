@@ -51,7 +51,9 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
 
     @Override
     protected void doReadWrite() {
-        open();
+        if (!isOpen()) {
+            open();
+        }
     }
 
     @Override

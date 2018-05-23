@@ -25,6 +25,6 @@ class DefaultRelationProviderTest {
         stub.stubEdgeLoad("MATCH (n:`graphLabel`)-[r:`funny`]->(m:`graphLabel`) WHERE ID(n) IN {vertexId1} RETURN r",
                 ImmutableMap.of("vertexId1", Collections.singleton(2l)), 1l, 2l);
         final Map<String, Set<Long>> actual = sut.loadRelatedIds(2l, Direction.OUT, ImmutableSet.of("funny"));
-        assertEquals(ImmutableMap.of("remote", ImmutableSet.of(1l)), actual);
+        assertEquals(ImmutableMap.of("remote", Collections.singleton(1l)), actual);
     }
 }

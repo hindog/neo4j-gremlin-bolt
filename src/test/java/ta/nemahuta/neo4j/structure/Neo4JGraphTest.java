@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
 import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +25,8 @@ import ta.nemahuta.neo4j.session.Neo4JTransaction;
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
 import ta.nemahuta.neo4j.testutils.StatementExecutorStub;
+
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -77,6 +80,19 @@ class Neo4JGraphTest {
     }
 
     @Test
+    void addEdge() {
+        stub.stubVertexCreate("CREATE (v:`y`:`x`) SET v={vertexProps1} RETURN ID(v)", ImmutableMap.of("vertexProps1", ImmutableMap.of("x", "y")), 1l);
+        final Vertex outVertex = sut.addVertex(T.label, "y", "x", "y");
+        stub.stubVertexCreate("CREATE (v:`z`:`x`) SET v={vertexProps1} RETURN ID(v)", ImmutableMap.of("vertexProps1", ImmutableMap.of("x", "y")), 2l);
+        final Vertex inVertex = sut.addVertex(T.label, "z", "x", "y");
+        stub.stubEdgeCreate("MATCH (n:`x`), (m:`x`) WHERE ID(n) IN {vertexId1} AND ID(m) IN {vertexId2} CREATE (n)-[r:`q`]->(m) SET r={edgeProps1} RETURN ID(r)",
+                ImmutableMap.of("vertexId1", Collections.singleton(1l), "vertexId2", Collections.singleton(2l), "edgeProps1", ImmutableMap.of("q", "p")),
+                3l);
+
+        assertTrue(outVertex.addEdge("q", inVertex, "q", "p") instanceof Neo4JEdge);
+    }
+
+    @Test
     void compute() {
         assertThrows(UnsupportedOperationException.class, () -> sut.compute());
     }
@@ -88,10 +104,14 @@ class Neo4JGraphTest {
 
     @Test
     void vertices() {
+        stub.stubVertexLoad("MATCH (v:`x`) WHERE ID(v) IN {vertexId1} RETURN v", ImmutableMap.of("vertexId1", Collections.singleton(1)));
+        assertNotNull(sut.vertices(1l));
     }
 
     @Test
     void edges() {
+        stub.stubEdgeLoad("MATCH (n:`x`)-[r]->(m:`x`) WHERE ID(r) IN {edgeId1} RETURN r", ImmutableMap.of("edgeId1", Collections.singleton(1)), 1l, 2l);
+        assertNotNull(sut.edges(1l));
     }
 
     @Test
@@ -105,6 +125,15 @@ class Neo4JGraphTest {
         sut.close();
         // then: 'session is closed'
         verify(session).close();
+        verify(sessionCache).close();
+    }
+
+    @Test
+    void closeOnOpenTx() {
+        // when: 'an open transaction'
+        sut.tx().open();
+        // then: 'closing the graph'
+        assertThrows(IllegalStateException.class, () -> sut.close());
     }
 
     @Test

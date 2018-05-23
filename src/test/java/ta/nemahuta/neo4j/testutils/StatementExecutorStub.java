@@ -2,7 +2,6 @@ package ta.nemahuta.neo4j.testutils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import org.javatuples.Pair;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
@@ -19,12 +18,12 @@ import static ta.nemahuta.neo4j.testutils.MockUtils.*;
 
 public class StatementExecutorStub implements StatementExecutor {
 
-    private final Map<Pair<String, String>, StatementResult> statementStubs = new HashMap<>();
+    private final Map<String, StatementResult> statementStubs = new HashMap<>();
 
     @Nullable
     @Override
     public StatementResult executeStatement(@Nonnull final Statement statement) {
-        final Pair<String, String> key = new Pair<>(statement.text(), statement.parameters().asMap().toString());
+        final String key = getKey(statement.text(), statement.parameters().asMap());
         return Optional.ofNullable(statementStubs.get(key))
                 .orElseThrow(() -> new IllegalStateException("No stub exists for statement:\n" +
                         key +
@@ -57,7 +56,12 @@ public class StatementExecutorStub implements StatementExecutor {
     }
 
     public void stubStatementExecution(final String text, final Map<String, Object> params, final StatementResult statementResult) {
-        statementStubs.put(new Pair<>(text, params.toString()), statementResult);
+        statementStubs.put(getKey(text, params), statementResult);
+    }
+
+    @Nonnull
+    private String getKey(final String text, final Map<String, Object> params) {
+        return text + " - " + params.keySet().stream().sorted().map(k -> k + "=" + params.get(k)).collect(Collectors.joining(", "));
     }
 
     public void stubVertexIdForLabel(final String label) {
@@ -76,9 +80,16 @@ public class StatementExecutorStub implements StatementExecutor {
         )));
     }
 
-    public void stubVertexCreate(final String text, final ImmutableMap<String, Object> params, final long id) {
+    public void stubVertexCreate(final String text, final Map<String, Object> params, final long id) {
         stubStatementExecution(text, params, mockStatementResult(mockRecord(
                 mockValue(Value::asLong, null, id)
         )));
+    }
+
+    public void stubEdgeCreate(final String text, final Map<String, Object> params, final long id) {
+        stubStatementExecution(text, params, mockStatementResult(mockRecord(
+                mockValue(Value::asLong, null, id)
+        )));
+
     }
 }
