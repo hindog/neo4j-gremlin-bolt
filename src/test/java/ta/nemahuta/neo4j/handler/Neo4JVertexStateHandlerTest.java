@@ -56,7 +56,7 @@ class Neo4JVertexStateHandlerTest extends AbstractStatementBuilderTest {
         // setup: 'stubbing the node'
         when(node.asMap()).thenReturn(properties);
         when(node.id()).thenReturn(id);
-        when(node.labels()).thenReturn(labels);
+        when(node.labels()).thenReturn(partition.ensurePartitionLabelsSet(labels));
         // when: 'converting the state'
         final Pair<Long, Neo4JVertexState> state = sut.getIdAndConvertToState(MockUtils.mockRecord(MockUtils.mockValue(Value::asNode, null, node)));
         assertEquals(new Pair<>(id, this.state), state);

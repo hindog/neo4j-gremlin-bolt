@@ -56,10 +56,16 @@ class SimpleCreateAndLoadTest {
     void createGraphCloseAndLoad(final String source) throws Exception {
         streamGraph(source);
         compareGraph(source);
-        try (Graph g = graphFactory.get()) {
-            try (Transaction tx = g.tx()) {
-                g.vertices().forEachRemaining(Vertex::remove);
-                tx.commit();
+        clearGraph();
+    }
+
+    void clearGraph() throws Exception {
+        if (graphFactory != null) {
+            try (Graph g = graphFactory.get()) {
+                try (Transaction tx = g.tx()) {
+                    g.vertices().forEachRemaining(Vertex::remove);
+                    tx.commit();
+                }
             }
         }
     }
