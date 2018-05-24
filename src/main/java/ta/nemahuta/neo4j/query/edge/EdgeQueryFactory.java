@@ -9,6 +9,7 @@ import ta.nemahuta.neo4j.query.UniqueParamNameGenerator;
 import ta.nemahuta.neo4j.query.WherePredicate;
 import ta.nemahuta.neo4j.query.edge.operation.CreateEdgeOperation;
 import ta.nemahuta.neo4j.query.edge.operation.ReturnEdgeOperation;
+import ta.nemahuta.neo4j.query.operation.CreatePropertyIndex;
 import ta.nemahuta.neo4j.query.operation.DeleteOperation;
 import ta.nemahuta.neo4j.query.operation.ReturnIdOperation;
 import ta.nemahuta.neo4j.query.operation.UpdatePropertiesOperation;
@@ -169,6 +170,19 @@ public abstract class EdgeQueryFactory {
     public EdgeOperation properties(@Nonnull @NonNull final ImmutableMap<String, Object> committedProperties,
                                     @Nonnull @NonNull final ImmutableMap<String, Object> currentProperties) {
         return new UpdatePropertiesOperation(committedProperties, currentProperties, getRelationAlias(), getParamNameGenerator().generate("edgeProps"));
+    }
+
+    /**
+     * Create a new property index for edge with the provided label.
+     *
+     * @param label        the label to be matched
+     * @param propertyName the property name to create an index on
+     * @return the operation
+     */
+    @Nonnull
+    public EdgeOperation createPropertyIndex(@Nonnull @NonNull final String label,
+                                             @Nonnull @NonNull final String propertyName) {
+        return new CreatePropertyIndex(Collections.singleton(label), propertyName);
     }
 
     /**

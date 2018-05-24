@@ -75,6 +75,15 @@ public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Ne
                 .build().get();
     }
 
+    @Nonnull
+    @Override
+    protected Statement createCreateIndexCommand(@Nonnull final Set<String> labels,
+                                                 @Nonnull final String propertyName) {
+        return query()
+                .andThen(b -> b.createPropertyIndex(labels, propertyName))
+                .build().get();
+    }
+
     /**
      * @return a new {@link VertexQueryBuilder}
      */

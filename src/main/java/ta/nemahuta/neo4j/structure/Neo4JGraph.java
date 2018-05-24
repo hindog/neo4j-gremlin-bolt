@@ -59,6 +59,8 @@ public class Neo4JGraph implements Graph {
     private final SoftRefMap<Long, Neo4JEdge> edges = new SoftRefMap<>();
 
     private final RelationProvider relationProvider;
+    private final Neo4JVertexStateHandler vertexStateHandler;
+    private final Neo4JEdgeStateHandler edgeStateHandler;
 
     public Neo4JGraph(@Nonnull @NonNull final Session session,
                       @Nonnull @NonNull final SessionCacheManager sessionCacheManager,
@@ -75,8 +77,10 @@ public class Neo4JGraph implements Graph {
         this.cache = sessionCache;
         this.partition = partition;
         this.transaction = new Neo4JTransaction(this, session, sessionCache);
-        this.vertexScope = new DefaultNeo4JElementStateScope<>(sessionCache.getVertexCache(), new Neo4JVertexStateHandler(transaction, partition));
-        this.edgeScope = new DefaultNeo4JElementStateScope<>(sessionCache.getEdgeCache(), new Neo4JEdgeStateHandler(transaction, partition));
+        this.vertexStateHandler = new Neo4JVertexStateHandler(transaction, partition);
+        this.edgeStateHandler = new Neo4JEdgeStateHandler(transaction, partition);
+        this.vertexScope = new DefaultNeo4JElementStateScope<>(sessionCache.getVertexCache(), vertexStateHandler);
+        this.edgeScope = new DefaultNeo4JElementStateScope<>(sessionCache.getEdgeCache(), edgeStateHandler);
         this.relationProvider = new DefaultRelationProvider(transaction, partition);
         this.configuration = configuration;
     }
@@ -119,6 +123,28 @@ public class Neo4JGraph implements Graph {
     @Override
     public Iterator<Edge> edges(@Nonnull @NonNull final Object... edgeIds) {
         return loadAndReturnFoundElementsOnly(edgeScope, id -> getOrCreateEdge(id), edgeIds);
+    }
+
+    /**
+     * Creates an index for a vertex property using the provided labels to match them.
+     *
+     * @param labels       the labels of the vertices to match
+     * @param propertyName the name of the property to create an index for
+     */
+    public void createVertexPropertyIndex(@Nonnull @NonNull final Set<String> labels,
+                                          @Nonnull @NonNull final String propertyName) {
+        vertexStateHandler.createIndex(labels, propertyName);
+    }
+
+    /**
+     * Creates an index for a edge property using the provided label to match them.
+     *
+     * @param label        the labels of the vertices to match
+     * @param propertyName the name of the property to create an index for
+     */
+    public void createEdgePropertyIndex(@Nonnull @NonNull final String label,
+                                        @Nonnull @NonNull final String propertyName) {
+        edgeStateHandler.createIndex(Collections.singleton(label), propertyName);
     }
 
     private <R, S extends Neo4JElementState> Iterator<R> loadAndReturnFoundElementsOnly(@Nonnull @NonNull final Neo4JElementStateScope<S> scope,

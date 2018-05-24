@@ -22,6 +22,7 @@ import ta.nemahuta.neo4j.testutils.MockUtils;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -90,4 +91,17 @@ class Neo4JEdgeStateHandlerTest extends AbstractStatementBuilderTest {
                 ImmutableMap.of("edgeId1", ImmutableSet.of(4l, 5l)),
                 sut.createLoadCommand(ImmutableSet.of(4l, 5l)));
     }
+
+    @Test
+    void createCreateIndexCommand() {
+        assertStatement("CREATE INDEX ON :`x`(y)",
+                ImmutableMap.of(),
+                sut.createCreateIndexCommand(ImmutableSet.of("x"), "y"));
+    }
+
+    @Test
+    void createCreateIndexCommandWrongSize() {
+        assertThrows(IllegalArgumentException.class, () -> sut.createCreateIndexCommand(ImmutableSet.of("x", "y"), "z"));
+    }
+
 }

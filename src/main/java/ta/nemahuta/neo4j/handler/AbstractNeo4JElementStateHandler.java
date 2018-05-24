@@ -53,6 +53,12 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
                 .orElseThrow(() -> new IllegalStateException("The statement executed returned a non single long record."));
     }
 
+    @Override
+    public void createIndex(@Nonnull @NonNull final Set<String> labels,
+                            @Nonnull @NonNull final String propertyName) {
+        statementExecutor.executeStatement(createCreateIndexCommand(labels, propertyName));
+    }
+
     /**
      * Create a delete statement to be processed.
      *
@@ -89,5 +95,15 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
      */
     @Nonnull
     protected abstract Statement createLoadCommand(@Nonnull Set<Long> ids);
+
+    /**
+     * Create a command which creates an index for the property of all elements which match the provided labels.
+     *
+     * @param labels       the labels to be matched
+     * @param propertyName the name of the property
+     * @return the statement to be processed
+     */
+    @Nonnull
+    protected abstract Statement createCreateIndexCommand(@Nonnull Set<String> labels, @Nonnull String propertyName);
 
 }

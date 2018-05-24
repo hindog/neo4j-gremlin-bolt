@@ -1,6 +1,7 @@
 package ta.nemahuta.neo4j.structure;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
 import org.apache.tinkerpop.gremlin.structure.T;
@@ -14,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Statement;
+import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
 import ta.nemahuta.neo4j.cache.HierarchicalCache;
 import ta.nemahuta.neo4j.cache.SessionCache;
@@ -30,8 +32,7 @@ import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -112,6 +113,18 @@ class Neo4JGraphTest {
     void edges() {
         stub.stubEdgeLoad("MATCH (n:`x`)-[r]->(m:`x`) WHERE ID(r) IN {edgeId1} RETURN r", ImmutableMap.of("edgeId1", Collections.singleton(1)), 1l, 2l);
         assertNotNull(sut.edges(1l));
+    }
+
+    @Test
+    void createEdgePropertyIndex() {
+        stub.stubStatementExecution("CREATE INDEX ON :`relation`(property)", ImmutableMap.of(), mock(StatementResult.class));
+        sut.createEdgePropertyIndex("relation", "property");
+    }
+
+    @Test
+    void createVertexPropertyIndex() {
+        stub.stubStatementExecution("CREATE INDEX ON :`v1`:`v2`:`x`(property)", ImmutableMap.of(), mock(StatementResult.class));
+        sut.createVertexPropertyIndex(ImmutableSet.of("v1", "v2"), "property");
     }
 
     @Test

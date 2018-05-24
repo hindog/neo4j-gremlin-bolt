@@ -77,6 +77,18 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
                 .build().get();
     }
 
+    @Nonnull
+    @Override
+    protected Statement createCreateIndexCommand(@Nonnull final Set<String> labels,
+                                                 @Nonnull final String propertyName) {
+        if (labels.size() != 1) {
+            throw new IllegalArgumentException("Expected exactly one label, but got: " + labels.size());
+        }
+        return query()
+                .andThen(b -> b.createPropertyIndex(labels.iterator().next(), propertyName))
+                .build().get();
+    }
+
     /**
      * @return a new {@link VertexQueryBuilder}
      */

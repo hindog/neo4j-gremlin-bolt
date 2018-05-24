@@ -89,4 +89,11 @@ class Neo4JVertexStateHandlerTest extends AbstractStatementBuilderTest {
                 ImmutableMap.of("vertexId1", ImmutableSet.of(2l, 3l)),
                 sut.createLoadCommand(ImmutableSet.of(2l, 3l)));
     }
+
+    @Test
+    void createCreateIndexCommand() {
+        assertStatement("CREATE INDEX ON :`x`:`y`:`graphLabel`(z)",
+                ImmutableMap.of(),
+                sut.createCreateIndexCommand(ImmutableSet.of("x", "y"), "z"));
+    }
 }

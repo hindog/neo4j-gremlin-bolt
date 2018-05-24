@@ -36,7 +36,7 @@ class AbstractNeo4JElementStateHandlerTest {
     private Neo4JElementState state;
 
     @Mock
-    private Statement deleteStmt, createStmt, updateStmt, loadStmt;
+    private Statement deleteStmt, createStmt, updateStmt, loadStmt, createIndexStmt;
 
     @Mock(answer = Answers.CALLS_REAL_METHODS)
     private StatementExecutor statementExecutor;
@@ -79,6 +79,12 @@ class AbstractNeo4JElementStateHandlerTest {
             @Override
             protected Statement createLoadCommand(@Nonnull final Set<Long> ids) {
                 return loadStmt;
+            }
+
+            @Nonnull
+            @Override
+            protected Statement createCreateIndexCommand(@Nonnull final Set<String> labels, final String propertyName) {
+                return createIndexStmt;
             }
         };
         when(statementExecutor.executeStatement(any())).then(i -> {
@@ -130,5 +136,12 @@ class AbstractNeo4JElementStateHandlerTest {
         // then: 'the insert command was invoked'
         verify(statementExecutor, times(1)).executeStatement(createStmt);
         verify(statementExecutor, times(1)).retrieveRecords(createStmt);
+    }
+
+    @Test
+    void createIndex() {
+        // when: ''
+        sut.createIndex(ImmutableSet.of("x"), "property");
+        verify(statementExecutor, times(1)).executeStatement(createIndexStmt);
     }
 }
