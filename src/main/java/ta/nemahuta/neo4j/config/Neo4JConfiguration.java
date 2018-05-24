@@ -45,7 +45,7 @@ public class Neo4JConfiguration {
      * the host name to be used for connection
      */
     @NonNull
-    @Getter(onMethod = @__(@Nonnull))
+    @Getter(onMethod_ = @Nonnull)
     @ConfigurationKey
     private final String hostname;
 
@@ -60,18 +60,18 @@ public class Neo4JConfiguration {
      * the authentication token to be used
      */
     @NonNull
-    @Getter(onMethod = @__(@Nonnull))
+    @Getter(onMethod_ = @Nonnull)
     @ConfigurationKey
     private final AuthToken authToken;
 
     /**
      * the optional graph name to be used to partition the graph
      */
-    @Getter(onMethod = @__(@Nullable))
+    @Getter(onMethod_ = @Nullable)
     @ConfigurationKey
     private final String graphName;
 
-    @Getter(onMethod = @__(@Nullable))
+    @Getter(onMethod_ = @Nullable)
     @ConfigurationKey
     private final Consumer<Config.ConfigBuilder> additionConfiguration;
 

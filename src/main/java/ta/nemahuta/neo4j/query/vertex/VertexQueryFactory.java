@@ -51,6 +51,7 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
      *
      * @param committedProperties the committed properties
      * @param currentProperties   the properties which are currently set
+     * @return the operation
      */
     @Nonnull
     public VertexOperation properties(@Nonnull @NonNull final Map<String, Object> committedProperties,

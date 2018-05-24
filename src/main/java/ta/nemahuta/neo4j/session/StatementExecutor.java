@@ -29,8 +29,10 @@ public interface StatementExecutor {
     StatementResult executeStatement(@Nonnull Statement statement);
 
     /**
+     * Retrieve the records of a statement execution through the {@link StatementResult}.
+     *
+     * @param statement the statement to retrieve the records for
      * @return a {@link Stream} of the {@link Record}s in the {@link StatementResult}
-     * @see #executeStatement(Statement)
      */
     @Nonnull
     default Stream<Record> retrieveRecords(@Nonnull @NonNull final Statement statement) {

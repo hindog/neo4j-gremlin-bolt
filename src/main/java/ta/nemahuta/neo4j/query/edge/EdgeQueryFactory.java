@@ -52,7 +52,7 @@ public abstract class EdgeQueryFactory {
     protected abstract Neo4JGraphPartition getPartition();
 
 
-    @Getter(onMethod = @__(@Nonnull))
+    @Getter(onMethod_ = @Nonnull)
     private final VertexQueryFactory lhs = new VertexQueryFactory() {
 
         @Nonnull
@@ -74,7 +74,7 @@ public abstract class EdgeQueryFactory {
         }
     };
 
-    @Getter(onMethod = @__(@Nonnull))
+    @Getter(onMethod_ = @Nonnull)
     private final VertexQueryFactory rhs = new VertexQueryFactory() {
 
         @Override

@@ -39,7 +39,7 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
 
     private final EdgeQueryFactory factory = new EdgeQueryFactory() {
 
-        @Getter(value = AccessLevel.PROTECTED, onMethod = @__(@Override))
+        @Getter(value = AccessLevel.PROTECTED, onMethod_ = @Override)
         protected final UniqueParamNameGenerator paramNameGenerator = new UniqueParamNameGenerator();
 
         @Override

@@ -145,6 +145,34 @@ bintray {
 
 tasks.bintrayUpload.onlyIf { !(project.version as String).endsWith("-SNAPSHOT") }
 
+javadoc {
+    source = sourceSets.main.allJava
+    classpath = configurations.compileClasspath
+
+    options {
+        setMemberLevel JavadocMemberLevel.PUBLIC
+        setAuthor true
+
+        links "https://docs.oracle.com/javase/8/docs/api/"
+    }
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    classifier = 'javadoc'
+    dependsOn javadoc
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
 publishing {
     publications {
         ModuleJar(MavenPublication) {
@@ -152,6 +180,9 @@ publishing {
             groupId project.group
             artifactId project.name
             version project.version as String
+
+            artifact sourcesJar
+            artifact javadocJar
         }
     }
 }

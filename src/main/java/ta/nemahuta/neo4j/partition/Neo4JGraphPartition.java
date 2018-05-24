@@ -32,6 +32,7 @@ public interface Neo4JGraphPartition {
     /**
      * Create a new predicate to match the orLabelsAnd of the partitions for the provided alias in a where clause.
      *
+     * @param alias the alias for the vertex
      * @return the {@link Optional} of the {@link WherePredicate} matching the labels
      */
     Optional<WherePredicate> vertexWhereLabelPredicate(@Nonnull String alias);

@@ -6,9 +6,9 @@ import org.ehcache.config.builders.CacheManagerBuilder;
 import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
-import ta.nemahuta.neo4j.config.Neo4JConfiguration;
 import ta.nemahuta.neo4j.cache.DefaultSessionCacheManager;
 import ta.nemahuta.neo4j.cache.SessionCacheManager;
+import ta.nemahuta.neo4j.config.Neo4JConfiguration;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -17,7 +17,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Factory for {@link Neo4JGraph}. Use the {@link Neo4JConfiguration#builder()} to build a new configuration for the factory.
+ * Factory for {@link Neo4JGraph}.
+ * The factory holds a global cache for vertices and edges and the driver which provides a connection pool.
  *
  * @author Christian Heike (christian.heike@icloud.com)
  */
