@@ -30,7 +30,9 @@ public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Ne
     @Override
     protected Pair<Long, Neo4JVertexState> getIdAndConvertToState(final Record r) {
         final Node n = r.get(0).asNode();
-        final Neo4JVertexState state = new Neo4JVertexState(ImmutableSet.copyOf(n.labels()), ImmutableMap.copyOf(n.asMap()));
+        final Neo4JVertexState state = new Neo4JVertexState(
+                ImmutableSet.copyOf(readPartition.ensurePartitionLabelsNotSet(n.labels())),
+                ImmutableMap.copyOf(n.asMap()));
         return new Pair<>(n.id(), state);
     }
 
