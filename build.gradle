@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'ta.nemahuta.neo4j'
-version = '1.2.0-SNAPSHOT'
+version = '1.1.1'
 
 description = "Tanemahuta's Neo4J Gremlin (Bolt) integration"
 
