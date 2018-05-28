@@ -1,5 +1,6 @@
 package ta.nemahuta.neo4j.structure;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.configuration.Configuration;
@@ -105,14 +106,20 @@ class Neo4JGraphTest {
 
     @Test
     void vertices() {
-        stub.stubVertexLoad("MATCH (v:`x`) WHERE ID(v) IN {vertexId1} RETURN v", ImmutableMap.of("vertexId1", Collections.singleton(1)));
-        assertNotNull(sut.vertices(1l));
+        stub.stubVertexLoad("MATCH (v:`x`) WHERE ID(v) IN {vertexId1} RETURN v", ImmutableMap.of("vertexId1", Collections.singleton(1)), 1l);
+        assertEquals(1, ImmutableList.copyOf(sut.vertices(1l)).size());
+    }
+
+    @Test
+    void verticesAll() {
+        stub.stubVertexLoad("MATCH (v:`x`) RETURN v", ImmutableMap.of(), 1l);
+        assertEquals(1, ImmutableList.copyOf(sut.vertices()).size());
     }
 
     @Test
     void edges() {
-        stub.stubEdgeLoad("MATCH (n:`x`)-[r]->(m:`x`) WHERE ID(r) IN {edgeId1} RETURN r", ImmutableMap.of("edgeId1", Collections.singleton(1)), 1l, 2l);
-        assertNotNull(sut.edges(1l));
+        stub.stubEdgeLoad("MATCH (n:`x`)-[r]->(m:`x`) WHERE ID(r) IN {edgeId1} RETURN r", ImmutableMap.of("edgeId1", Collections.singleton(1)), 1l, 1l, 2l);
+        assertEquals(1, ImmutableList.copyOf(sut.edges(1l)).size());
     }
 
     @Test

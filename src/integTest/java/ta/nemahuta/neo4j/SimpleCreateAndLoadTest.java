@@ -1,5 +1,6 @@
 package ta.nemahuta.neo4j;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -19,6 +20,7 @@ import java.io.*;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SimpleCreateAndLoadTest {
 
@@ -52,10 +54,12 @@ class SimpleCreateAndLoadTest {
 
 
     @ParameterizedTest
-    @ValueSource(strings = {"/graph1-example.xml", "/graph2-example.xml"})
-    void createGraphCloseAndLoad(final String source) throws Exception {
+    @ValueSource(strings = {"/graph1-example.xml:6", "/graph2-example.xml:809"})
+    void createGraphCloseAndLoad(final String sourceAndCount) throws Exception {
+        final String source = sourceAndCount.split(":")[0];
+        final Long size = Long.valueOf(sourceAndCount.split(":")[1]);
         streamGraph(source);
-        compareGraph(source);
+        compareGraph(source, size);
         clearGraph();
     }
 
@@ -70,10 +74,11 @@ class SimpleCreateAndLoadTest {
         }
     }
 
-    private void compareGraph(final String source) throws Exception {
+    private void compareGraph(final String source, final long size) throws Exception {
         try (OutputStream os = new ByteArrayOutputStream()) {
             try (Graph graph = graphFactory.get()) {
                 try (Transaction tx = graph.tx()) {
+                    assertEquals(size, ImmutableList.copyOf(graph.vertices()).size());
                     graph.io(IoCore.graphml()).writer().create().writeGraph(os, graph);
                     tx.rollback();
                 }
@@ -93,7 +98,6 @@ class SimpleCreateAndLoadTest {
                 try (InputStream is = getClass().getResourceAsStream(source)) {
                     graph.io(IoCore.graphml()).reader().create().readGraph(is, graph);
                 }
-                tx.commit();
             }
         }
     }

@@ -151,10 +151,15 @@ public class Neo4JGraph implements Graph {
                                                                                         @Nonnull @NonNull final Function<Long, R> accessor,
                                                                                         @Nonnull @NonNull final Object... ids) {
         // Load all elements using the scope
-        final Map<Long, S> loaded = scope.getAll(ImmutableList.copyOf(Stream.of(ids).filter(l -> l instanceof Long).map(l -> (Long) l).iterator()));
+        final Collection<Long> idCollection = Stream.of(ids).filter(Long.class::isInstance).map(l -> (Long) l).collect(ImmutableList.toImmutableList());
+        final Map<Long, S> loaded = scope.getAll(ImmutableList.copyOf(idCollection.iterator()));
         // Stream the ids and return those who had long ids and have been found only
-        return Stream.of(ids)
-                .map(id -> (id instanceof Long) && loaded.get(id) == null ? accessor.apply((Long) id) : null).iterator();
+
+        return (!idCollection.isEmpty() ? idCollection.stream() : loaded.keySet().stream())
+                .filter(loaded::containsKey)
+                .filter(Objects::nonNull)
+                .map(accessor::apply)
+                .iterator();
     }
 
     Neo4JEdge addEdge(@Nonnull @NonNull final String label,

@@ -2,6 +2,7 @@ package ta.nemahuta.neo4j.cache;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.ehcache.Cache;
 import org.ehcache.config.CacheRuntimeConfiguration;
 import org.ehcache.spi.loaderwriter.BulkCacheLoadingException;
@@ -15,6 +16,7 @@ import java.util.*;
  * Default implementation of the {@link HierarchicalCache}.
  */
 @RequiredArgsConstructor
+@Slf4j
 public class DefaultHierarchicalCache<K, V> implements HierarchicalCache<K, V> {
 
     /**
@@ -31,10 +33,18 @@ public class DefaultHierarchicalCache<K, V> implements HierarchicalCache<K, V> {
 
     @Override
     public void commit() {
-        child.forEach(e -> {
+        long counter = 0;
+        for (final Entry<K, V> e : child) {
             parent.put(e.getKey(), e.getValue());
             child.remove(e.getKey());
-        });
+            counter++;
+        }
+        log.debug("Committed {} elements in cache", counter);
+    }
+
+    @Override
+    public Iterator<Entry<K, V>> childIterator() {
+        return child.iterator();
     }
 
     @Override
@@ -76,6 +86,7 @@ public class DefaultHierarchicalCache<K, V> implements HierarchicalCache<K, V> {
 
     @Override
     public void clear() {
+        log.debug("Clearing cache");
         child.clear();
     }
 

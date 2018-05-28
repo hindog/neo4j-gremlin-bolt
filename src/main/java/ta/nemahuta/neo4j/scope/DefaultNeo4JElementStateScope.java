@@ -1,8 +1,10 @@
 package ta.nemahuta.neo4j.scope;
 
+import com.google.common.collect.ImmutableSet;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.ehcache.Cache;
 import ta.nemahuta.neo4j.cache.HierarchicalCache;
 import ta.nemahuta.neo4j.handler.Neo4JElementStateHandler;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
@@ -11,6 +13,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -34,6 +37,8 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
     private final Neo4JElementStateHandler remoteElementHandler;
 
     private final Set<Long> deleted = Collections.newSetFromMap(new ConcurrentHashMap<>());
+
+    private final AtomicBoolean completelyLoaded = new AtomicBoolean(false);
 
     @Override
     public void update(final long id,
@@ -80,29 +85,63 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
     @Override
     public Map<Long, S> getAll(@Nonnull @NonNull final Collection<Long> ids) {
         return locked(ReadWriteLock::readLock, () -> {
+            log.debug("Retrieving {} items", ids.size());
             final Map<Long, S> results = new ConcurrentHashMap<>();
-            final Set<Long> idsToBeLoaded = ids
-                    .parallelStream()
-                    .filter(id -> !deleted.contains(id)) // Deleted elements in the current scope will not be handled
-                    .filter(id ->
-                            Optional.ofNullable(hierarchicalCache.get(id))
-                                    .map(state -> {
-                                        // Put to map and remove from the ones to be loaded
-                                        results.put(id, state);
-                                        return false;
-                                    }).orElse(true)
-                    ).collect(Collectors.toSet());
-
-            log.debug("Found the following ids to be in scope already: {}", results.keySet());
-            log.debug("Loading the following ids from the remote: {}", idsToBeLoaded);
-
+            if (ids.isEmpty()) {
+                // Mark all ids to be loaded
+                if (completelyLoaded.getAndSet(true)) {
+                    log.trace("Scope is populated, using cache items only.");
+                    // if all ids have been loaded at this point, we take them from the cache completely
+                    putAllFromCache(ImmutableSet.of(), results);
+                } else {
+                    log.trace("Scope is not populated yet, loading all items.");
+                    // in the other case we must load each and every entry from the scope
+                    loadFromSession(ImmutableSet.of(), results);
+                }
+            } else {
+                putAllFromCache(ids, results);
+                final Set<Long> idsToBeLoaded = ids.stream().filter(id -> !results.containsKey(id)).collect(Collectors.toSet());
+                log.trace("Found {} elements to be in scope already.", results.size());
+                if (!idsToBeLoaded.isEmpty()) {
+                    log.trace("Loading the other {} elements.", idsToBeLoaded.size());
+                    loadFromSession(idsToBeLoaded, results);
+                }
+            }
             // Now we load all the remaining elements and put them to the cache and in the results
-            final Map<Long, S> loaded = remoteElementHandler.getAll(idsToBeLoaded);
-            results.putAll(loaded);
-            hierarchicalCache.putAll(loaded);
-
             return results;
         });
+    }
+
+    private void loadFromSession(final Set<Long> selectorOrEmpty, final Map<Long, S> results) {
+        final Map<Long, S> loaded = remoteElementHandler.getAll(selectorOrEmpty);
+        log.trace("Loaded {} items", loaded.size());
+        for (final Map.Entry<Long, S> entry : loaded.entrySet()) {
+            if (!deleted.contains(entry.getKey())) {
+                results.put(entry.getKey(), entry.getValue());
+                hierarchicalCache.put(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    private void putAllFromCache(final Collection<Long> selectorOrEmpty, final Map<Long, S> results) {
+        long counter = 0;
+        if (selectorOrEmpty.isEmpty()) {
+            final Iterator<Cache.Entry<Long, S>> iter = this.hierarchicalCache.childIterator();
+            while (iter.hasNext()) {
+                final Cache.Entry<Long, S> next = iter.next();
+                results.put(next.getKey(), next.getValue());
+                counter++;
+            }
+        } else {
+            for (final Long key : selectorOrEmpty) {
+                final S value = this.hierarchicalCache.get(key);
+                if (value != null) {
+                    counter++;
+                    results.put(key, value);
+                }
+            }
+        }
+        log.trace("Put {} elements from cache", counter);
     }
 
     private <S> S locked(@Nonnull @NonNull final Function<ReadWriteLock, Lock> lockFunction, @Nonnull @NonNull final Supplier<S> fun) {

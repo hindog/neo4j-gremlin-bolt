@@ -13,12 +13,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Iterator;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,10 +41,7 @@ class DefaultHierarchicalCacheTest {
     @Test
     void commit() {
         // setup: 'stub the invocation necessary for committing the elements'
-        doAnswer(i -> {
-            i.<Consumer<Cache.Entry<String, String>>>getArgument(0).accept(cacheEntryMock1);
-            return null;
-        }).when(childCacheMock).forEach(any());
+        when(childCacheMock.iterator()).then(i -> Stream.of(cacheEntryMock1).iterator());
         // when: 'committing the cache'
         sut.commit();
         // then: 'the element of the child cache has been put to the parent cache'

@@ -49,9 +49,9 @@ public class StatementExecutorStub implements StatementExecutor {
         )));
     }
 
-    public void stubEdgeLoad(final String text, final Map<String, Object> params, final long indId, final long outId) {
+    public void stubEdgeLoad(final String text, final Map<String, Object> params, final long id, final long indId, final long outId) {
         stubStatementExecution(text, params, mockStatementResult(mockRecord(
-                mockValue(Value::asRelationship, null, mockRelationship(2l, "remote", ImmutableMap.of("x", "y"), indId, outId))
+                mockValue(Value::asRelationship, null, mockRelationship(id, "remote", ImmutableMap.of("x", "y"), indId, outId))
         )));
     }
 
@@ -74,9 +74,9 @@ public class StatementExecutorStub implements StatementExecutor {
         )));
     }
 
-    public void stubVertexLoad(final String text, final Map<String, Object> params) {
+    public void stubVertexLoad(final String text, final Map<String, Object> params, long id) {
         stubStatementExecution(text, params, mockStatementResult(mockRecord(
-                mockValue(Value::asNode, null, mockNode(2l, ImmutableSet.of("remote"), ImmutableMap.of("x", "y")))
+                mockValue(Value::asNode, null, mockNode(id, ImmutableSet.of("remote"), ImmutableMap.of("x", "y")))
         )));
     }
 
