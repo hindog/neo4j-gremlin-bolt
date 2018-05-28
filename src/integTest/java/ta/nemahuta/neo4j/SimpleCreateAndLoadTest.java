@@ -1,13 +1,14 @@
 package ta.nemahuta.neo4j;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.io.IoCore;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.Test;
 import org.neo4j.driver.v1.AuthTokens;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,23 +18,34 @@ import ta.nemahuta.neo4j.structure.Neo4JGraphFactory;
 
 import javax.annotation.Nonnull;
 import java.io.*;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SimpleCreateAndLoadTest {
 
     private static final UUID uuid = UUID.randomUUID();
     private static final Logger log = LoggerFactory.getLogger(SimpleCreateAndLoadTest.class);
 
-    private Neo4JGraphFactory graphFactory = createFactory();
+    private static Neo4JGraphFactory graphFactory;
+
+    static {
+        try {
+            graphFactory = createFactory();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     SimpleCreateAndLoadTest() throws Exception {
     }
 
     @Nonnull
-    private Neo4JGraphFactory createFactory() throws Exception {
+    static private Neo4JGraphFactory createFactory() throws Exception {
         closeFactory();
         return graphFactory = new Neo4JGraphFactory(
                 Neo4JConfiguration.builder()
@@ -44,45 +56,68 @@ class SimpleCreateAndLoadTest {
         );
     }
 
-    @AfterEach
-    void closeFactory() throws Exception {
+    @AfterAll
+    static void closeFactory() throws Exception {
         if (graphFactory != null) {
             graphFactory.close();
             graphFactory = null;
         }
     }
 
-
-    @ParameterizedTest
-    @ValueSource(strings = {"/graph1-example.xml:6", "/graph2-example.xml:809"})
-    void createGraphCloseAndLoad(final String sourceAndCount) throws Exception {
-        final String source = sourceAndCount.split(":")[0];
-        final Long size = Long.valueOf(sourceAndCount.split(":")[1]);
-        streamGraph(source);
-        compareGraph(source, size);
-        clearGraph();
+    @Test
+    void checkCreateAndReadSmallGraph() throws Exception {
+        checkGraph("/graph1-example.xml", 6, 6);
+        withGraph(graph -> {
+            final Optional<Vertex> josh = ImmutableList.copyOf(graph.vertices()).stream()
+                    .filter(v -> Objects.equals(v.property("name").value(), "josh")).findAny();
+            assertTrue(josh.isPresent(), "Josh is not present");
+            assertTrue(josh.get().edges(Direction.OUT).hasNext(), "No out edges for josh");
+        });
     }
 
+    @Test
+    void checkCreateAndReadXHugeGraph() throws Exception {
+        checkGraph("/graph2-example.xml", 809, 8049);
+    }
+
+    private void checkGraph(final String source, final long vertexCount, final long edgeCount) throws Exception {
+        streamGraph(source);
+        compareGraph(source, vertexCount, edgeCount);
+    }
+
+    @AfterEach
     void clearGraph() throws Exception {
         if (graphFactory != null) {
-            try (Graph g = graphFactory.get()) {
-                try (Transaction tx = g.tx()) {
-                    g.vertices().forEachRemaining(Vertex::remove);
-                    tx.commit();
-                }
+            withGraph(graph -> {
+                graph.vertices().forEachRemaining(Vertex::remove);
+                graph.tx().commit();
+            });
+        }
+    }
+
+    private <T> T withGraph(final GraphFunction<T> callable) throws Exception {
+        try (Graph graph = graphFactory.get()) {
+            try (Transaction tx = graph.tx()) {
+                return callable.apply(graph);
             }
         }
     }
 
-    private void compareGraph(final String source, final long size) throws Exception {
+    private void withGraph(final GraphConsumer consumer) throws Exception {
+        withGraph(graph -> {
+            consumer.consume(graph);
+            return null;
+        });
+    }
+
+    private void compareGraph(final String source, final long vertexCount, final long edgeCount) throws Exception {
         try (OutputStream os = new ByteArrayOutputStream()) {
-            try (Graph graph = graphFactory.get()) {
-                try (Transaction tx = graph.tx()) {
-                    assertEquals(size, ImmutableList.copyOf(graph.vertices()).size());
-                    graph.io(IoCore.graphml()).writer().create().writeGraph(os, graph);
-                    tx.rollback();
-                }
-            }
+            withGraph(graph -> {
+                assertEquals(vertexCount, ImmutableList.copyOf(graph.vertices()).size());
+                assertEquals(edgeCount, ImmutableList.copyOf(graph.edges()).size());
+                graph.io(IoCore.graphml()).writer().create().writeGraph(os, graph);
+                graph.tx().rollback();
+            });
             log.debug("\n", new String(((ByteArrayOutputStream) os).toByteArray()));
             try (Reader expected = new InputStreamReader(getClass().getResourceAsStream(source))) {
                 try (Reader actual = new InputStreamReader(new ByteArrayInputStream(((ByteArrayOutputStream) os).toByteArray()))) {
@@ -93,13 +128,21 @@ class SimpleCreateAndLoadTest {
     }
 
     private void streamGraph(@Nonnull final String source) throws Exception {
-        try (Graph graph = graphFactory.get()) {
-            try (Transaction tx = graph.tx()) {
-                try (InputStream is = getClass().getResourceAsStream(source)) {
-                    graph.io(IoCore.graphml()).reader().create().readGraph(is, graph);
-                }
+        withGraph(graph -> {
+            try (InputStream is = getClass().getResourceAsStream(source)) {
+                graph.io(IoCore.graphml()).reader().create().readGraph(is, graph);
             }
-        }
+        });
+    }
+
+    @FunctionalInterface
+    public interface GraphFunction<T> {
+        T apply(Graph graph) throws Exception;
+    }
+
+    @FunctionalInterface
+    public interface GraphConsumer {
+        void consume(Graph graph) throws Exception;
     }
 
 }

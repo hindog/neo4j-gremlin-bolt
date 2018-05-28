@@ -209,8 +209,8 @@ public class Neo4JGraph implements Graph {
 
     private Vertex getOrCreateVertex(final long id, final boolean justCreated) {
         return vertices.getOrCreate(id, () -> {
-            final EdgeProvider inEdgeProvider = new LazyEdgeProvider(labels -> relationProvider.loadRelatedIds(id, Direction.IN, labels), justCreated);
-            final EdgeProvider outEdgeProvider = new LazyEdgeProvider(labels -> relationProvider.loadRelatedIds(id, Direction.OUT, labels), justCreated);
+            final EdgeProvider inEdgeProvider = new LazyEdgeProvider(labels -> relationProvider.loadRelationIds(id, Direction.IN, labels), justCreated);
+            final EdgeProvider outEdgeProvider = new LazyEdgeProvider(labels -> relationProvider.loadRelationIds(id, Direction.OUT, labels), justCreated);
             final Neo4JVertex newVertex = new Neo4JVertex(this, id, vertexScope, inEdgeProvider, outEdgeProvider);
             return newVertex;
         });
