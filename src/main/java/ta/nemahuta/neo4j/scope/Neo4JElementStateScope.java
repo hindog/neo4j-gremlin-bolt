@@ -1,5 +1,6 @@
 package ta.nemahuta.neo4j.scope;
 
+import ta.nemahuta.neo4j.session.RollbackAndCommit;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 
 import javax.annotation.Nonnull;
@@ -7,7 +8,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
-public interface Neo4JElementStateScope<S extends Neo4JElementState> {
+public interface Neo4JElementStateScope<S extends Neo4JElementState> extends RollbackAndCommit {
 
     /**
      * Modifies the element state for the element with the provided id.

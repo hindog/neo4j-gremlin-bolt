@@ -105,6 +105,22 @@ class Neo4JGraphTest {
     }
 
     @Test
+    void txCommit() {
+        sut.tx().commit();
+        verify(sessionCache.getEdgeCache(), times(1)).commit();
+        verify(sessionCache.getVertexCache(), times(1)).commit();
+        verify(sessionCache.getEdgeCache(), times(1)).removeFromParent(any());
+        verify(sessionCache.getVertexCache(), times(1)).removeFromParent(any());
+    }
+
+    @Test
+    void txRollback() {
+        sut.tx().rollback();
+        verify(sessionCache.getEdgeCache(), times(1)).clear();
+        verify(sessionCache.getVertexCache(), times(1)).clear();
+    }
+
+    @Test
     void vertices() {
         stub.stubVertexLoad("MATCH (v:`x`) WHERE ID(v) IN {vertexId1} RETURN v", ImmutableMap.of("vertexId1", Collections.singleton(1)), 1l);
         assertEquals(1, ImmutableList.copyOf(sut.vertices(1l)).size());

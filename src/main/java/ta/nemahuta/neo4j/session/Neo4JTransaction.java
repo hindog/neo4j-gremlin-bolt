@@ -46,7 +46,7 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
     @Override
     protected void doCommit() throws TransactionException {
         log.debug("Committing all entities in sessions scope of transaction {} in session {}", transactionHashCode(), session.hashCode());
-        sessionCache.commit();
+
         Optional.ofNullable(wrapped)
                 .orElseThrow(org.apache.tinkerpop.gremlin.structure.Transaction.Exceptions::transactionMustBeOpenToReadWrite)
                 .success();
@@ -62,7 +62,8 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
     @Override
     protected void doRollback() throws TransactionException {
         log.debug("Rolling back all entities in sessions scope of transaction {} in session {}", transactionHashCode(), session.hashCode());
-        sessionCache.flush();
+
+
         Optional.ofNullable(wrapped)
                 .orElseThrow(org.apache.tinkerpop.gremlin.structure.Transaction.Exceptions::transactionMustBeOpenToReadWrite)
                 .failure();

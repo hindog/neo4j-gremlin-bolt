@@ -80,4 +80,22 @@ class DefaultNeo4JElementStateScopeTest {
         verify(handler, times(1)).getAll(ImmutableSet.of(2l, 3l, 4l));
     }
 
+    @Test
+    void commit() {
+        sut.delete(1l);
+        // when: 'committing'
+        sut.commit();
+        // then: 'the cache is committed'
+        verify(cache, times(1)).removeFromParent(any());
+        verify(cache, times(1)).commit();
+    }
+
+    @Test
+    void rollback() {
+        // when: 'rolling back'
+        sut.rollback();
+        // then: 'the cache is rolled back'
+        verify(cache, times(1)).clear();
+    }
+
 }

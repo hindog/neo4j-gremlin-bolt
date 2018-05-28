@@ -10,6 +10,7 @@ import org.ehcache.spi.loaderwriter.BulkCacheWritingException;
 import org.ehcache.spi.loaderwriter.CacheLoadingException;
 import org.ehcache.spi.loaderwriter.CacheWritingException;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 
 /**
@@ -45,6 +46,12 @@ public class DefaultHierarchicalCache<K, V> implements HierarchicalCache<K, V> {
     @Override
     public Iterator<Entry<K, V>> childIterator() {
         return child.iterator();
+    }
+
+    @Override
+    public void removeFromParent(@Nonnull final Set<K> keys) {
+        log.debug("Removing {} elements from parent.", keys.size());
+        parent.removeAll(keys);
     }
 
     @Override

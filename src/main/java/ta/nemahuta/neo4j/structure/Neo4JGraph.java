@@ -76,12 +76,26 @@ public class Neo4JGraph implements Graph {
         this.cache = sessionCache;
         this.partition = partition;
         this.transaction = new Neo4JTransaction(this, session, sessionCache);
+        this.transaction.addTransactionListener(this::handleTransaction);
         this.vertexStateHandler = new Neo4JVertexStateHandler(transaction, partition);
         this.edgeStateHandler = new Neo4JEdgeStateHandler(transaction, partition);
         this.vertexScope = new DefaultNeo4JElementStateScope<>(sessionCache.getVertexCache(), vertexStateHandler);
         this.edgeScope = new DefaultNeo4JElementStateScope<>(sessionCache.getEdgeCache(), edgeStateHandler);
         this.relationProvider = new DefaultRelationProvider(transaction, partition);
         this.configuration = configuration;
+    }
+
+    private void handleTransaction(final Transaction.Status status) {
+        switch (status) {
+            case COMMIT:
+                this.edgeScope.commit();
+                this.vertexScope.commit();
+                break;
+            case ROLLBACK:
+                this.edgeScope.rollback();
+                this.vertexScope.rollback();
+                break;
+        }
     }
 
     @Override
