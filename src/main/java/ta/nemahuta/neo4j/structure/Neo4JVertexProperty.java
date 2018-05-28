@@ -1,6 +1,5 @@
 package ta.nemahuta.neo4j.structure;
 
-import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
@@ -17,8 +16,8 @@ public class Neo4JVertexProperty<T> extends Neo4JProperty<Neo4JVertex, T> implem
 
     private final String id;
 
-    public Neo4JVertexProperty(@NonNull @Nonnull final Neo4JVertex parent,
-                               @NonNull @Nonnull final String key) {
+    public Neo4JVertexProperty(@Nonnull final Neo4JVertex parent,
+                               @Nonnull final String key) {
         super(parent, key);
         this.id = parent.id + "." + key;
     }

@@ -2,7 +2,6 @@ package ta.nemahuta.neo4j.query.edge;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
@@ -71,7 +70,7 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
      *
      * @param partition the {@link Neo4JGraphPartition} being operated on
      */
-    public EdgeQueryBuilder(@NonNull @Nonnull final Neo4JGraphPartition partition) {
+    public EdgeQueryBuilder(@Nonnull final Neo4JGraphPartition partition) {
         super(partition);
         setMatch(relationPredicate);
     }
@@ -83,7 +82,7 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
      * @return {@code this}
      */
     @Nonnull
-    public EdgeQueryBuilder lhsMatch(@Nonnull @NonNull final Function<VertexQueryFactory, MatchPredicate> lhsMatchBuilder) {
+    public EdgeQueryBuilder lhsMatch(@Nonnull final Function<VertexQueryFactory, MatchPredicate> lhsMatchBuilder) {
         return match(factory.getLhs(), relationPredicate::setLhs, lhsMatchBuilder);
     }
 
@@ -94,7 +93,7 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
      * @return {@code this}
      */
     @Nonnull
-    public EdgeQueryBuilder rhsMatch(@Nonnull @NonNull final Function<VertexQueryFactory, MatchPredicate> rhsMatchBuilder) {
+    public EdgeQueryBuilder rhsMatch(@Nonnull final Function<VertexQueryFactory, MatchPredicate> rhsMatchBuilder) {
         return match(factory.getRhs(), relationPredicate::setRhs, rhsMatchBuilder);
     }
 
@@ -105,7 +104,7 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
      * @return {@code this}
      */
     @Nonnull
-    public EdgeQueryBuilder direction(@Nonnull @NonNull final Direction direction) {
+    public EdgeQueryBuilder direction(@Nonnull final Direction direction) {
         this.relationPredicate.setDirection(direction);
         return this;
     }
@@ -117,7 +116,7 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
      * @return {@code this}
      */
     @Nonnull
-    public EdgeQueryBuilder labels(@Nonnull @NonNull final Set<String> labels) {
+    public EdgeQueryBuilder labels(@Nonnull final Set<String> labels) {
         this.relationPredicate.setLabels(labels);
         return this;
     }
@@ -129,7 +128,7 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
      * @return {@code this}
      */
     @Nonnull
-    public EdgeQueryBuilder where(@Nonnull @NonNull final Function<EdgeQueryFactory, WherePredicate> whereBuilder) {
+    public EdgeQueryBuilder where(@Nonnull final Function<EdgeQueryFactory, WherePredicate> whereBuilder) {
         setWhere(whereBuilder.apply(factory));
         return this;
     }
@@ -141,7 +140,7 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
      * @return {@code this}
      */
     @Nonnull
-    public EdgeQueryBuilder andThen(@Nonnull @NonNull final Function<EdgeQueryFactory, EdgeOperation> opBuilder) {
+    public EdgeQueryBuilder andThen(@Nonnull final Function<EdgeQueryFactory, EdgeOperation> opBuilder) {
         addOperation(opBuilder.apply(factory));
         return this;
     }
@@ -155,9 +154,9 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
      * @return {@code this}
      */
     @Nonnull
-    private EdgeQueryBuilder match(@Nonnull @NonNull final VertexQueryFactory queryFactory,
-                                   @Nonnull @NonNull final Consumer<MatchPredicate> setter,
-                                   @Nonnull @NonNull final Function<VertexQueryFactory, MatchPredicate> matchBuilder) {
+    private EdgeQueryBuilder match(@Nonnull final VertexQueryFactory queryFactory,
+                                   @Nonnull final Consumer<MatchPredicate> setter,
+                                   @Nonnull final Function<VertexQueryFactory, MatchPredicate> matchBuilder) {
         setter.accept(matchBuilder.apply(queryFactory));
         return this;
     }

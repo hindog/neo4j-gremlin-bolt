@@ -1,6 +1,5 @@
 package ta.nemahuta.neo4j.structure;
 
-import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.ehcache.config.builders.CacheManagerBuilder;
 import org.neo4j.driver.v1.Config;
@@ -28,12 +27,12 @@ public class Neo4JGraphFactory implements AutoCloseable, Supplier<Graph> {
     private final Neo4JConfiguration configuration;
     private final Driver driver;
 
-    public Neo4JGraphFactory(@Nonnull @NonNull final Neo4JConfiguration configuration) {
+    public Neo4JGraphFactory(@Nonnull final Neo4JConfiguration configuration) {
         this(new DefaultSessionCacheManager(CacheManagerBuilder.newCacheManagerBuilder().build(true)), configuration);
     }
 
-    public Neo4JGraphFactory(@Nonnull @NonNull final SessionCacheManager cacheManager,
-                             @Nonnull @NonNull final Neo4JConfiguration configuration) {
+    public Neo4JGraphFactory(@Nonnull final SessionCacheManager cacheManager,
+                             @Nonnull final Neo4JConfiguration configuration) {
         this.cacheManager = cacheManager;
         this.configuration = configuration;
         this.driver = createDriver();

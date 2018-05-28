@@ -1,6 +1,5 @@
 package ta.nemahuta.neo4j.structure;
 
-import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 
@@ -13,8 +12,8 @@ import javax.annotation.Nonnull;
  */
 public class Neo4JEdgeProperty<T> extends Neo4JProperty<Neo4JEdge, T> {
 
-    public Neo4JEdgeProperty(@NonNull @Nonnull final Neo4JEdge parent,
-                             @NonNull @Nonnull final String key) {
+    public Neo4JEdgeProperty(@Nonnull final Neo4JEdge parent,
+                             @Nonnull final String key) {
         super(parent, key);
     }
 

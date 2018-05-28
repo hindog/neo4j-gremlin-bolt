@@ -3,11 +3,9 @@ package ta.nemahuta.neo4j.state;
 import com.google.common.collect.ImmutableMap;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.ToString;
 
 import javax.annotation.Nonnull;
-import java.io.Serializable;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
@@ -19,7 +17,7 @@ public class Neo4JEdgeState extends Neo4JElementState {
     @Getter
     private final long inVertexId, outVertexId;
 
-    public Neo4JEdgeState(@Nonnull @NonNull final String label,
+    public Neo4JEdgeState(@Nonnull final String label,
                           @Nonnull final ImmutableMap<String, Object> properties,
                           final long inVertexId,
                           final long outVertexId) {
@@ -30,7 +28,7 @@ public class Neo4JEdgeState extends Neo4JElementState {
     }
 
     @Override
-    public Neo4JEdgeState withProperties(@Nonnull @NonNull final ImmutableMap<String, Object> properties) {
+    public Neo4JEdgeState withProperties(@Nonnull final ImmutableMap<String, Object> properties) {
         return new Neo4JEdgeState(label, properties, inVertexId, outVertexId);
     }
 

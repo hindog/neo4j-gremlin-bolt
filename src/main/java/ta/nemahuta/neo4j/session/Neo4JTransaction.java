@@ -1,6 +1,5 @@
 package ta.nemahuta.neo4j.session;
 
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tinkerpop.gremlin.structure.util.AbstractThreadedTransaction;
 import org.apache.tinkerpop.gremlin.structure.util.TransactionException;
@@ -31,9 +30,9 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
 
     private static final Logger statementLogger = LoggerFactory.getLogger(Neo4JTransaction.class.getPackage().getName() + ".Statement");
 
-    public Neo4JTransaction(@Nonnull @NonNull final Neo4JGraph g,
-                            @Nonnull @NonNull final Session session,
-                            @Nonnull @NonNull final SessionCache sessionCache) {
+    public Neo4JTransaction(@Nonnull final Neo4JGraph g,
+                            @Nonnull final Session session,
+                            @Nonnull final SessionCache sessionCache) {
         super(g);
         this.session = session;
         this.sessionCache = sessionCache;

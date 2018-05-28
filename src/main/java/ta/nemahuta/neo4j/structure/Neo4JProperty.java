@@ -23,8 +23,8 @@ public abstract class Neo4JProperty<P extends Neo4JElement, T> implements Proper
     @NonNull
     protected final String key;
 
-    public Neo4JProperty(@Nonnull @NonNull final P parent,
-                         @Nonnull @NonNull final String key) {
+    public Neo4JProperty(@Nonnull final P parent,
+                         @Nonnull final String key) {
         this.parent = parent;
         this.key = key;
     }

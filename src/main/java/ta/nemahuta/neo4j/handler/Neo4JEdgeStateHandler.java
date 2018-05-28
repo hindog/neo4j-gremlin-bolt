@@ -2,7 +2,6 @@ package ta.nemahuta.neo4j.handler;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.javatuples.Pair;
 import org.neo4j.driver.v1.Record;
@@ -23,7 +22,7 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
     private final Neo4JGraphPartition readPartition;
 
     public Neo4JEdgeStateHandler(@Nonnull final StatementExecutor statementExecutor,
-                                 @Nonnull @NonNull final Neo4JGraphPartition readPartition) {
+                                 @Nonnull final Neo4JGraphPartition readPartition) {
         super(statementExecutor);
         this.readPartition = readPartition;
     }
@@ -31,8 +30,8 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
     @Override
     protected Pair<Long, Neo4JEdgeState> getIdAndConvertToState(final Record r) {
         final Relationship relationship = r.get(0).asRelationship();
-        final long inId = relationship.startNodeId();
-        final long outId = relationship.endNodeId();
+        final long inId = relationship.endNodeId();
+        final long outId = relationship.startNodeId();
         final Neo4JEdgeState state = new Neo4JEdgeState(relationship.type(), ImmutableMap.copyOf(relationship.asMap()), inId, outId);
         return new Pair<>(relationship.id(), state);
     }

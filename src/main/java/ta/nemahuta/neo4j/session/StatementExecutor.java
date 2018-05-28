@@ -1,6 +1,5 @@
 package ta.nemahuta.neo4j.session;
 
-import lombok.NonNull;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
@@ -35,7 +34,7 @@ public interface StatementExecutor {
      * @return a {@link Stream} of the {@link Record}s in the {@link StatementResult}
      */
     @Nonnull
-    default Stream<Record> retrieveRecords(@Nonnull @NonNull final Statement statement) {
+    default Stream<Record> retrieveRecords(@Nonnull final Statement statement) {
         return StreamSupport.stream(
                 Spliterators.spliteratorUnknownSize(executeStatement(statement),
                         Spliterator.NONNULL | Spliterator.IMMUTABLE

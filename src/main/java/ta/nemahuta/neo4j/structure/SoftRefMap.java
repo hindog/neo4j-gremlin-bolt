@@ -1,7 +1,5 @@
 package ta.nemahuta.neo4j.structure;
 
-import lombok.NonNull;
-
 import javax.annotation.Nonnull;
 import java.lang.ref.SoftReference;
 import java.util.Map;
@@ -24,7 +22,7 @@ public class SoftRefMap<K, V> {
         this(new ConcurrentHashMap<>());
     }
 
-    protected SoftRefMap(@Nonnull @NonNull final Map<K, SoftReference<V>> wrapped) {
+    protected SoftRefMap(@Nonnull final Map<K, SoftReference<V>> wrapped) {
         this.wrapped = wrapped;
     }
 
@@ -35,7 +33,7 @@ public class SoftRefMap<K, V> {
      * @param factory the factory for missing or cleared values
      * @return the entry value
      */
-    public V getOrCreate(@Nonnull @NonNull final K key, @Nonnull @NonNull final Supplier<V> factory) {
+    public V getOrCreate(@Nonnull final K key, @Nonnull final Supplier<V> factory) {
         return Optional.ofNullable(wrapped.get(key))
                 .map(SoftReference::get)
                 .orElseGet(() -> {

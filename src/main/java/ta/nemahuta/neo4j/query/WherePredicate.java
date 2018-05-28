@@ -1,7 +1,5 @@
 package ta.nemahuta.neo4j.query;
 
-import lombok.NonNull;
-
 import javax.annotation.Nonnull;
 
 /**
@@ -21,7 +19,7 @@ public interface WherePredicate extends QueryPredicate {
      * @return the new predicate
      */
     @Nonnull
-    default WherePredicate and(@Nonnull @NonNull final WherePredicate rhs) {
+    default WherePredicate and(@Nonnull final WherePredicate rhs) {
         if (this == EMPTY) {
             return rhs;
         } else if (rhs == EMPTY) {
@@ -42,7 +40,7 @@ public interface WherePredicate extends QueryPredicate {
      * @return the new predicate
      */
     @Nonnull
-    default WherePredicate or(@Nonnull @NonNull final WherePredicate rhs) {
+    default WherePredicate or(@Nonnull final WherePredicate rhs) {
         if (this == EMPTY) {
             return rhs;
         } else if (rhs == EMPTY) {
@@ -72,8 +70,8 @@ public interface WherePredicate extends QueryPredicate {
     }
 
     @Nonnull
-    static WherePredicate orOp(@Nonnull @NonNull final WherePredicate w1,
-                               @Nonnull @NonNull final WherePredicate w2) {
+    static WherePredicate orOp(@Nonnull final WherePredicate w1,
+                               @Nonnull final WherePredicate w2) {
         return w1.or(w2);
     }
 

@@ -1,6 +1,5 @@
 package ta.nemahuta.neo4j.query.vertex;
 
-import lombok.NonNull;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.MatchPredicate;
 import ta.nemahuta.neo4j.query.UniqueParamNameGenerator;
@@ -38,7 +37,7 @@ public abstract class VertexQueryPredicateFactory {
      * @return the predicate
      */
     @Nonnull
-    public WherePredicate idsInSet(@Nonnull @NonNull final Set<Long> ids) {
+    public WherePredicate idsInSet(@Nonnull final Set<Long> ids) {
         return ids.isEmpty() ? WherePredicate.EMPTY : new WhereIdInPredicate(ids, getAlias(), getParamNameGenerator().generate("vertexId"));
     }
 
@@ -60,7 +59,7 @@ public abstract class VertexQueryPredicateFactory {
      * @return the predicate
      */
     @Nonnull
-    public MatchPredicate labelsMatch(@Nonnull @NonNull final Set<String> labels) {
+    public MatchPredicate labelsMatch(@Nonnull final Set<String> labels) {
         return new MatchAllVertexLabelsPredicate(labels, getPartition(), getAlias());
     }
 

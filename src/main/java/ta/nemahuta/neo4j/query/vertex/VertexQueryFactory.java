@@ -1,6 +1,5 @@
 package ta.nemahuta.neo4j.query.vertex;
 
-import lombok.NonNull;
 import ta.nemahuta.neo4j.query.operation.*;
 import ta.nemahuta.neo4j.query.vertex.operation.CreateVertexOperation;
 import ta.nemahuta.neo4j.query.vertex.operation.ReturnVertexOperation;
@@ -40,8 +39,8 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
      * @return the operation
      */
     @Nonnull
-    public VertexOperation labels(@Nonnull @NonNull final Set<String> committedLabels,
-                                  @Nonnull @NonNull final Set<String> currentLabels) {
+    public VertexOperation labels(@Nonnull final Set<String> committedLabels,
+                                  @Nonnull final Set<String> currentLabels) {
         return new UpdateLabelsOperation(committedLabels, getPartition().ensurePartitionLabelsSet(currentLabels), getAlias());
     }
 
@@ -54,8 +53,8 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
      * @return the operation
      */
     @Nonnull
-    public VertexOperation properties(@Nonnull @NonNull final Map<String, Object> committedProperties,
-                                      @Nonnull @NonNull final Map<String, Object> currentProperties) {
+    public VertexOperation properties(@Nonnull final Map<String, Object> committedProperties,
+                                      @Nonnull final Map<String, Object> currentProperties) {
         return new UpdatePropertiesOperation(committedProperties, currentProperties, getAlias(), getParamNameGenerator().generate("vertexProps"));
     }
 
@@ -67,8 +66,8 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
      * @return the operation
      */
     @Nonnull
-    public VertexOperation create(@Nonnull @NonNull final Set<String> labels,
-                                  @Nonnull @NonNull final Map<String, Object> properties) {
+    public VertexOperation create(@Nonnull final Set<String> labels,
+                                  @Nonnull final Map<String, Object> properties) {
         return new CreateVertexOperation(getPartition().ensurePartitionLabelsSet(labels), properties,
                 getAlias(), getParamNameGenerator().generate("vertexProps"));
     }
@@ -86,8 +85,8 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
      * @return the operation
      */
     @Nonnull
-    public VertexOperation createPropertyIndex(@Nonnull @NonNull final Set<String> labels,
-                                               @Nonnull @NonNull final String propertyName) {
+    public VertexOperation createPropertyIndex(@Nonnull final Set<String> labels,
+                                               @Nonnull final String propertyName) {
         return new CreatePropertyIndex(getPartition().ensurePartitionLabelsSet(labels), propertyName);
     }
 

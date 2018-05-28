@@ -36,7 +36,7 @@ public abstract class AbstractQueryBuilder implements StatementBuilder {
      *
      * @param match the match predicate to be set
      */
-    protected void setMatch(@Nonnull @NonNull final MatchPredicate match) {
+    protected void setMatch(@Nonnull final MatchPredicate match) {
         this.match = match;
     }
 
@@ -45,7 +45,7 @@ public abstract class AbstractQueryBuilder implements StatementBuilder {
      *
      * @param where the where predicate to be set.
      */
-    protected void setWhere(@Nonnull @NonNull final WherePredicate where) {
+    protected void setWhere(@Nonnull final WherePredicate where) {
         this.where = where;
     }
 
@@ -54,7 +54,7 @@ public abstract class AbstractQueryBuilder implements StatementBuilder {
      *
      * @param operation the operation to be added
      */
-    protected void addOperation(@Nonnull @NonNull final Operation operation) {
+    protected void addOperation(@Nonnull final Operation operation) {
         this.operations.add(operation);
     }
 

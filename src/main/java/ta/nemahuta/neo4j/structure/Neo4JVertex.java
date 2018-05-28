@@ -1,6 +1,5 @@
 package ta.nemahuta.neo4j.structure;
 
-import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -29,8 +28,8 @@ public class Neo4JVertex extends Neo4JElement<Neo4JVertexState, VertexProperty> 
 
     public Neo4JVertex(@Nonnull final Neo4JGraph graph, final long id,
                        @Nonnull final Neo4JElementStateScope<Neo4JVertexState> scope,
-                       @Nonnull @NonNull final EdgeProvider inEdgeProvider,
-                       @Nonnull @NonNull final EdgeProvider outEdgeProvider) {
+                       @Nonnull final EdgeProvider inEdgeProvider,
+                       @Nonnull final EdgeProvider outEdgeProvider) {
         super(graph, id, scope);
         this.inEdgeProvider = inEdgeProvider;
         this.outEdgeProvider = outEdgeProvider;
@@ -54,8 +53,8 @@ public class Neo4JVertex extends Neo4JElement<Neo4JVertexState, VertexProperty> 
     }
 
     @Override
-    public Iterator<Vertex> vertices(@Nonnull @NonNull final Direction direction,
-                                     @Nonnull @NonNull final String... edgeLabels) {
+    public Iterator<Vertex> vertices(@Nonnull final Direction direction,
+                                     @Nonnull final String... edgeLabels) {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(edges(direction, edgeLabels), Spliterator.ORDERED), false)
                 .map(e -> Objects.equals(e.inVertex().id(), this.id()) ? e.outVertex() : e.inVertex())
                 .iterator();

@@ -2,7 +2,6 @@ package ta.nemahuta.neo4j.query.vertex;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NonNull;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.*;
 
@@ -44,7 +43,7 @@ public class VertexQueryBuilder extends AbstractQueryBuilder {
      *
      * @param partition the readPartition to be used
      */
-    public VertexQueryBuilder(@Nonnull @NonNull final Neo4JGraphPartition partition) {
+    public VertexQueryBuilder(@Nonnull final Neo4JGraphPartition partition) {
         super(partition);
     }
 
@@ -55,7 +54,7 @@ public class VertexQueryBuilder extends AbstractQueryBuilder {
      * @return {@code this}
      */
     @Nonnull
-    public VertexQueryBuilder match(@Nonnull @NonNull final Function<VertexQueryFactory, MatchPredicate> matchBuilder) {
+    public VertexQueryBuilder match(@Nonnull final Function<VertexQueryFactory, MatchPredicate> matchBuilder) {
         setMatch(matchBuilder.apply(factory));
         return this;
     }
@@ -67,7 +66,7 @@ public class VertexQueryBuilder extends AbstractQueryBuilder {
      * @return {@code this}
      */
     @Nonnull
-    public VertexQueryBuilder where(@Nonnull @NonNull final Function<VertexQueryFactory, WherePredicate> whereBuilder) {
+    public VertexQueryBuilder where(@Nonnull final Function<VertexQueryFactory, WherePredicate> whereBuilder) {
         setWhere(whereBuilder.apply(factory));
         return this;
     }
@@ -79,7 +78,7 @@ public class VertexQueryBuilder extends AbstractQueryBuilder {
      * @return {@code this}
      */
     @Nonnull
-    public VertexQueryBuilder andThen(@Nonnull @NonNull final Function<VertexQueryFactory, VertexOperation> opBuilder) {
+    public VertexQueryBuilder andThen(@Nonnull final Function<VertexQueryFactory, VertexOperation> opBuilder) {
         addOperation(opBuilder.apply(factory));
         return this;
     }

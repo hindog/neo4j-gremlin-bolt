@@ -60,8 +60,8 @@ public class CreateEdgeOperation implements EdgeOperation {
     }
 
     @Override
-    public void append(@NonNull @Nonnull final StringBuilder queryBuilder,
-                       @NonNull @Nonnull final Map<String, Object> parameters) {
+    public void append(@Nonnull final StringBuilder queryBuilder,
+                       @Nonnull final Map<String, Object> parameters) {
         queryBuilder.append("CREATE (").append(lhsAlias).append(")");
         QueryUtils.appendRelationStart(direction, queryBuilder);
         queryBuilder.append(relationAlias);

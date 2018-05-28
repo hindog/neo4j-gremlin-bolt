@@ -2,7 +2,6 @@ package ta.nemahuta.neo4j.query.edge;
 
 import com.google.common.collect.ImmutableMap;
 import lombok.Getter;
-import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.UniqueParamNameGenerator;
@@ -103,7 +102,7 @@ public abstract class EdgeQueryFactory {
      * @return the predicate matching the id
      */
     @Nonnull
-    public WherePredicate whereId(@Nonnull @NonNull final Long id) {
+    public WherePredicate whereId(@Nonnull final Long id) {
         return whereIds(Collections.singleton(id));
     }
 
@@ -114,7 +113,7 @@ public abstract class EdgeQueryFactory {
      * @return the predicate matching any of the ids
      */
     @Nonnull
-    public WherePredicate whereIds(@Nonnull @NonNull final Set<Long> ids) {
+    public WherePredicate whereIds(@Nonnull final Set<Long> ids) {
         return ids.isEmpty() ? WherePredicate.EMPTY :
                 new WhereIdInPredicate(ids, getRelationAlias(), getParamNameGenerator().generate("edgeId"));
     }
@@ -144,9 +143,9 @@ public abstract class EdgeQueryFactory {
      * @return the {@link EdgeOperation} which creates the edge
      */
     @Nonnull
-    public EdgeOperation createEdge(@Nonnull @NonNull final Direction direction,
-                                    @Nonnull @NonNull final String label,
-                                    @Nonnull @NonNull final ImmutableMap<String, Object> properties) {
+    public EdgeOperation createEdge(@Nonnull final Direction direction,
+                                    @Nonnull final String label,
+                                    @Nonnull final ImmutableMap<String, Object> properties) {
         return new CreateEdgeOperation(getLhsAlias(), getRelationAlias(), getRhsAlias(), label, direction, properties,
                 getParamNameGenerator().generate("edgeProps"));
     }
@@ -167,8 +166,8 @@ public abstract class EdgeQueryFactory {
      * @return the operation
      */
     @Nonnull
-    public EdgeOperation properties(@Nonnull @NonNull final ImmutableMap<String, Object> committedProperties,
-                                    @Nonnull @NonNull final ImmutableMap<String, Object> currentProperties) {
+    public EdgeOperation properties(@Nonnull final ImmutableMap<String, Object> committedProperties,
+                                    @Nonnull final ImmutableMap<String, Object> currentProperties) {
         return new UpdatePropertiesOperation(committedProperties, currentProperties, getRelationAlias(), getParamNameGenerator().generate("edgeProps"));
     }
 
@@ -180,8 +179,8 @@ public abstract class EdgeQueryFactory {
      * @return the operation
      */
     @Nonnull
-    public EdgeOperation createPropertyIndex(@Nonnull @NonNull final String label,
-                                             @Nonnull @NonNull final String propertyName) {
+    public EdgeOperation createPropertyIndex(@Nonnull final String label,
+                                             @Nonnull final String propertyName) {
         return new CreatePropertyIndex(Collections.singleton(label), propertyName);
     }
 
