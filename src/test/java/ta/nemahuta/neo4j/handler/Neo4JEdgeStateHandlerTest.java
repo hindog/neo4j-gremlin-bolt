@@ -39,12 +39,12 @@ class Neo4JEdgeStateHandlerTest extends AbstractStatementBuilderTest {
 
     private Neo4JEdgeStateHandler sut;
 
-    private final long inId = 1l, outId = 2l, id = 3l;
+    private final long endNodeId = 1l, startNodeId = 2l, id = 3l;
     private final String label = "yay";
     private final ImmutableMap<String, Object> properties = ImmutableMap.of("a", "b"),
             newProperties = ImmutableMap.of("b", "c");
-    private final Neo4JEdgeState state = new Neo4JEdgeState(label, properties, inId, outId),
-            newState = new Neo4JEdgeState(label, newProperties, inId, outId);
+    private final Neo4JEdgeState state = new Neo4JEdgeState(label, properties, endNodeId, startNodeId),
+            newState = new Neo4JEdgeState(label, newProperties, endNodeId, startNodeId);
 
     @BeforeEach
     void createStateHandler() {
@@ -56,8 +56,8 @@ class Neo4JEdgeStateHandlerTest extends AbstractStatementBuilderTest {
         // setup: 'stubbing the relationship'
         when(relationship.asMap()).thenReturn(properties);
         when(relationship.type()).thenReturn(label);
-        when(relationship.startNodeId()).thenReturn(inId);
-        when(relationship.endNodeId()).thenReturn(outId);
+        when(relationship.startNodeId()).thenReturn(startNodeId);
+        when(relationship.endNodeId()).thenReturn(endNodeId);
         when(relationship.id()).thenReturn(id);
         // when: 'converting the state'
         final Pair<Long, Neo4JEdgeState> state = sut.getIdAndConvertToState(MockUtils.mockRecord(MockUtils.mockValue(Value::asRelationship, null, relationship)));
@@ -81,7 +81,7 @@ class Neo4JEdgeStateHandlerTest extends AbstractStatementBuilderTest {
     @Test
     void createInsertCommand() {
         assertStatement("MATCH (n:`graphLabel`), (m:`graphLabel`) WHERE ID(n) IN {vertexId1} AND ID(m) IN {vertexId2} CREATE (n)-[r:`yay`]->(m) SET r={edgeProps1} RETURN ID(r)",
-                ImmutableMap.of("edgeProps1", properties, "vertexId1", Collections.singleton(outId), "vertexId2", Collections.singleton(inId)),
+                ImmutableMap.of("edgeProps1", properties, "vertexId1", Collections.singleton(startNodeId), "vertexId2", Collections.singleton(endNodeId)),
                 sut.createInsertCommand(state));
     }
 

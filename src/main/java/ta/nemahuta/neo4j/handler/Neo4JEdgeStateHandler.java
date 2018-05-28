@@ -31,8 +31,8 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
     @Override
     protected Pair<Long, Neo4JEdgeState> getIdAndConvertToState(final Record r) {
         final Relationship relationship = r.get(0).asRelationship();
-        final long inId = relationship.startNodeId();
-        final long outId = relationship.endNodeId();
+        final long inId = relationship.endNodeId();
+        final long outId = relationship.startNodeId();
         final Neo4JEdgeState state = new Neo4JEdgeState(relationship.type(), ImmutableMap.copyOf(relationship.asMap()), inId, outId);
         return new Pair<>(relationship.id(), state);
     }
