@@ -24,7 +24,7 @@ public class DefaultRelationProvider implements RelationProvider {
     private final Neo4JGraphPartition readPartition;
 
     @Override
-    public Map<String, Set<Long>> loadRelatedIds(final long lhsId, @Nonnull final Direction direction, @Nonnull final Set<String> labels) {
+    public Map<String, Set<Long>> loadRelationIds(final long lhsId, @Nonnull final Direction direction, @Nonnull final Set<String> labels) {
         final Map<String, Set<Long>> result = new HashMap<>();
         statementExecutor.retrieveRecords(createRelatedIdStatement(lhsId, direction, labels))
                 .forEach(r -> addToResult(r, result));
@@ -39,7 +39,7 @@ public class DefaultRelationProvider implements RelationProvider {
                     final Set<Long> newEntry = new HashSet<>();
                     result.put(v.type(), newEntry);
                     return newEntry;
-                }).add(v.endNodeId());
+                }).add(v.id());
     }
 
     private Statement createRelatedIdStatement(final long lhsId, final Direction direction, final Set<String> labels) {

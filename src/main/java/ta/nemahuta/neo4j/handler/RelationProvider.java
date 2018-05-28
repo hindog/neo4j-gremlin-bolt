@@ -14,8 +14,8 @@ public interface RelationProvider {
      * @param lhsId     the left hand side vertex id
      * @param direction the direction for the query
      * @param labels    the labels to be used to filter (or an empty list if all are being queried)
-     * @return a map of labels and their ids
+     * @return a map of labels and the corresponding ids of the edges
      */
-    Map<String, Set<Long>> loadRelatedIds(long lhsId, @Nonnull Direction direction, @Nonnull Set<String> labels);
+    Map<String, Set<Long>> loadRelationIds(long lhsId, @Nonnull Direction direction, @Nonnull Set<String> labels);
 
 }
