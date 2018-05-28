@@ -43,8 +43,8 @@ public class UpdatePropertiesOperation implements VertexOperation, EdgeOperation
     }
 
     @Override
-    public void append(@Nonnull @NonNull final StringBuilder queryBuilder,
-                       @Nonnull @NonNull final Map<String, Object> parameters) {
+    public void append(@Nonnull final StringBuilder queryBuilder,
+                       @Nonnull final Map<String, Object> parameters) {
         queryBuilder.append("SET ").append(alias).append("={").append(paramName).append("}");
         parameters.put(paramName, currentProperties);
     }

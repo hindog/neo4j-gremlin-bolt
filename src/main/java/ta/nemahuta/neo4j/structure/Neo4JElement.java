@@ -2,7 +2,6 @@ package ta.nemahuta.neo4j.structure;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -45,7 +44,7 @@ public abstract class Neo4JElement<S extends Neo4JElementState, P extends Proper
         return graph;
     }
 
-    protected P getProperty(@Nonnull @NonNull final String key, final Object value) {
+    protected P getProperty(@Nonnull final String key, final Object value) {
         ElementHelper.validateProperty(key, value);
         if (!Objects.equals(getState().getProperties().get(key), value)) {
             scope.update(id, computePropertyChangedState(key, value, getState()));
@@ -53,7 +52,7 @@ public abstract class Neo4JElement<S extends Neo4JElementState, P extends Proper
         return getProperties(key).findAny().get();
     }
 
-    protected Stream<P> getProperties(@Nonnull @NonNull final String... propertyKeys) {
+    protected Stream<P> getProperties(@Nonnull final String... propertyKeys) {
         return (propertyKeys.length == 0 ? getState().getProperties().keySet().stream() : Stream.of(propertyKeys))
                 .map(this::getOrCreateProperty)
                 .filter(Objects::nonNull);
@@ -76,7 +75,7 @@ public abstract class Neo4JElement<S extends Neo4JElementState, P extends Proper
      */
     protected abstract P createNewProperty(final String key);
 
-    private S computePropertyChangedState(final @Nonnull @NonNull String key, final Object value, final S state) {
+    private S computePropertyChangedState(final @Nonnull String key, final Object value, final S state) {
         // Build a new map with the propertyMap except the one being set
         final ImmutableMap.Builder<String, Object> builder =
                 ImmutableMap.<String, Object>builder().putAll(Maps.filterKeys(state.getProperties(), k -> !Objects.equals(k, key)));

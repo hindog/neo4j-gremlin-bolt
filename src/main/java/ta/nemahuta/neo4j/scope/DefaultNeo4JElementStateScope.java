@@ -42,7 +42,7 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
 
     @Override
     public void update(final long id,
-                       @Nonnull @NonNull final S newState) {
+                       @Nonnull final S newState) {
         locked(ReadWriteLock::writeLock, () -> {
             final S state = getAll(Collections.singleton(id)).get(id);
             if (!Objects.equals(newState, state)) {
@@ -67,7 +67,7 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
 
     @Override
     @Nonnull
-    public long create(@Nonnull @NonNull final S state) {
+    public long create(@Nonnull final S state) {
         return locked(ReadWriteLock::writeLock, () -> {
             final Long result = remoteElementHandler.create(state);
             hierarchicalCache.put(result, state);
@@ -83,7 +83,7 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
 
     @Nullable
     @Override
-    public Map<Long, S> getAll(@Nonnull @NonNull final Collection<Long> ids) {
+    public Map<Long, S> getAll(@Nonnull final Collection<Long> ids) {
         return locked(ReadWriteLock::readLock, () -> {
             log.debug("Retrieving {} items", ids.size());
             final Map<Long, S> results = new ConcurrentHashMap<>();
@@ -144,7 +144,7 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
         log.trace("Put {} elements from cache", counter);
     }
 
-    private <S> S locked(@Nonnull @NonNull final Function<ReadWriteLock, Lock> lockFunction, @Nonnull @NonNull final Supplier<S> fun) {
+    private <S> S locked(@Nonnull final Function<ReadWriteLock, Lock> lockFunction, @Nonnull final Supplier<S> fun) {
         final Lock lock = lockFunction.apply(this.lockProvider);
         lock.lock();
         try {

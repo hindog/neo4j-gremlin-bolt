@@ -2,7 +2,6 @@ package ta.nemahuta.neo4j.handler;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import lombok.NonNull;
 import org.javatuples.Pair;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Statement;
@@ -22,7 +21,7 @@ public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Ne
     private final Neo4JGraphPartition readPartition;
 
     public Neo4JVertexStateHandler(@Nonnull final StatementExecutor statementExecutor,
-                                   @Nonnull @NonNull final Neo4JGraphPartition readPartition) {
+                                   @Nonnull final Neo4JGraphPartition readPartition) {
         super(statementExecutor);
         this.readPartition = readPartition;
     }

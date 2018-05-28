@@ -44,8 +44,8 @@ public class CreateVertexOperation implements VertexOperation {
     }
 
     @Override
-    public void append(@Nonnull @NonNull final StringBuilder queryBuilder,
-                       @Nonnull @NonNull final Map<String, Object> parameters) {
+    public void append(@Nonnull final StringBuilder queryBuilder,
+                       @Nonnull final Map<String, Object> parameters) {
 
         queryBuilder.append("CREATE (").append(alias);
         QueryUtils.appendLabels(queryBuilder, labels);

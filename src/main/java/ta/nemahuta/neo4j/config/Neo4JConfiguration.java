@@ -99,7 +99,7 @@ public class Neo4JConfiguration {
     }
 
     @Nonnull
-    public static Neo4JConfiguration fromApacheConfiguration(@Nonnull @NonNull final Configuration configuration) {
+    public static Neo4JConfiguration fromApacheConfiguration(@Nonnull final Configuration configuration) {
         final Neo4JConfigurationBuilder builder = builder();
         configurationFields().forEach(f -> {
             final Object value = configuration.getProperty(f.getName());
@@ -117,8 +117,8 @@ public class Neo4JConfiguration {
     }
 
     @Nonnull
-    private static Method findBuilderMethod(@Nonnull @NonNull final String name,
-                                            @Nonnull @NonNull final Class<?> paramClass) throws NoSuchMethodException {
+    private static Method findBuilderMethod(@Nonnull final String name,
+                                            @Nonnull final Class<?> paramClass) throws NoSuchMethodException {
 
         return Stream.of(Neo4JConfigurationBuilder.class.getDeclaredMethods())
                 .filter(m -> name.equals(m.getName()))
@@ -127,8 +127,8 @@ public class Neo4JConfiguration {
                 .orElseThrow(() -> new NoSuchMethodException("Could not find method '" + name + "' which accepts " + paramClass.getName()));
     }
 
-    private static boolean canCoerce(@Nonnull @NonNull final Class<?> fromClass,
-                                     @Nonnull @NonNull final Class<?> toClass) {
+    private static boolean canCoerce(@Nonnull final Class<?> fromClass,
+                                     @Nonnull final Class<?> toClass) {
         return BOXING_DEFINITION.getOrDefault(toClass, toClass).isAssignableFrom(BOXING_DEFINITION.getOrDefault(fromClass, fromClass));
     }
 

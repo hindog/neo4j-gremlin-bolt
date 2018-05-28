@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import lombok.NonNull;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
 import org.apache.tinkerpop.gremlin.structure.*;
@@ -62,9 +61,9 @@ public class Neo4JGraph implements Graph {
     private final Neo4JVertexStateHandler vertexStateHandler;
     private final Neo4JEdgeStateHandler edgeStateHandler;
 
-    public Neo4JGraph(@Nonnull @NonNull final Session session,
-                      @Nonnull @NonNull final SessionCacheManager sessionCacheManager,
-                      @Nonnull @NonNull final Neo4JConfiguration configuration) {
+    public Neo4JGraph(@Nonnull final Session session,
+                      @Nonnull final SessionCacheManager sessionCacheManager,
+                      @Nonnull final Neo4JConfiguration configuration) {
         this(session, sessionCacheManager.createSessionCache(session.hashCode()),
                 Optional.ofNullable(configuration.getGraphName()).map(Neo4JLabelGraphPartition::allLabelsOf).orElseGet(Neo4JLabelGraphPartition::anyLabel),
                 configuration);
@@ -116,12 +115,12 @@ public class Neo4JGraph implements Graph {
     }
 
     @Override
-    public Iterator<Vertex> vertices(@Nonnull @NonNull final Object... vertexIds) {
+    public Iterator<Vertex> vertices(@Nonnull final Object... vertexIds) {
         return loadAndReturnFoundElementsOnly(vertexScope, id -> getOrCreateVertex(id, false), vertexIds);
     }
 
     @Override
-    public Iterator<Edge> edges(@Nonnull @NonNull final Object... edgeIds) {
+    public Iterator<Edge> edges(@Nonnull final Object... edgeIds) {
         return loadAndReturnFoundElementsOnly(edgeScope, id -> getOrCreateEdge(id), edgeIds);
     }
 
@@ -131,8 +130,8 @@ public class Neo4JGraph implements Graph {
      * @param labels       the labels of the vertices to match
      * @param propertyName the name of the property to create an index for
      */
-    public void createVertexPropertyIndex(@Nonnull @NonNull final Set<String> labels,
-                                          @Nonnull @NonNull final String propertyName) {
+    public void createVertexPropertyIndex(@Nonnull final Set<String> labels,
+                                          @Nonnull final String propertyName) {
         vertexStateHandler.createIndex(labels, propertyName);
     }
 
@@ -142,14 +141,14 @@ public class Neo4JGraph implements Graph {
      * @param label        the labels of the vertices to match
      * @param propertyName the name of the property to create an index for
      */
-    public void createEdgePropertyIndex(@Nonnull @NonNull final String label,
-                                        @Nonnull @NonNull final String propertyName) {
+    public void createEdgePropertyIndex(@Nonnull final String label,
+                                        @Nonnull final String propertyName) {
         edgeStateHandler.createIndex(Collections.singleton(label), propertyName);
     }
 
-    private <R, S extends Neo4JElementState> Iterator<R> loadAndReturnFoundElementsOnly(@Nonnull @NonNull final Neo4JElementStateScope<S> scope,
-                                                                                        @Nonnull @NonNull final Function<Long, R> accessor,
-                                                                                        @Nonnull @NonNull final Object... ids) {
+    private <R, S extends Neo4JElementState> Iterator<R> loadAndReturnFoundElementsOnly(@Nonnull final Neo4JElementStateScope<S> scope,
+                                                                                        @Nonnull final Function<Long, R> accessor,
+                                                                                        @Nonnull final Object... ids) {
         // Load all elements using the scope
         final Collection<Long> idCollection = Stream.of(ids).filter(Long.class::isInstance).map(l -> (Long) l).collect(ImmutableList.toImmutableList());
         final Map<Long, S> loaded = scope.getAll(ImmutableList.copyOf(idCollection.iterator()));
@@ -162,9 +161,9 @@ public class Neo4JGraph implements Graph {
                 .iterator();
     }
 
-    Neo4JEdge addEdge(@Nonnull @NonNull final String label,
-                      @Nonnull @NonNull final Neo4JVertex outVertex,
-                      @Nonnull @NonNull final Neo4JVertex inVertex, final Object... keyValues) {
+    Neo4JEdge addEdge(@Nonnull final String label,
+                      @Nonnull final Neo4JVertex outVertex,
+                      @Nonnull final Neo4JVertex inVertex, final Object... keyValues) {
 
         ElementHelper.validateLabel(label);
         ElementHelper.legalPropertyKeyValueArray(keyValues);

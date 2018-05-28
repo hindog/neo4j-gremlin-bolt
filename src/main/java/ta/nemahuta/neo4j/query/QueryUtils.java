@@ -2,7 +2,6 @@ package ta.nemahuta.neo4j.query;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 
 import javax.annotation.Nonnull;
@@ -22,8 +21,8 @@ public class QueryUtils {
      * @param sb     the query builder
      * @param labels the orLabelsAnd to be appended
      */
-    public static void appendLabels(@Nonnull @NonNull final StringBuilder sb,
-                                    @Nonnull @NonNull final Set<String> labels) {
+    public static void appendLabels(@Nonnull final StringBuilder sb,
+                                    @Nonnull final Set<String> labels) {
         labels.forEach(label -> appendLabel(sb, label));
     }
 
@@ -33,8 +32,8 @@ public class QueryUtils {
      * @param sb    the query builder
      * @param label the label to be appended
      */
-    private static void appendLabel(@Nonnull @NonNull final StringBuilder sb,
-                                    @Nonnull @NonNull final String label) {
+    private static void appendLabel(@Nonnull final StringBuilder sb,
+                                    @Nonnull final String label) {
         sb.append(":`").append(label).append("`");
     }
 
@@ -44,8 +43,8 @@ public class QueryUtils {
      * @param direction the direction to be used
      * @param sb        the target to append to
      */
-    public static void appendRelationStart(@Nonnull @NonNull final Direction direction,
-                                           @Nonnull @NonNull final StringBuilder sb) {
+    public static void appendRelationStart(@Nonnull final Direction direction,
+                                           @Nonnull final StringBuilder sb) {
         sb.append(directionString(direction, true));
     }
 
@@ -55,8 +54,8 @@ public class QueryUtils {
      * @param direction the direction to be used
      * @param sb        the target to append to
      */
-    public static void appendRelationEnd(@Nonnull @NonNull final Direction direction,
-                                         @Nonnull @NonNull final StringBuilder sb) {
+    public static void appendRelationEnd(@Nonnull final Direction direction,
+                                         @Nonnull final StringBuilder sb) {
         sb.append(directionString(direction, false));
     }
 
@@ -68,7 +67,7 @@ public class QueryUtils {
      * @return the relation prefix/suffix as requested
      */
     @Nonnull
-    private static String directionString(@Nonnull @NonNull final Direction direction,
+    private static String directionString(@Nonnull final Direction direction,
                                           final boolean start) {
         switch (direction) {
             case IN:

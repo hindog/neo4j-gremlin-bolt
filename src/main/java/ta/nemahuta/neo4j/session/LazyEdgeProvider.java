@@ -1,7 +1,6 @@
 package ta.nemahuta.neo4j.session;
 
 import com.google.common.collect.ImmutableSet;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import ta.nemahuta.neo4j.structure.EdgeProvider;
 
@@ -26,7 +25,7 @@ public class LazyEdgeProvider implements EdgeProvider {
 
     private boolean completelyLoaded;
 
-    public LazyEdgeProvider(@Nonnull @NonNull final Function<Set<String>, Map<String, Set<Long>>> retriever,
+    public LazyEdgeProvider(@Nonnull final Function<Set<String>, Map<String, Set<Long>>> retriever,
                             final boolean completelyLoaded) {
         this.completelyLoaded = completelyLoaded;
         this.retriever = retriever;
@@ -34,7 +33,7 @@ public class LazyEdgeProvider implements EdgeProvider {
 
     @Override
     @Nonnull
-    public Collection<Long> provideEdges(@Nonnull @NonNull final String... labels) {
+    public Collection<Long> provideEdges(@Nonnull final String... labels) {
         // Load the edges if necessary
         final ImmutableSet<String> labelSet = ImmutableSet.copyOf(labels);
         computeSelectorAndLoad(labelSet);
@@ -54,7 +53,7 @@ public class LazyEdgeProvider implements EdgeProvider {
      *
      * @param labelSet the labels to be loaded
      */
-    protected void computeSelectorAndLoad(@Nonnull @NonNull final ImmutableSet<String> labelSet) {
+    protected void computeSelectorAndLoad(@Nonnull final ImmutableSet<String> labelSet) {
         computeSelector(labelSet).ifPresent(selector -> {
             retriever.apply(selector.includeLabels)
                     .entrySet()
@@ -78,7 +77,7 @@ public class LazyEdgeProvider implements EdgeProvider {
      * @param labels the labels to query the edges for
      * @return the stream providing a set of labels from the cache
      */
-    protected Stream<Set<Long>> fromCache(@Nonnull @NonNull final ImmutableSet<String> labels) {
+    protected Stream<Set<Long>> fromCache(@Nonnull final ImmutableSet<String> labels) {
         if (labels.isEmpty()) {
             return cache.values().stream();
         } else {
@@ -93,7 +92,7 @@ public class LazyEdgeProvider implements EdgeProvider {
      * @return the optional selector, or {@link Optional#empty()} if none is to be loaded
      */
     @Nonnull
-    protected Optional<EdgeLoadSelector> computeSelector(@Nonnull @NonNull final ImmutableSet<String> labels) {
+    protected Optional<EdgeLoadSelector> computeSelector(@Nonnull final ImmutableSet<String> labels) {
         if (completelyLoaded) {
             // In case the edges have been completely loaded, we select nothing
             return Optional.empty();

@@ -1,7 +1,5 @@
 package ta.nemahuta.neo4j.query;
 
-import lombok.NonNull;
-
 import javax.annotation.Nonnull;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -23,7 +21,7 @@ public class UniqueParamNameGenerator {
      * @return the prefix plus an appended number (collision free)
      */
     @Nonnull
-    public String generate(@Nonnull @NonNull final String prefix) {
+    public String generate(@Nonnull final String prefix) {
         return prefix + (prefixesCounter.computeIfAbsent(prefix, k -> new AtomicLong(0)).incrementAndGet());
     }
 

@@ -35,7 +35,7 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
     protected abstract Pair<Long, S> getIdAndConvertToState(final Record r);
 
     @Override
-    public void update(final long id, @Nonnull @NonNull final S currentState, @Nonnull @NonNull final S newState) {
+    public void update(final long id, @Nonnull final S currentState, @Nonnull final S newState) {
         statementExecutor.executeStatement(createUpdateCommand(id, currentState, newState));
     }
 
@@ -54,8 +54,8 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
     }
 
     @Override
-    public void createIndex(@Nonnull @NonNull final Set<String> labels,
-                            @Nonnull @NonNull final String propertyName) {
+    public void createIndex(@Nonnull final Set<String> labels,
+                            @Nonnull final String propertyName) {
         statementExecutor.executeStatement(createCreateIndexCommand(labels, propertyName));
     }
 

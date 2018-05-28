@@ -67,8 +67,8 @@ public class MatchRelationPredicate implements MatchPredicate {
     private Set<String> labels;
 
     @Override
-    public void append(@Nonnull @NonNull final StringBuilder queryBuilder,
-                       @Nonnull @NonNull final Map<String, Object> parameters) {
+    public void append(@Nonnull final StringBuilder queryBuilder,
+                       @Nonnull final Map<String, Object> parameters) {
 
         Optional.ofNullable(lhs)
                 .orElseGet(() -> this.defaultLabelMatcher(lhsAlias))
@@ -89,7 +89,7 @@ public class MatchRelationPredicate implements MatchPredicate {
         return new MatchAllVertexLabelsPredicate(Collections.emptySet(), partition, alias);
     }
 
-    private void appendRelation(@Nonnull @NonNull final StringBuilder queryBuilder) {
+    private void appendRelation(@Nonnull final StringBuilder queryBuilder) {
         QueryUtils.appendRelationStart(direction, queryBuilder);
         queryBuilder.append(relationAlias);
         if (labels != null) {

@@ -1,6 +1,5 @@
 package ta.nemahuta.neo4j.cache;
 
-import lombok.NonNull;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
@@ -22,7 +21,7 @@ public class DefaultSessionCacheManager implements SessionCacheManager {
     protected final Cache<Long, Neo4JEdgeState> globalEdgeCache;
     protected final Cache<Long, Neo4JVertexState> globalVertexCache;
 
-    public DefaultSessionCacheManager(@Nonnull @NonNull final CacheManager cacheManager) {
+    public DefaultSessionCacheManager(@Nonnull final CacheManager cacheManager) {
         this.cacheManager = cacheManager;
         this.globalEdgeCache = createEdgeCache(CACHE_NAME_EDGE_GLOBAL);
         this.globalVertexCache = createVertexCache(CACHE_NAME_VERTEX_GLOBAL);
