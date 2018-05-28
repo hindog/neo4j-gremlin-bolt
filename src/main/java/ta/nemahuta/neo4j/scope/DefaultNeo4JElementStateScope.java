@@ -134,10 +134,12 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
             }
         } else {
             for (final Long key : selectorOrEmpty) {
-                final S value = this.hierarchicalCache.get(key);
-                if (value != null) {
-                    counter++;
-                    results.put(key, value);
+                if (!deleted.contains(key)) {
+                    final S value = this.hierarchicalCache.get(key);
+                    if (value != null) {
+                        counter++;
+                        results.put(key, value);
+                    }
                 }
             }
         }
@@ -154,4 +156,15 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
         }
     }
 
+    @Override
+    public void commit() {
+        this.hierarchicalCache.commit();
+        this.hierarchicalCache.removeFromParent(deleted);
+    }
+
+    @Override
+    public void rollback() {
+        this.hierarchicalCache.clear();
+        this.deleted.clear();
+    }
 }

@@ -68,15 +68,24 @@ class SimpleCreateAndLoadTest {
     void checkCreateAndReadSmallGraph() throws Exception {
         checkGraph("/graph1-example.xml", 6, 6);
         withGraph(graph -> {
-            final Optional<Vertex> josh = ImmutableList.copyOf(graph.vertices()).stream()
+            final Optional<Vertex> joshOpt = ImmutableList.copyOf(graph.vertices()).stream()
                     .filter(v -> Objects.equals(v.property("name").value(), "josh")).findAny();
-            assertTrue(josh.isPresent(), "Josh is not present");
-            assertTrue(josh.get().edges(Direction.OUT).hasNext(), "No out edges for josh");
+            assertTrue(joshOpt.isPresent(), "Josh is not present");
+            final Vertex josh = joshOpt.get();
+            assertTrue(josh.edges(Direction.OUT).hasNext(), "No out edges for josh");
+            josh.remove();
+            assertTrue(ImmutableList.copyOf(graph.vertices()).stream()
+                    .noneMatch(v -> Objects.equals(v.property("name").value(), "josh")));
+            graph.tx().commit();
+        });
+        withGraph(graph -> {
+            assertTrue(ImmutableList.copyOf(graph.vertices()).stream()
+                    .noneMatch(v -> Objects.equals(v.property("name").value(), "josh")));
         });
     }
 
     @Test
-    void checkCreateAndReadXHugeGraph() throws Exception {
+    void checkCreateAndReadHugeGraph() throws Exception {
         checkGraph("/graph2-example.xml", 809, 8049);
     }
 

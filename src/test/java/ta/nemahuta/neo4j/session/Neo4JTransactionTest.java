@@ -63,7 +63,6 @@ class Neo4JTransactionTest {
         sut.doCommit();
         // then: 'the transaction was marked as success and the cache was committed'
         verify(transaction, times(1)).success();
-        verify(sessionCache, times(1)).commit();
     }
 
 
@@ -75,7 +74,6 @@ class Neo4JTransactionTest {
         sut.doRollback();
         // then: 'the transaction was marked as failure and the cache was flushed'
         verify(transaction, times(1)).failure();
-        verify(sessionCache, times(1)).flush();
     }
 
     @Test

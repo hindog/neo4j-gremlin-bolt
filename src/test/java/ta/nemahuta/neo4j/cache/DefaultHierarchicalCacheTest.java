@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Iterator;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -193,6 +194,15 @@ class DefaultHierarchicalCacheTest {
         // then: 'the operation has been invoked on the child cache only'
         verify(childCacheMock, times(1)).getRuntimeConfiguration();
         verifyNoMoreInteractions(parentCacheMock);
+    }
+
+    @Test
+    void removeFromParent() {
+        // when: 'issuing the removal'
+        final Set<String> keys = ImmutableSet.of("1", "2", "3");
+        sut.removeFromParent(keys);
+        // then: 'the operation has been invoked on the parent'
+        verify(parentCacheMock, times(1)).removeAll(keys);
     }
 
     @Test

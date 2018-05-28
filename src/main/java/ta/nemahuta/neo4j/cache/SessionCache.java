@@ -20,13 +20,4 @@ public interface SessionCache extends AutoCloseable {
 
     void close();
 
-    default void flush() {
-        getEdgeCache().clear();
-        getVertexCache().clear();
-    }
-
-    default void commit() {
-        getEdgeCache().commit();
-        getVertexCache().commit();
-    }
 }
