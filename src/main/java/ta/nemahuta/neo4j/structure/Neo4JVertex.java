@@ -49,7 +49,8 @@ public class Neo4JVertex extends Neo4JElement<Neo4JVertexState, VertexProperty> 
 
     @Override
     public Iterator<Edge> edges(final Direction direction, final String... edgeLabels) {
-        return graph.edges(edgeIdStream(direction, edgeLabels).collect(Collectors.toSet()).toArray());
+        final Set<Long> edgeIds = edgeIdStream(direction, edgeLabels).collect(Collectors.toSet());
+        return edgeIds.isEmpty() ? Collections.emptyIterator() : graph.edges(edgeIds.toArray());
     }
 
     @Override
