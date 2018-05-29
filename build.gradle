@@ -141,6 +141,7 @@ bintray {
             vcsTag = name
         }
     }
+    publish = true
 }
 
 tasks.bintrayUpload.onlyIf { !(project.version as String).endsWith("-SNAPSHOT") }
