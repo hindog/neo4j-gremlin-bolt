@@ -11,6 +11,7 @@ each and every part of the code, I want to acknowledge their work.
 
 ![Build Status](https://travis-ci.org/Tanemahuta/neo4j-gremlin-bolt.svg?branch=develop)
 ![Coverage Status](https://codecov.io/gh/Tanemahuta/neo4j-gremlin-bolt/branch/develop/graph/badge.svg)
+[ ![Download](https://api.bintray.com/packages/tanemahuta/neo4j/neo4j-gremlin-bolt/images/download.svg) ](https://bintray.com/tanemahuta/neo4j/neo4j-gremlin-bolt/_latestVersion)
 
 ## Requirements for building
 
