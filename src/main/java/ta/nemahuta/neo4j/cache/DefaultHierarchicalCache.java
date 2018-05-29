@@ -44,11 +44,6 @@ public class DefaultHierarchicalCache<K, V> implements HierarchicalCache<K, V> {
     }
 
     @Override
-    public Iterator<Entry<K, V>> childIterator() {
-        return child.iterator();
-    }
-
-    @Override
     public void removeFromParent(@Nonnull final Set<K> keys) {
         log.debug("Removing {} elements from parent.", keys.size());
         parent.removeAll(keys);
