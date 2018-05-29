@@ -49,25 +49,31 @@ class Neo4JVertexTest {
     private final Neo4JVertexState state = new Neo4JVertexState(ImmutableSet.of("x", "y"), ImmutableMap.of("a", "b", "x", "y"));
 
     private Neo4JVertex sut;
+    private final long inEdgeId = 1l, outEdgeId = 2l, sutId = 1l;
+
 
     @BeforeEach
     void createSutAndStub() {
-        this.sut = new Neo4JVertex(graph, 1l, scope, inProvider, outProvider);
-        when(scope.get(1l)).thenReturn(state);
-        when(inEdge.id()).thenReturn(1l);
-        when(outEdge.id()).thenReturn(2l);
+        this.sut = new Neo4JVertex(graph, sutId, scope, inProvider, outProvider);
+        when(scope.get(sutId)).thenReturn(state);
+        when(inEdge.id()).thenReturn(inEdgeId);
+        when(outEdge.id()).thenReturn(outEdgeId);
         when(graph.features()).thenReturn(Neo4JFeatures.INSTANCE);
         when(graph.addEdge(eq("edge"), eq(sut), eq(otherVertex), any())).thenReturn(inEdge);
-        when(inProvider.provideEdges(any())).thenReturn(ImmutableList.of(1l));
-        when(outProvider.provideEdges(any())).thenReturn(ImmutableList.of(2l));
-        when(graph.edges(1l)).then(i -> Stream.of(inEdge).iterator());
-        when(graph.edges(2l)).then(i -> Stream.of(outEdge).iterator());
-        when(graph.edges(1l, 2l)).then(i -> Stream.of(inEdge, outEdge).iterator());
-        when(graph.edges(2l, 1l)).then(i -> Stream.of(outEdge, inEdge).iterator());
+        when(graph.edges(inEdgeId)).then(i -> Stream.of(inEdge).iterator());
+        when(graph.edges(outEdgeId)).then(i -> Stream.of(outEdge).iterator());
+        when(graph.edges(inEdgeId, outEdgeId)).then(i -> Stream.of(inEdge, outEdge).iterator());
+        when(graph.edges(outEdge, inEdgeId)).then(i -> Stream.of(outEdge, inEdge).iterator());
+        when(graph.edges()).then(i -> Stream.of(outEdge, inEdge).iterator());
+        // Stub inVertex -inEdge-> sut -outEdge->outVertex
+        when(inProvider.provideEdges(eq("x"))).thenReturn(ImmutableList.of(inEdgeId));
+        when(outProvider.provideEdges(eq("x"))).thenReturn(ImmutableList.of(outEdgeId));
+        when(inProvider.provideEdges(eq("y"))).thenReturn(ImmutableList.of());
+        when(outProvider.provideEdges(eq("y"))).thenReturn(ImmutableList.of());
         when(inEdge.outVertex()).thenReturn(inVertex);
         when(inEdge.inVertex()).thenReturn(sut);
-        when(outEdge.inVertex()).thenReturn(sut);
-        when(outEdge.outVertex()).thenReturn(outVertex);
+        when(outEdge.inVertex()).thenReturn(outVertex);
+        when(outEdge.outVertex()).thenReturn(sut);
     }
 
     @Test
@@ -85,13 +91,21 @@ class Neo4JVertexTest {
         assertEquals(ImmutableList.of(inEdge), ImmutableList.copyOf(sut.edges(Direction.IN, "x")));
         assertEquals(ImmutableList.of(outEdge), ImmutableList.copyOf(sut.edges(Direction.OUT, "x")));
         assertEquals(ImmutableList.of(inEdge, outEdge), ImmutableList.copyOf(sut.edges(Direction.BOTH, "x")));
+        assertEquals(ImmutableList.of(inEdge), ImmutableList.copyOf(sut.edges(Direction.IN, "x")));
+        assertEquals(ImmutableList.of(), ImmutableList.copyOf(sut.edges(Direction.IN, "y")));
+        assertEquals(ImmutableList.of(), ImmutableList.copyOf(sut.edges(Direction.OUT, "y")));
+        assertEquals(ImmutableList.of(), ImmutableList.copyOf(sut.edges(Direction.BOTH, "y")));
     }
 
     @Test
     void vertices() {
+        // inVertex -inEdge-> sut -outEdge->outVertex
         assertEquals(ImmutableList.of(inVertex), ImmutableList.copyOf(sut.vertices(Direction.IN, "x")));
         assertEquals(ImmutableList.of(outVertex), ImmutableList.copyOf(sut.vertices(Direction.OUT, "x")));
-        assertEquals(ImmutableList.of(inVertex, outVertex), ImmutableList.copyOf(sut.vertices(Direction.BOTH, "x")));
+        assertEquals(ImmutableSet.of(inVertex, outVertex), ImmutableSet.copyOf(sut.vertices(Direction.BOTH, "x")));
+        assertEquals(ImmutableSet.of(), ImmutableSet.copyOf(sut.vertices(Direction.IN, "y")));
+        assertEquals(ImmutableSet.of(), ImmutableSet.copyOf(sut.vertices(Direction.OUT, "y")));
+        assertEquals(ImmutableSet.of(), ImmutableSet.copyOf(sut.vertices(Direction.BOTH, "y")));
     }
 
 
