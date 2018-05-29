@@ -20,6 +20,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -124,26 +126,24 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
     }
 
     private void putAllFromCache(final Collection<Long> selectorOrEmpty, final Map<Long, S> results) {
-        long counter = 0;
-        if (selectorOrEmpty.isEmpty()) {
-            final Iterator<Cache.Entry<Long, S>> iter = this.hierarchicalCache.childIterator();
-            while (iter.hasNext()) {
-                final Cache.Entry<Long, S> next = iter.next();
-                results.put(next.getKey(), next.getValue());
-                counter++;
+        final long beforeSize = results.size();
+        final Stream<Long> selector = (!selectorOrEmpty.isEmpty() ? selectorOrEmpty.stream() : cacheKeys())
+                .filter(key -> !deleted.contains(key))
+                .distinct();
+
+        selector.forEach(key -> {
+            final S value = this.hierarchicalCache.get(key);
+            if (value != null) {
+                results.put(key, value);
             }
-        } else {
-            for (final Long key : selectorOrEmpty) {
-                if (!deleted.contains(key)) {
-                    final S value = this.hierarchicalCache.get(key);
-                    if (value != null) {
-                        counter++;
-                        results.put(key, value);
-                    }
-                }
-            }
-        }
-        log.trace("Put {} elements from cache", counter);
+        });
+        log.trace("Put {} elements from cache", results.size() - beforeSize);
+    }
+
+    @Nonnull
+    private Stream<Long> cacheKeys() {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this.hierarchicalCache.iterator(), Spliterator.ORDERED), true)
+                .map(Cache.Entry::getKey);
     }
 
     private <S> S locked(@Nonnull final Function<ReadWriteLock, Lock> lockFunction, @Nonnull final Supplier<S> fun) {
