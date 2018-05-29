@@ -8,6 +8,7 @@ import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
 import javax.annotation.Nonnull;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 /**
  * Wrapper for a {@link Property} in Neo4j.
@@ -31,21 +32,24 @@ public abstract class Neo4JProperty<P extends Neo4JElement, T> implements Proper
 
     @Override
     public String key() {
+        assertPresent();
         return key;
     }
 
     @Override
     public T value() throws NoSuchElementException {
+        assertPresent();
         return (T) parent.getState().getProperties().get(key);
     }
 
     @Override
     public boolean isPresent() {
-        return parent.getState().getProperties().containsKey(key);
+        return Optional.ofNullable(parent.getState().getProperties().get(key)).isPresent();
     }
 
     @Override
     public P element() {
+        assertPresent();
         return parent;
     }
 
@@ -56,6 +60,7 @@ public abstract class Neo4JProperty<P extends Neo4JElement, T> implements Proper
 
     @Override
     public int hashCode() {
+        assertPresent();
         return ElementHelper.hashCode((Element) this);
     }
 
@@ -67,6 +72,12 @@ public abstract class Neo4JProperty<P extends Neo4JElement, T> implements Proper
     @Override
     public boolean equals(final Object object) {
         return object instanceof Property && ElementHelper.areEqual(this, object);
+    }
+
+    protected void assertPresent() {
+        if (!isPresent()) {
+            throw Property.Exceptions.propertyDoesNotExist();
+        }
     }
 
 }
