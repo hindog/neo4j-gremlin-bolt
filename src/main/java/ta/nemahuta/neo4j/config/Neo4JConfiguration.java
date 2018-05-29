@@ -75,17 +75,20 @@ public class Neo4JConfiguration {
     private final Consumer<Config.ConfigBuilder> additionConfiguration;
 
     @Nonnull
-    @SneakyThrows
     public Configuration toApacheConfiguration() {
         final Configuration result = new BaseConfiguration();
         configurationFields()
-                .forEach(f -> {
-                    final String key = !StringUtils.isEmpty(f.getAnnotation(ConfigurationKey.class).value()) ?
-                            f.getAnnotation(ConfigurationKey.class).value() :
-                            f.getName();
-                    result.addProperty(key, f.get(Neo4JConfiguration.this));
-                });
+                .forEach(f -> addField(result, f));
+
         return result;
+    }
+
+    @SneakyThrows
+    private void addField(final Configuration result, final Field f) {
+        final String key = !StringUtils.isEmpty(f.getAnnotation(ConfigurationKey.class).value()) ?
+                f.getAnnotation(ConfigurationKey.class).value() :
+                f.getName();
+        result.addProperty(key, f.get(Neo4JConfiguration.this));
     }
 
     @Nonnull
@@ -98,20 +101,24 @@ public class Neo4JConfiguration {
     @SneakyThrows
     public static Neo4JConfiguration fromApacheConfiguration(@Nonnull final Configuration configuration) {
         final Neo4JConfigurationBuilder builder = builder();
-        configurationFields().forEach(f -> {
-            final Object value = configuration.getProperty(f.getName());
-            if (value == null) {
-                return;
-            }
-            final Method builderMethod = findBuilderMethod(f.getName(), value.getClass());
-            builderMethod.invoke(builder, value);
-        });
+        configurationFields().forEach(f -> invokeBuilderMethod(configuration, builder, f));
         return builder.build();
     }
 
+    @SneakyThrows
+    private static void invokeBuilderMethod(final @Nonnull Configuration configuration, final Neo4JConfigurationBuilder builder, final Field f) {
+        final Object value = configuration.getProperty(f.getName());
+        if (value == null) {
+            return;
+        }
+        final Method builderMethod = findBuilderMethod(f.getName(), value.getClass());
+        builderMethod.invoke(builder, value);
+    }
+
     @Nonnull
+    @SneakyThrows
     private static Method findBuilderMethod(@Nonnull final String name,
-                                            @Nonnull final Class<?> paramClass) throws NoSuchMethodException {
+                                            @Nonnull final Class<?> paramClass) {
 
         return Stream.of(Neo4JConfigurationBuilder.class.getDeclaredMethods())
                 .filter(m -> name.equals(m.getName()))
