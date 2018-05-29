@@ -77,8 +77,9 @@ class Neo4JGraphTest {
 
     @Test
     void addVertex() {
-        stub.stubVertexCreate("CREATE (v:`x`:`y`) SET v={vertexProps1} RETURN ID(v)", ImmutableMap.of("vertexProps1", ImmutableMap.of("x", "y")), 1l);
-        assertTrue(sut.addVertex(T.label, "x::y", "x", "y") instanceof Neo4JVertex);
+        stub.stubVertexCreate("CREATE (v:`z`:`x`) SET v={vertexProps1} RETURN ID(v)", ImmutableMap.of("vertexProps1", ImmutableMap.of("x", "y")), 1l);
+        assertTrue(sut.addVertex(T.label, "z", "x", "y") instanceof Neo4JVertex);
+        verify(vertexCache, times(1)).put(eq(1l), argThat(state -> state.getLabels().equals(ImmutableSet.of("z"))));
     }
 
     @Test
