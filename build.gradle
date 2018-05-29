@@ -133,6 +133,8 @@ bintray {
         userOrg = 'tanemahuta'
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/Tanemahuta/neo4j-gremlin-bolt.git'
+        issueTrackerUrl = "https://github.com/Tanemahuta/neo4j-gremlin-bolt/issues"
+        websiteUrl = "https://github.com/Tanemahuta/neo4j-gremlin-bolt"
         githubRepo = 'Tanemahuta/neo4j-gremlin-bolt'
         githubReleaseNotesFile = 'README.md'
         version {
