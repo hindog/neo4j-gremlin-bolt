@@ -106,7 +106,7 @@ public class Neo4JGraph implements Graph {
             throw Vertex.Exceptions.userSuppliedIdsNotSupported();
 
         final ImmutableSet<String> labels = ImmutableSet.copyOf(
-                partition.ensurePartitionLabelsSet(
+                partition.ensurePartitionLabelsNotSet(
                         Arrays.asList(ElementHelper.getLabelValue(keyValues).orElse(Vertex.DEFAULT_LABEL).split(Neo4JVertex.LABEL_DELIMITER))
                 )
         );
@@ -170,7 +170,6 @@ public class Neo4JGraph implements Graph {
 
         return (!idCollection.isEmpty() ? idCollection.stream() : loaded.keySet().stream())
                 .filter(loaded::containsKey)
-                .filter(Objects::nonNull)
                 .map(accessor::apply)
                 .iterator();
     }
