@@ -19,8 +19,10 @@ each and every part of the code, I want to acknowledge their work.
 * Gradle 4.x or newer (use the wrapper, please)
 
 ## Usage
+Use the following repository: 
+[bintray]()https://bintray.com/tanemahuta/neo4j/neo4j-gremlin-bolt)
 
-Add the Neo4j [Apache Tinkerpop](http://tinkerpop.apache.org/) implementation to your project:
+and add the Neo4j [Apache Tinkerpop](http://tinkerpop.apache.org/) implementation to your project:
 
 ### Maven
 
