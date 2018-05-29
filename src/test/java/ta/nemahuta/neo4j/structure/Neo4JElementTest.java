@@ -99,6 +99,7 @@ class Neo4JElementTest {
 
     @Test
     void updatePropertyValue() {
+        when(state.getProperties()).thenReturn(ImmutableMap.of("a", "c"));
         // when: 'adding a property'
         assertEquals(property, sut.property("a", "b"));
         // then: 'there was an update to the properties'
@@ -110,7 +111,7 @@ class Neo4JElementTest {
         // setup: 'the properties in the state'
         when(state.getProperties()).thenReturn(ImmutableMap.of("x", "y"));
         // expect: 'the iterator contains the correct properties'
-        assertEquals(ImmutableList.of(property, property), ImmutableList.copyOf(sut.properties("x", "y")));
+        assertEquals(ImmutableList.of(property), ImmutableList.copyOf(sut.properties("x", "y")));
     }
 
     @Test

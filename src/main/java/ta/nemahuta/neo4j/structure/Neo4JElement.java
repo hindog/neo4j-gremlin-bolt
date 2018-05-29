@@ -53,9 +53,10 @@ public abstract class Neo4JElement<S extends Neo4JElementState, P extends Proper
     }
 
     protected Stream<P> getProperties(@Nonnull final String... propertyKeys) {
-        return (propertyKeys.length == 0 ? getState().getProperties().keySet().stream() : Stream.of(propertyKeys))
-                .map(this::getOrCreateProperty)
-                .filter(Objects::nonNull);
+        return (propertyKeys.length == 0 ?
+                getState().getProperties().keySet().stream() :
+                Stream.of(propertyKeys).filter(k -> Optional.ofNullable(getState().getProperties().get(k)).isPresent())
+        ).map(this::getOrCreateProperty).filter(Objects::nonNull);
     }
 
     @Nullable
