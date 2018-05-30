@@ -2,6 +2,7 @@ package ta.nemahuta.neo4j.structure;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
+import java.util.stream.Stream;
 
 /**
  * Interface for an edge provider.
@@ -26,4 +27,5 @@ public interface EdgeProvider {
      * @param id    the identifier of the edges
      */
     void register(@Nonnull String label, long id);
+
 }

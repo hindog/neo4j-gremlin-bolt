@@ -88,31 +88,31 @@ public class MockUtils {
     public static Value mockValue(final Object prop) {
         final Value value = mock(Value.class);
         if (prop == null) {
-            when(value.type()).thenReturn(new TypeRepresentation(NULL_TyCon));
+            when(value.type()).thenReturn(new TypeRepresentation(NULL));
         } else if (prop instanceof Boolean) {
             when(value.asBoolean()).thenReturn((Boolean) prop);
-            when(value.type()).thenReturn(new TypeRepresentation(BOOLEAN_TyCon));
+            when(value.type()).thenReturn(new TypeRepresentation(BOOLEAN));
         } else if (prop instanceof String) {
             when(value.asString()).thenReturn((String) prop);
-            when(value.type()).thenReturn(new TypeRepresentation(STRING_TyCon));
+            when(value.type()).thenReturn(new TypeRepresentation(STRING));
         } else if (prop instanceof Float) {
             when(value.asFloat()).thenReturn((Float) prop);
-            when(value.type()).thenReturn(new TypeRepresentation(FLOAT_TyCon));
+            when(value.type()).thenReturn(new TypeRepresentation(FLOAT));
         } else if (prop instanceof Integer) {
             when(value.asInt()).thenReturn((Integer) prop);
-            when(value.type()).thenReturn(new TypeRepresentation(INTEGER_TyCon));
+            when(value.type()).thenReturn(new TypeRepresentation(INTEGER));
         } else if (prop instanceof Number) {
             when(value.asNumber()).thenReturn((Number) prop);
-            when(value.type()).thenReturn(new TypeRepresentation(NUMBER_TyCon));
+            when(value.type()).thenReturn(new TypeRepresentation(NUMBER));
         } else if (prop instanceof byte[]) {
             when(value.asByteArray()).thenReturn((byte[]) prop);
-            when(value.type()).thenReturn(new TypeRepresentation(BYTES_TyCon));
+            when(value.type()).thenReturn(new TypeRepresentation(BYTES));
         } else if (prop instanceof Iterable) {
             when(value.asList()).thenReturn(ImmutableList.copyOf((Iterable) prop));
-            when(value.type()).thenReturn(new TypeRepresentation(LIST_TyCon));
+            when(value.type()).thenReturn(new TypeRepresentation(LIST));
         } else {
             when(value.asObject()).thenReturn(prop);
-            when(value.type()).thenReturn(new TypeRepresentation(ANY_TyCon));
+            when(value.type()).thenReturn(new TypeRepresentation(ANY));
         }
         return value;
     }

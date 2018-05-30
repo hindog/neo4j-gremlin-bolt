@@ -38,17 +38,19 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
     @NonNull
     private final Neo4JElementStateHandler remoteElementHandler;
 
-    private final Set<Long> deleted = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    protected final Set<Long> deleted = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private final AtomicBoolean completelyLoaded = new AtomicBoolean(false);
 
     @Override
-    public void update(final long id,
-                       @Nonnull final S newState) {
+    public void update(final long id, @Nonnull final S newState) {
+        if (deleted.contains(id)) {
+            throw new IllegalStateException("The element " + id + " has been deleted in the scope, cannot change to state: " + newState);
+        }
         locked(ReadWriteLock::writeLock, () -> {
             final S state = getAll(Collections.singleton(id)).get(id);
             if (!Objects.equals(newState, state)) {
-                log.debug("Change detected for element with id: {}", id);
+                log.trace("Change detected for element with id: {}", id);
                 hierarchicalCache.put(id, newState);
                 remoteElementHandler.update(id, state, newState);
             }
@@ -58,14 +60,18 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
 
     @Override
     public void delete(final long id) {
+        if (deleted.contains(id)) {
+            return;
+        }
         locked(ReadWriteLock::writeLock, () -> {
-            log.debug("Removing element with id from the queue: {}", id);
+            log.trace("Deleting element with id temporary: {}", id);
             deleted.add(id);
             hierarchicalCache.remove(id);
             remoteElementHandler.delete(id);
             return null;
         });
     }
+
 
     @Override
     @Nonnull
@@ -80,14 +86,14 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
     @Nullable
     @Override
     public S get(final long id) {
-        return locked(ReadWriteLock::readLock, () -> getAll(Collections.singleton(id)).get(id));
+        return getAll(Collections.singleton(id)).get(id);
     }
 
     @Nullable
     @Override
     public Map<Long, S> getAll(@Nonnull final Collection<Long> ids) {
         return locked(ReadWriteLock::readLock, () -> {
-            log.debug("Retrieving {} items", ids.size());
+            log.trace("Retrieving {} items", ids.size());
             final Map<Long, S> results = new ConcurrentHashMap<>();
             if (ids.isEmpty()) {
                 // Mark all ids to be loaded
@@ -102,7 +108,7 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
                 }
             } else {
                 putAllFromCache(ids, results);
-                final Set<Long> idsToBeLoaded = ids.stream().filter(id -> !results.containsKey(id)).collect(Collectors.toSet());
+                final Set<Long> idsToBeLoaded = ids.stream().filter(id -> !results.containsKey(id) && !deleted.contains(id)).collect(Collectors.toSet());
                 log.trace("Found {} elements to be in scope already.", results.size());
                 if (!idsToBeLoaded.isEmpty()) {
                     log.trace("Loading the other {} elements.", idsToBeLoaded.size());
@@ -142,7 +148,7 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
 
     @Nonnull
     private Stream<Long> cacheKeys() {
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this.hierarchicalCache.iterator(), Spliterator.ORDERED), true)
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this.hierarchicalCache.iterator(), Spliterator.ORDERED), false)
                 .map(Cache.Entry::getKey);
     }
 
@@ -160,6 +166,7 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
     public void commit() {
         this.hierarchicalCache.commit();
         this.hierarchicalCache.removeFromParent(deleted);
+        this.deleted.clear();
     }
 
     @Override
