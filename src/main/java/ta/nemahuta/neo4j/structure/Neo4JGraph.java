@@ -79,9 +79,20 @@ public class Neo4JGraph implements Graph {
         this.transaction.addTransactionListener(this::handleTransaction);
         this.vertexStateHandler = new Neo4JVertexStateHandler(transaction, partition);
         this.edgeStateHandler = new Neo4JEdgeStateHandler(transaction, partition);
-        this.vertexScope = new DefaultNeo4JElementStateScope<>(sessionCache.getVertexCache(), vertexStateHandler);
-        this.edgeScope = new DefaultNeo4JElementStateScope<>(sessionCache.getEdgeCache(), edgeStateHandler);
         this.relationProvider = new DefaultRelationProvider(transaction, partition);
+        this.edgeScope = new DefaultNeo4JElementStateScope<>(sessionCache.getEdgeCache(), edgeStateHandler);
+        this.vertexScope = new DefaultNeo4JElementStateScope<Neo4JVertexState>(sessionCache.getVertexCache(), vertexStateHandler) {
+            @Override
+            public void delete(long id) {
+                final Set<Long> edgeIds = deleted.contains(id) ? Collections.emptySet() :
+                        relationProvider.loadRelationIds(id, Direction.BOTH, Collections.emptySet())
+                                .values().stream().map(Set::stream).reduce(Stream::concat)
+                                .orElseGet(Stream::empty)
+                                .collect(ImmutableSet.toImmutableSet());
+                edgeIds.forEach(edgeScope::delete);
+                super.delete(id);
+            }
+        };
         this.configuration = configuration;
     }
 

@@ -26,5 +26,5 @@
     <root level="debug">
         <appender-ref ref="STDOUT"/>
     </root>
-    <logger name="ta.nemahuta.neo4j.session.Statement" level="INFO"/>
+    <logger name="ta.nemahuta.neo4j.session.Statement" level="DEBUG"/>
 </configuration>

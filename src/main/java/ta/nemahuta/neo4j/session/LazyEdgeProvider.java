@@ -47,7 +47,6 @@ public class LazyEdgeProvider implements EdgeProvider {
         putToCache(label, Collections.singleton(id));
     }
 
-
     /**
      * Computes the selector and loads the edges for the provided labels, putting them to the cache.
      *
