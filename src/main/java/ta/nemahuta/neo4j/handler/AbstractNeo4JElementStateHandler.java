@@ -2,7 +2,9 @@ package ta.nemahuta.neo4j.handler;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
+import org.neo4j.driver.internal.types.TypeRepresentation;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.Value;
@@ -16,6 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @RequiredArgsConstructor
+@Slf4j
 public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementState> implements Neo4JElementStateHandler<S> {
 
     @NonNull
@@ -48,9 +51,38 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
     public long create(@Nonnull final S state) {
         return statementExecutor.retrieveRecords(createInsertCommand(state))
                 .findAny()
-                .flatMap(r -> r.size() == 1 ? Optional.of(r.get(0)) : Optional.empty())
-                .map(Value::asLong)
+                .flatMap(this::recordToLong)
                 .orElseThrow(() -> new IllegalStateException("The statement executed returned a non single long record."));
+    }
+
+    private Optional<Long> recordToLong(final Record record) {
+        final Optional<Long> result = recordToOptional(record).flatMap(this::valueAsLong);
+        if (!result.isPresent()) {
+            log.error("Record received is of wrong format: {}", record);
+        }
+        return result;
+    }
+
+    private Optional<Long> valueAsLong(@Nonnull final Value value) {
+        switch (((TypeRepresentation) value.type()).constructor()) {
+            case NUMBER:
+            case INTEGER:
+                return Optional.of(value.asNumber().longValue());
+            default:
+                log.error("Received a record with value: {}", value);
+                return Optional.empty();
+        }
+    }
+
+    private Optional<Value> recordToOptional(@Nonnull final Record r) {
+        if (r.size() > 0) {
+            if (r.size() > 1) {
+                log.warn("Record contains more than one entry: {}", r.size());
+            }
+            return Optional.of(r.get(0));
+        }
+        log.error("Record contains no entry: {}", r.keys());
+        return Optional.empty();
     }
 
     @Override

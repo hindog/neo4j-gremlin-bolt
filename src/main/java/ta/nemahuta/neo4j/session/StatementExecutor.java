@@ -35,8 +35,9 @@ public interface StatementExecutor {
      */
     @Nonnull
     default Stream<Record> retrieveRecords(@Nonnull final Statement statement) {
+        final StatementResult iterator = executeStatement(statement);
         return StreamSupport.stream(
-                Spliterators.spliteratorUnknownSize(executeStatement(statement),
+                Spliterators.spliteratorUnknownSize(iterator,
                         Spliterator.NONNULL | Spliterator.IMMUTABLE
                 ), true);
     }

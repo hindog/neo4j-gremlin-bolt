@@ -18,9 +18,13 @@ import ta.nemahuta.neo4j.structure.Neo4JGraphFactory;
 
 import javax.annotation.Nonnull;
 import java.io.*;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,6 +36,7 @@ class SimpleCreateAndLoadTest {
     private static final Logger log = LoggerFactory.getLogger(SimpleCreateAndLoadTest.class);
 
     private static Neo4JGraphFactory graphFactory;
+    private final CountDownLatch latch = new CountDownLatch(1);
 
     static {
         try {
@@ -82,6 +87,39 @@ class SimpleCreateAndLoadTest {
             assertTrue(ImmutableList.copyOf(graph.vertices()).stream()
                     .noneMatch(v -> Objects.equals(v.property("name").value(), "josh")));
         });
+    }
+
+    @Test
+    void parallelTest1() throws Exception {
+        parallelStream(1000, "/graph1-example.xml");
+    }
+
+    @Test
+    void parallelTest2() throws Exception {
+        parallelStream(10, "/graph2-example.xml");
+    }
+
+    private void parallelStream(final int max, final String source) throws InterruptedException {
+        final ExecutorService executor = Executors.newCachedThreadPool();
+        final List<Future<Boolean>> futures = executor.invokeAll(
+                Stream.<Callable<Boolean>>generate(() -> () -> {
+                    latch.countDown();
+                    try {
+                        streamGraph(source);
+                    } catch (Exception e) {
+                        throw new IllegalStateException(e);
+                    }
+                    return true;
+                }).limit(max).collect(Collectors.toList())
+        );
+        executor.shutdown();
+        assertTrue(futures.stream().allMatch(f -> {
+            try {
+                return f.get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new IllegalStateException(e);
+            }
+        }));
     }
 
     @Test
