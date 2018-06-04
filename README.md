@@ -22,7 +22,7 @@ each and every part of the code, I want to acknowledge their work.
 Use the following repository: 
 [bintray]()https://bintray.com/tanemahuta/neo4j/neo4j-gremlin-bolt)
 
-and add the Neo4j [Apache Tinkerpop](http://tinkerpop.apache.org/) implementation to your project:
+and add the Neo4j [Apache Tinkerpop](http://tinkerpop.apache.org/) implementation and a cache provider to your project:
 
 ### Maven
 
@@ -32,12 +32,18 @@ and add the Neo4j [Apache Tinkerpop](http://tinkerpop.apache.org/) implementatio
         <artifactId>neo4j-gremlin-bolt</artifactId>
         <version>{version}</version>
     </dependency>
+    <dependency>
+        <groupId>org.ehcache</groupId>
+        <artifactId>ehcache</artifactId>
+        <version>{ehCacheVersion}</version>
+    </dependency>
 ```
 
 ### Gradle
 ```groovy
 dependencies {
     compile 'ta.nemahuta.neo4j:neo4j-gremlin-bolt:{version}'
+    runtime 'org.ehcache:ehcache:{ehCacheVersion}'
 }
 ```
 
@@ -50,9 +56,9 @@ neo4j-gremlin-bolt and it's modules are licensed under the [Apache License v 2.0
 * [Apache Tinkerpop](http://tinkerpop.apache.org/) 3.x Online Transactional Processing Graph Systems (OLTP) support.
 * [neo4j](http://neo4j.com/) implementation on top of the [BOLT](https://github.com/neo4j/neo4j-java-driver) protocol.
 
-# Graph API
+## Graph API
 
-## Graph configuration
+### Graph configuration
 The graph configuration will be used to connect to the graph.
 You can use the builder to create one:
 ```java
@@ -61,10 +67,12 @@ You can use the builder to create one:
                         .graphName("partitionLabel") // this is optional
                         .hostname("localhost")
                         .port(7687)
-                        .authToken(AuthTokens.basic("neo4j", "neo4j123")).build();
+                        .authToken(AuthTokens.basic("neo4j", "neo4j123"))
+                        .cacheExpiry("30.minutes")
+                        .build();
 ```
 
-## Graph Factory
+### Graph Factory
 The graph factory is being to share a session (including the connection pool of it) and a global cache of loaded elements 
 in an environment.
 To obtain a graph factory just create a new one using the configuration:
@@ -72,7 +80,7 @@ To obtain a graph factory just create a new one using the configuration:
     Neo4JGraphFactory graphFactory = new Neo4JGraphFactory(config);
 ```
 
-## Working with transactions
+### Working with transactions
 
 * Obtain a [Transaction](http://tinkerpop.apache.org/javadocs/current/core/org/apache/tinkerpop/gremlin/structure/Transaction.html) instance from current Graph.
 
@@ -89,9 +97,9 @@ To obtain a graph factory just create a new one using the configuration:
     }
 ```
 
-## Working with Vertices and Edges
+### Working with Vertices and Edges
 
-### Create a Vertex
+#### Create a Vertex
 
 Create a new [Vertex](http://tinkerpop.apache.org/javadocs/current/core/org/apache/tinkerpop/gremlin/structure/Vertex.html) in the current `graph` call the [Graph.addVertex()](http://tinkerpop.apache.org/javadocs/current/core/org/apache/tinkerpop/gremlin/structure/Graph.html#addVertex-java.lang.Object...-) method.
 
@@ -115,6 +123,22 @@ Create a new [Vertex](http://tinkerpop.apache.org/javadocs/current/core/org/apac
   // create another vertex in current graph with label
   Vertex vertex2 = graph.addVertex(T.label, "Company");
 ```
+
+## Caching
+This project heavily uses caching when obtaining a graph.
+
+Since no `GraphComputer` for gremlin is created, the vertices will normally be completely loaded, and thus the implementation 
+is sped up by using a global cache for each `Neo4JGraphFactory`.
+
+The global caches will be used in the session caches and the session caches are committed to the global cache, each time a transaction
+has been committed.
+
+Some words of warning regarding asynchronous usage:
+- each transaction has to be handled in the same thread it has been created in, solely! (this is a limitation of the bolt driver)
+- the graphs and the element states _should be_ thread safe per se, the connector (bolt-driver) seems not to be
+- be aware that you can produce data races by executing transactions out-of-order any-time, so make sure you synchronize the operations 
+accordingly  
+- we are using the connector asynchronously using `ReadWriteLocks` for certain conditions, and it works smoothly
 
 ## Building the library
 
