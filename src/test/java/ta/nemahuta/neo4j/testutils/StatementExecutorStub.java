@@ -2,6 +2,7 @@ package ta.nemahuta.neo4j.testutils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import org.neo4j.driver.internal.types.TypeConstructor;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
@@ -82,13 +83,13 @@ public class StatementExecutorStub implements StatementExecutor {
 
     public void stubVertexCreate(final String text, final Map<String, Object> params, final long id) {
         stubStatementExecution(text, params, mockStatementResult(mockRecord(
-                mockValue(Value::asLong, null, id)
+                mockValue(Value::asNumber, TypeConstructor.NUMBER, id)
         )));
     }
 
     public void stubEdgeCreate(final String text, final Map<String, Object> params, final long id) {
         stubStatementExecution(text, params, mockStatementResult(mockRecord(
-                mockValue(Value::asLong, null, id)
+                mockValue(Value::asNumber, TypeConstructor.NUMBER, id)
         )));
 
     }

@@ -4,13 +4,13 @@ import com.google.common.collect.ImmutableSet;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.ehcache.Cache;
 import ta.nemahuta.neo4j.cache.HierarchicalCache;
 import ta.nemahuta.neo4j.handler.Neo4JElementStateHandler;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.cache.Cache;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -148,8 +148,7 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
 
     @Nonnull
     private Stream<Long> cacheKeys() {
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this.hierarchicalCache.iterator(), Spliterator.ORDERED), false)
-                .map(Cache.Entry::getKey);
+        return StreamSupport.stream(this.hierarchicalCache.spliterator(), false).map(Cache.Entry::getKey);
     }
 
     private <S> S locked(@Nonnull final Function<ReadWriteLock, Lock> lockFunction, @Nonnull final Supplier<S> fun) {

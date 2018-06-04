@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.neo4j.driver.internal.types.TypeConstructor;
+import org.neo4j.driver.internal.types.TypeRepresentation;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
@@ -43,6 +45,9 @@ class AbstractNeo4JElementStateHandlerTest {
 
     @Mock
     private Record record;
+
+    @Mock
+    private TypeRepresentation type;
 
     @Mock
     private Value value;
@@ -95,7 +100,9 @@ class AbstractNeo4JElementStateHandlerTest {
             return result;
         });
         when(record.get(0)).thenReturn(value);
-        when(value.asLong()).thenReturn(2l);
+        when(type.constructor()).thenReturn(TypeConstructor.NUMBER);
+        when(value.type()).thenReturn(type);
+        when(value.asNumber()).thenReturn(2l);
         when(record.size()).thenReturn(1);
     }
 

@@ -11,10 +11,12 @@ import org.neo4j.driver.v1.Config;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.cache.expiry.Duration;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -28,6 +30,8 @@ import java.util.stream.Stream;
 @EqualsAndHashCode
 @Slf4j
 public class Neo4JConfiguration {
+
+    public static final Duration DEFAULT_CACHE_EXPIRY = new Duration(TimeUnit.MINUTES, 30);
 
     private static final Map<Class<?>, Class<?>> BOXING_DEFINITION = ImmutableMap.<Class<?>, Class<?>>builder()
             .put(boolean.class, Boolean.class)
@@ -73,6 +77,15 @@ public class Neo4JConfiguration {
     @Getter(onMethod = @__(@Nullable))
     @ConfigurationKey
     private final Consumer<Config.ConfigBuilder> additionConfiguration;
+
+    @Getter(onMethod = @__(@Nullable))
+    @ConfigurationKey
+    private final String cacheExpiry;
+
+    @Getter
+    @ConfigurationKey
+    private final boolean cacheStatistics;
+
 
     @Nonnull
     public Configuration toApacheConfiguration() {
@@ -130,6 +143,34 @@ public class Neo4JConfiguration {
     private static boolean canCoerce(@Nonnull final Class<?> fromClass,
                                      @Nonnull final Class<?> toClass) {
         return BOXING_DEFINITION.getOrDefault(toClass, toClass).isAssignableFrom(BOXING_DEFINITION.getOrDefault(fromClass, fromClass));
+    }
+
+    public Duration getCacheExpiryDuration() {
+        if (StringUtils.isEmpty(cacheExpiry)) {
+            return DEFAULT_CACHE_EXPIRY;
+        }
+        final String[] split = cacheExpiry.split(".");
+        final long amount = parseExpiryAmount(split[0]);
+        final TimeUnit unit = parseTimeUnit(split[1]);
+        return new Duration(unit, amount);
+    }
+
+    protected TimeUnit parseTimeUnit(final String s) {
+        try {
+            return TimeUnit.valueOf(s.toUpperCase());
+        } catch (final IllegalArgumentException ex) {
+            log.warn("Could not parse expiry time unit: {}", s, ex);
+        }
+        return DEFAULT_CACHE_EXPIRY.getTimeUnit();
+    }
+
+    protected long parseExpiryAmount(final String s) {
+        try {
+            return Long.parseLong(s);
+        } catch (final NumberFormatException ex) {
+            log.warn("Could not parse cache expiry amount to long: {}", s, ex);
+            return DEFAULT_CACHE_EXPIRY.getDurationAmount();
+        }
     }
 
 }

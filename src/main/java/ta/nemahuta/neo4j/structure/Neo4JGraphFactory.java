@@ -1,16 +1,16 @@
 package ta.nemahuta.neo4j.structure;
 
 import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.ehcache.config.builders.CacheManagerBuilder;
 import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
-import ta.nemahuta.neo4j.cache.DefaultSessionCacheManager;
+import ta.nemahuta.neo4j.cache.JCacheSessionCacheManager;
 import ta.nemahuta.neo4j.cache.SessionCacheManager;
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.cache.Caching;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -28,7 +28,7 @@ public class Neo4JGraphFactory implements AutoCloseable, Supplier<Graph> {
     private final Driver driver;
 
     public Neo4JGraphFactory(@Nonnull final Neo4JConfiguration configuration) {
-        this(new DefaultSessionCacheManager(CacheManagerBuilder.newCacheManagerBuilder().build(true)), configuration);
+        this(new JCacheSessionCacheManager(Caching.getCachingProvider().getCacheManager(), configuration), configuration);
     }
 
     public Neo4JGraphFactory(@Nonnull final SessionCacheManager cacheManager,
