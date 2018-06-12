@@ -23,12 +23,17 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
     private final Neo4JConfiguration configuration;
     private final Factory<? extends ExpiryPolicy> expiryFactory;
 
+    private final String globalEdgeCacheName;
+    private final String globalVertexCacheName;
+
     public JCacheSessionCacheManager(@Nonnull final CacheManager cacheManager,
                                      @Nonnull final Neo4JConfiguration configuration) {
         this.cacheManager = cacheManager;
         this.configuration = configuration;
-        this.globalEdgeCache = createEdgeCache(CACHE_NAME_EDGE_GLOBAL);
-        this.globalVertexCache = createVertexCache(CACHE_NAME_VERTEX_GLOBAL);
+        this.globalEdgeCacheName = CACHE_NAME_EDGE_GLOBAL + "-" + configuration.hashCode();
+        this.globalVertexCacheName = CACHE_NAME_VERTEX_GLOBAL + "-" + configuration.hashCode();
+        this.globalEdgeCache = createEdgeCache(globalEdgeCacheName);
+        this.globalVertexCache = createVertexCache(globalVertexCacheName);
         this.expiryFactory = () -> new AccessedExpiryPolicy(configuration.getCacheExpiryDuration());
     }
 
@@ -70,8 +75,8 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
     public void close() {
         globalVertexCache.close();
         globalEdgeCache.close();
-        cacheManager.destroyCache(CACHE_NAME_EDGE_GLOBAL);
-        cacheManager.destroyCache(CACHE_NAME_VERTEX_GLOBAL);
+        cacheManager.destroyCache(globalEdgeCacheName);
+        cacheManager.destroyCache(globalVertexCacheName);
         cacheManager.close();
     }
 }

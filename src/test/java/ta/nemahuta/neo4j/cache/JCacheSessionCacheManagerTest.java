@@ -37,8 +37,8 @@ class JCacheSessionCacheManagerTest {
 
     @BeforeEach
     void stubGlobalCreationAndCreateSut() {
-        when(cacheManager.createCache(eq("vertex-global"), any(Configuration.class))).thenReturn(globalVertexCache);
-        when(cacheManager.createCache(eq("edge-global"), any(Configuration.class))).thenReturn(globalEdgeCache);
+        when(cacheManager.createCache(startsWith("vertex-global-"), any(Configuration.class))).thenReturn(globalVertexCache);
+        when(cacheManager.createCache(startsWith("edge-global-"), any(Configuration.class))).thenReturn(globalEdgeCache);
         final Neo4JConfiguration config = Neo4JConfiguration.builder().hostname("localhost").port(1234).authToken(AuthTokens.none()).build();
         this.sut = new JCacheSessionCacheManager(cacheManager, config);
     }
@@ -70,8 +70,8 @@ class JCacheSessionCacheManagerTest {
         sut.close();
         // then: 'the cache manager has been closed as well'
         verify(cacheManager, times(1)).close();
-        verify(cacheManager, times(1)).destroyCache("edge-global");
-        verify(cacheManager, times(1)).destroyCache("vertex-global");
+        verify(cacheManager, times(1)).destroyCache(startsWith("edge-global-"));
+        verify(cacheManager, times(1)).destroyCache(startsWith("vertex-global-"));
 
     }
 }
