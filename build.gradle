@@ -1,4 +1,4 @@
-itplugins {
+plugins {
     id 'net.ltgt.apt' version '0.15'
     id 'java'
     id 'maven-publish'
