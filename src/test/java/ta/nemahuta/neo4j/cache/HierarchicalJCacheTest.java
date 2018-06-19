@@ -1,54 +1,67 @@
 package ta.nemahuta.neo4j.cache;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import javax.cache.Cache;
-import java.util.Iterator;
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class HierarchicalJCacheTest {
 
     @Mock
-    private Cache<String, String> parentCacheMock, childCacheMock;
+    private Cache<String, String> parentCacheMock;
+    @Mock
+    private Map<String, Reference<String>> childCacheMock;
 
-    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
-    private Cache.Entry<String, String> cacheEntryMock1, cacheEntryMock2;
+    @Mock
+    private Cache.Entry<String, String> cacheEntryMock1;
+
+    @Mock
+    private Map.Entry<String, Reference<String>> cacheEntryMock2;
 
     private HierarchicalCache<String, String> sut;
 
     @BeforeEach
     void setupSut() {
         this.sut = new HierarchicalJCache<>(parentCacheMock, childCacheMock);
+        when(parentCacheMock.iterator()).then(i -> ImmutableSet.of(cacheEntryMock1).iterator());
+        when(childCacheMock.keySet()).then(i -> ImmutableSet.of("y"));
+        when(cacheEntryMock1.getKey()).thenReturn("a");
+        when(cacheEntryMock1.getValue()).thenReturn("b");
+        when(childCacheMock.entrySet()).thenReturn(ImmutableSet.of(cacheEntryMock2));
+        when(cacheEntryMock2.getKey()).thenReturn("x");
+        when(cacheEntryMock2.getValue()).thenReturn(new SoftReference<>("y"));
     }
 
     @Test
     void commit() {
-        // setup: 'stub the invocation necessary for committing the elements'
-        when(childCacheMock.iterator()).then(i -> Stream.of(cacheEntryMock1).iterator());
         // when: 'committing the cache'
         sut.commit();
         // then: 'the element of the child cache has been put to the parent cache'
-        verify(parentCacheMock, times(1)).put(cacheEntryMock1.getKey(), cacheEntryMock1.getValue());
-        verify(childCacheMock, times(1)).remove(cacheEntryMock1.getKey());
+        verify(parentCacheMock, times(1)).put(eq("x"), eq("y"));
+        verify(childCacheMock, times(1)).remove(eq("x"));
+        verify(childCacheMock, times(1)).entrySet();
         verifyNoMoreInteractions(parentCacheMock, childCacheMock);
     }
 
     @Test
     void getChildItem() {
         // setup: 'stubbing of the get on the child cache'
-        when(childCacheMock.get("x")).thenReturn("y");
+        when(childCacheMock.get("x")).thenReturn(new SoftReference<>("y"));
         // when: 'querying the cache'
         assertEquals("y", sut.get("x"));
         // then: 'no interaction was made with the parent'
@@ -70,7 +83,7 @@ class HierarchicalJCacheTest {
         // when: 'putting an element to the cache'
         sut.put("x", "y");
         // then: 'the element is put to the child cache only'
-        verify(childCacheMock, times(1)).put("x", "y");
+        verify(childCacheMock, times(1)).put(eq("x"), argThat(i -> i.get().equals("y")));
         verifyNoMoreInteractions(parentCacheMock);
     }
 
@@ -103,18 +116,13 @@ class HierarchicalJCacheTest {
     }
 
     @Test
-    void iterator() {
-        // setup: 'stubbing the iterator functions for both'
-        when(cacheEntryMock1.getKey()).thenReturn("x");
-        when(cacheEntryMock2.getKey()).thenReturn("x");
-        when(childCacheMock.iterator()).then(i -> Stream.of(cacheEntryMock1).iterator());
-        when(parentCacheMock.iterator()).then(i -> Stream.of(cacheEntryMock2).iterator());
+    void getKeys() {
         // when: 'requesting the iterator'
-        final Iterator<Cache.Entry<String, String>> iter = sut.iterator();
+        final Set<String> keys = sut.getKeys();
         // then: 'the result is unique by their keys'
-        assertEquals(ImmutableList.of(cacheEntryMock1), ImmutableList.copyOf(iter));
+        assertEquals(ImmutableSet.copyOf(keys), ImmutableSet.of("a", "y"));
         // and: 'both caches are queried'
-        verify(childCacheMock, times(1)).iterator();
+        verify(childCacheMock, times(1)).keySet();
         verify(parentCacheMock, times(1)).iterator();
     }
 }

@@ -1,6 +1,7 @@
 package ta.nemahuta.neo4j.cache;
 
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
+import ta.nemahuta.neo4j.scope.KnownKeys;
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
 
@@ -11,6 +12,7 @@ import javax.cache.configuration.Factory;
 import javax.cache.configuration.MutableConfiguration;
 import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.ExpiryPolicy;
+import java.util.Optional;
 
 public class JCacheSessionCacheManager implements SessionCacheManager {
 
@@ -19,7 +21,9 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
 
     protected final CacheManager cacheManager;
     protected final Cache<Long, Neo4JEdgeState> globalEdgeCache;
+    protected final KnownKeys<Long> globalKnownEdgeIds = new KnownKeys<>();
     protected final Cache<Long, Neo4JVertexState> globalVertexCache;
+    protected final KnownKeys<Long> globalKnownVertexIds = new KnownKeys<>();
     private final Neo4JConfiguration configuration;
     private final Factory<? extends ExpiryPolicy> expiryFactory;
 
@@ -30,10 +34,13 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
                                      @Nonnull final Neo4JConfiguration configuration) {
         this.cacheManager = cacheManager;
         this.configuration = configuration;
-        this.globalEdgeCacheName = CACHE_NAME_EDGE_GLOBAL + "-" + configuration.hashCode();
-        this.globalVertexCacheName = CACHE_NAME_VERTEX_GLOBAL + "-" + configuration.hashCode();
-        this.globalEdgeCache = createEdgeCache(globalEdgeCacheName);
-        this.globalVertexCache = createVertexCache(globalVertexCacheName);
+        final String sessionName = configuration.getHostname() + ":" + configuration.getPort();
+        this.globalEdgeCacheName = CACHE_NAME_EDGE_GLOBAL + "-" + sessionName;
+        this.globalVertexCacheName = CACHE_NAME_VERTEX_GLOBAL + "-" + sessionName;
+        this.globalEdgeCache = Optional.ofNullable(cacheManager.getCache(globalEdgeCacheName, Long.class, Neo4JEdgeState.class))
+                .orElseGet(() -> createEdgeCache(globalEdgeCacheName));
+        this.globalVertexCache = Optional.ofNullable(cacheManager.getCache(globalVertexCacheName, Long.class, Neo4JVertexState.class))
+                .orElseGet(() -> createVertexCache(globalVertexCacheName));
         this.expiryFactory = () -> new AccessedExpiryPolicy(configuration.getCacheExpiryDuration());
     }
 
@@ -53,22 +60,12 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
 
     @Override
     public SessionCache createSessionCache(final Object id) {
-        final String vertexCacheName = "vertex-session-" + id;
-        final String edgeCacheName = "edge-session-" + id;
-        final Cache<Long, Neo4JVertexState> sessionVertexCache = createVertexCache(vertexCacheName);
-        final Cache<Long, Neo4JEdgeState> sessionEdgeCache = createEdgeCache(edgeCacheName);
         return new DefaultSessionCache(
-                new HierarchicalJCache<>(globalEdgeCache, sessionEdgeCache),
-                new HierarchicalJCache<>(globalVertexCache, sessionVertexCache)) {
-
-            @Override
-            public void close() {
-                sessionVertexCache.close();
-                sessionEdgeCache.close();
-                cacheManager.destroyCache(vertexCacheName);
-                cacheManager.destroyCache(edgeCacheName);
-            }
-        };
+                new HierarchicalJCache<>(globalEdgeCache),
+                new KnownKeys<>(globalKnownEdgeIds),
+                new HierarchicalJCache<>(globalVertexCache),
+                new KnownKeys<>(globalKnownVertexIds)
+        );
     }
 
     @Override
@@ -79,4 +76,5 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
         cacheManager.destroyCache(globalVertexCacheName);
         cacheManager.close();
     }
+
 }

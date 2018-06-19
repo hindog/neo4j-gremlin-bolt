@@ -6,7 +6,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
-import org.apache.tinkerpop.gremlin.structure.*;
+import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkerpop.gremlin.structure.Transaction;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactoryClass;
 import org.neo4j.driver.v1.Session;
@@ -29,7 +34,14 @@ import ta.nemahuta.neo4j.state.Neo4JElementState;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -71,20 +83,21 @@ public class Neo4JGraph implements Graph {
 
     public Neo4JGraph(final Session session,
                       final SessionCache sessionCache,
-                      final Neo4JGraphPartition partition, final Neo4JConfiguration configuration) {
+                      final Neo4JGraphPartition partition,
+                      final Neo4JConfiguration configuration) {
         this.session = session;
         this.cache = sessionCache;
         this.partition = partition;
-        this.transaction = new Neo4JTransaction(this, session, sessionCache);
+        this.transaction = new Neo4JTransaction(this, session);
         this.transaction.addTransactionListener(this::handleTransaction);
         this.vertexStateHandler = new Neo4JVertexStateHandler(transaction, partition);
         this.edgeStateHandler = new Neo4JEdgeStateHandler(transaction, partition);
         this.relationProvider = new DefaultRelationProvider(transaction, partition);
-        this.edgeScope = new DefaultNeo4JElementStateScope<>(sessionCache.getEdgeCache(), edgeStateHandler);
-        this.vertexScope = new DefaultNeo4JElementStateScope<Neo4JVertexState>(sessionCache.getVertexCache(), vertexStateHandler) {
+        this.edgeScope = new DefaultNeo4JElementStateScope<>(sessionCache.getEdgeCache(), edgeStateHandler, sessionCache.getKnownEdgeIds());
+        this.vertexScope = new DefaultNeo4JElementStateScope<Neo4JVertexState>(sessionCache.getVertexCache(), vertexStateHandler, sessionCache.getKnownVertexIds()) {
             @Override
             public void delete(long id) {
-                final Set<Long> edgeIds = deleted.contains(id) ? Collections.emptySet() :
+                final Set<Long> edgeIds = sessionCache.getKnownVertexIds().getRemoved().contains(id) ? Collections.emptySet() :
                         relationProvider.loadRelationIds(id, Direction.BOTH, Collections.emptySet())
                                 .values().stream().map(Set::stream).reduce(Stream::concat)
                                 .orElseGet(Stream::empty)
@@ -211,7 +224,6 @@ public class Neo4JGraph implements Graph {
         if (transaction.isOpen()) {
             throw Transaction.Exceptions.openTransactionsOnClose();
         }
-        cache.close();
         session.close();
     }
 

@@ -15,10 +15,12 @@ import ta.nemahuta.neo4j.state.Neo4JVertexState;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.configuration.Configuration;
+import java.lang.ref.Reference;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,9 +31,9 @@ class JCacheSessionCacheManagerTest {
     private CacheManager cacheManager;
 
     @Mock
-    private Cache<Long, Neo4JVertexState> sessionVertexCache, globalVertexCache;
+    private Cache<Long, Neo4JVertexState> globalVertexCache;
     @Mock
-    private Cache<Long, Neo4JEdgeState> sessionEdgeCache, globalEdgeCache;
+    private Cache<Long, Neo4JEdgeState> globalEdgeCache;
 
     private SessionCacheManager sut;
 
@@ -46,22 +48,13 @@ class JCacheSessionCacheManagerTest {
 
     @Test
     void createSessionCache() {
-        // setup: 'stub the creation of the session caches'
-        when(cacheManager.createCache(eq("vertex-session-a"), any(Configuration.class))).thenReturn(sessionVertexCache);
-        when(cacheManager.createCache(eq("edge-session-a"), any(Configuration.class))).thenReturn(sessionEdgeCache);
         // when: 'creating a session cache'
         final DefaultSessionCache cache = (DefaultSessionCache) sut.createSessionCache("a");
         // then: 'we use the correct hierarchical caches'
         assertEquals(globalVertexCache, ((HierarchicalJCache) cache.getVertexCache()).parent);
-        assertEquals(sessionVertexCache, ((HierarchicalJCache) cache.getVertexCache()).child);
+        assertNotNull(((HierarchicalJCache) cache.getVertexCache()).child);
         assertEquals(globalEdgeCache, ((HierarchicalJCache) cache.getEdgeCache()).parent);
-        assertEquals(sessionEdgeCache, ((HierarchicalJCache) cache.getEdgeCache()).child);
-
-        // when: 'closing the cache'
-        cache.close();
-        // then: 'the caches are cleared and removed '
-        verify(cacheManager, times(1)).destroyCache("edge-session-a");
-        verify(cacheManager, times(1)).destroyCache("vertex-session-a");
+        assertNotNull(((HierarchicalJCache) cache.getEdgeCache()).child);
     }
 
     @Test

@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 import javax.cache.Cache;
 import java.util.Set;
 
-public interface HierarchicalCache<K, V> extends Iterable<Cache.Entry<K, V>> {
+public interface HierarchicalCache<K, V> {
 
     /**
      * Get an element from the cache.
@@ -49,4 +49,9 @@ public interface HierarchicalCache<K, V> extends Iterable<Cache.Entry<K, V>> {
      * Clear the cache.
      */
     void clear();
+
+    /**
+     * @return the keys of the elements the cache has encountered, regardless of their cache status
+     */
+    Set<K> getKeys();
 }
