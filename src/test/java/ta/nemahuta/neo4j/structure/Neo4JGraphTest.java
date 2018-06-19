@@ -24,6 +24,7 @@ import ta.nemahuta.neo4j.config.Neo4JConfiguration;
 import ta.nemahuta.neo4j.features.Neo4JFeatures;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.partition.Neo4JLabelGraphPartition;
+import ta.nemahuta.neo4j.scope.KnownKeys;
 import ta.nemahuta.neo4j.session.Neo4JTransaction;
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
@@ -47,8 +48,12 @@ class Neo4JGraphTest {
 
     @Mock
     private SessionCache sessionCache;
+
     @Mock
     private Session session;
+
+    @Mock
+    private KnownKeys<Long> knownEdgeIds, knownVertexIds;
 
     private final Neo4JGraphPartition graphPartition = Neo4JLabelGraphPartition.allLabelsOf("x");
 
@@ -68,7 +73,9 @@ class Neo4JGraphTest {
     @BeforeEach
     void setupSut() {
         when(sessionCache.getVertexCache()).thenReturn(vertexCache);
+        when(sessionCache.getKnownVertexIds()).thenReturn(knownVertexIds);
         when(sessionCache.getEdgeCache()).thenReturn(edgeCache);
+        when(sessionCache.getKnownEdgeIds()).thenReturn(knownEdgeIds);
         this.sut = new Neo4JGraph(session, sessionCache, graphPartition, configuration);
         when(session.beginTransaction()).thenReturn(transaction);
         when(configuration.toApacheConfiguration()).thenReturn(apacheConfiguration);
@@ -162,7 +169,6 @@ class Neo4JGraphTest {
         sut.close();
         // then: 'session is closed'
         verify(session).close();
-        verify(sessionCache).close();
     }
 
     @Test

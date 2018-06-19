@@ -23,8 +23,6 @@ class Neo4JTransactionTest {
 
     @Mock
     private Session session;
-    @Mock
-    private SessionCache sessionCache;
 
     @Mock
     private Transaction transaction;
@@ -36,7 +34,7 @@ class Neo4JTransactionTest {
 
     @BeforeEach
     void createSut() {
-        this.sut = new Neo4JTransaction(graph, session, sessionCache);
+        this.sut = new Neo4JTransaction(graph, session);
     }
 
     private void stubTransactionAndOpen() {
@@ -85,7 +83,6 @@ class Neo4JTransactionTest {
         // then: 'the transaction was closed, the session cache was closed and it is not open anymore'
         assertFalse(sut.isOpen());
         verify(transaction, times(1)).close();
-        verify(sessionCache, times(1)).close();
     }
 
     @Test

@@ -10,10 +10,12 @@ import ta.nemahuta.neo4j.state.Neo4JElementState;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.cache.Cache;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -21,7 +23,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -38,13 +39,12 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
     @NonNull
     private final Neo4JElementStateHandler remoteElementHandler;
 
-    protected final Set<Long> deleted = Collections.newSetFromMap(new ConcurrentHashMap<>());
-
-    private final AtomicBoolean completelyLoaded = new AtomicBoolean(false);
+    @NonNull
+    private final KnownKeys<Long> knownKeys;
 
     @Override
     public void update(final long id, @Nonnull final S newState) {
-        if (deleted.contains(id)) {
+        if (knownKeys.getRemoved().contains(id)) {
             throw new IllegalStateException("The element " + id + " has been deleted in the scope, cannot change to state: " + newState);
         }
         locked(ReadWriteLock::writeLock, () -> {
@@ -60,18 +60,17 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
 
     @Override
     public void delete(final long id) {
-        if (deleted.contains(id)) {
+        if (knownKeys.getRemoved().contains(id)) {
             return;
         }
         locked(ReadWriteLock::writeLock, () -> {
             log.trace("Deleting element with id temporary: {}", id);
-            deleted.add(id);
+            knownKeys.getRemoved().add(id);
             hierarchicalCache.remove(id);
             remoteElementHandler.delete(id);
             return null;
         });
     }
-
 
     @Override
     @Nonnull
@@ -79,6 +78,7 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
         return locked(ReadWriteLock::writeLock, () -> {
             final Long result = remoteElementHandler.create(state);
             hierarchicalCache.put(result, state);
+            knownKeys.getLoaded().add(result);
             return result;
         });
     }
@@ -95,26 +95,30 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
         return locked(ReadWriteLock::readLock, () -> {
             log.trace("Retrieving {} items", ids.size());
             final Map<Long, S> results = new ConcurrentHashMap<>();
+            final Collection<Long> idsToBeRetrieved;
             if (ids.isEmpty()) {
-                // Mark all ids to be loaded
-                if (completelyLoaded.getAndSet(true)) {
+                if (knownKeys.isCompletelyKnown()) {
                     log.trace("Scope is populated, using cache items only.");
                     // if all ids have been loaded at this point, we take them from the cache completely
-                    putAllFromCache(ImmutableSet.of(), results);
+                    idsToBeRetrieved = knownKeys.getExisting();
                 } else {
-                    log.trace("Scope is not populated yet, loading all items.");
                     // in the other case we must load each and every entry from the scope
+                    log.trace("Scope is not populated yet, loading all items.");
                     loadFromSession(ImmutableSet.of(), results);
+                    knownKeys.markCompletelyKnown();
+                    return results;
                 }
             } else {
-                putAllFromCache(ids, results);
-                final Set<Long> idsToBeLoaded = ids.stream().filter(id -> !results.containsKey(id) && !deleted.contains(id)).collect(Collectors.toSet());
-                log.trace("Found {} elements to be in scope already.", results.size());
-                if (!idsToBeLoaded.isEmpty()) {
-                    log.trace("Loading the other {} elements.", idsToBeLoaded.size());
-                    loadFromSession(idsToBeLoaded, results);
-                }
+                idsToBeRetrieved = ids;
             }
+            putAllFromCache(idsToBeRetrieved, results);
+            final Set<Long> idsToBeLoaded = idsToBeRetrieved.stream().filter(id -> !results.containsKey(id)).collect(Collectors.toSet());
+            log.trace("Found {} elements to be in scope already.", results.size());
+            if (!idsToBeLoaded.isEmpty()) {
+                log.trace("Loading the other {} elements.", idsToBeLoaded.size());
+                loadFromSession(idsToBeLoaded, results);
+            }
+
             // Now we load all the remaining elements and put them to the cache and in the results
             return results;
         });
@@ -124,17 +128,18 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
         final Map<Long, S> loaded = remoteElementHandler.getAll(selectorOrEmpty);
         log.trace("Loaded {} items", loaded.size());
         for (final Map.Entry<Long, S> entry : loaded.entrySet()) {
-            if (!deleted.contains(entry.getKey())) {
+            if (!knownKeys.getRemoved().contains(entry.getKey())) {
                 results.put(entry.getKey(), entry.getValue());
                 hierarchicalCache.put(entry.getKey(), entry.getValue());
+                knownKeys.getLoaded().add(entry.getKey());
             }
         }
     }
 
     private void putAllFromCache(final Collection<Long> selectorOrEmpty, final Map<Long, S> results) {
         final long beforeSize = results.size();
-        final Stream<Long> selector = (!selectorOrEmpty.isEmpty() ? selectorOrEmpty.stream() : cacheKeys())
-                .filter(key -> !deleted.contains(key))
+        final Stream<Long> selector = (!selectorOrEmpty.isEmpty() ? selectorOrEmpty.stream() : hierarchicalCache.getKeys().stream())
+                .filter(key -> !knownKeys.getRemoved().contains(key))
                 .distinct();
 
         selector.forEach(key -> {
@@ -144,11 +149,6 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
             }
         });
         log.trace("Put {} elements from cache", results.size() - beforeSize);
-    }
-
-    @Nonnull
-    private Stream<Long> cacheKeys() {
-        return StreamSupport.stream(this.hierarchicalCache.spliterator(), false).map(Cache.Entry::getKey);
     }
 
     private <S> S locked(@Nonnull final Function<ReadWriteLock, Lock> lockFunction, @Nonnull final Supplier<S> fun) {
@@ -164,13 +164,14 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
     @Override
     public void commit() {
         this.hierarchicalCache.commit();
-        this.hierarchicalCache.removeFromParent(deleted);
-        this.deleted.clear();
+        this.hierarchicalCache.removeFromParent(knownKeys.getRemoved());
+        this.knownKeys.commit();
     }
 
     @Override
     public void rollback() {
         this.hierarchicalCache.clear();
-        this.deleted.clear();
+        this.knownKeys.rollback();
     }
+    
 }

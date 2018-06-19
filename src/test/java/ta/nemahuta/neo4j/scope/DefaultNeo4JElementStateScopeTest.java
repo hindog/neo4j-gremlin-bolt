@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -27,6 +28,9 @@ class DefaultNeo4JElementStateScopeTest {
     @Mock
     private Neo4JElementStateHandler<Neo4JElementState> handler;
 
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    private KnownKeys<Long> knownKeys;
+
     @Mock
     private Neo4JElementState state, modifiedState;
 
@@ -34,7 +38,7 @@ class DefaultNeo4JElementStateScopeTest {
 
     @BeforeEach
     void createSut() {
-        this.sut = new DefaultNeo4JElementStateScope<>(cache, handler);
+        this.sut = new DefaultNeo4JElementStateScope<>(cache, handler, knownKeys);
         when(cache.get(1l)).thenReturn(state);
     }
 
@@ -45,6 +49,8 @@ class DefaultNeo4JElementStateScopeTest {
         // then: 'the cache is notified and the handler as well'
         verify(cache, times(1)).put(1l, modifiedState);
         verify(handler, times(1)).update(1l, state, modifiedState);
+        verify(knownKeys.getRemoved(), times(2)).contains(any());
+        verifyNoMoreInteractions(knownKeys.getLoaded(), knownKeys.getRemoved());
     }
 
     @Test
@@ -54,6 +60,7 @@ class DefaultNeo4JElementStateScopeTest {
         // then: 'the cache is notified and the handler as well'
         verify(cache, times(1)).remove(1l);
         verify(handler, times(1)).delete(1l);
+        verify(knownKeys.getRemoved(), times(1)).add(1l);
     }
 
     @Test
@@ -63,6 +70,7 @@ class DefaultNeo4JElementStateScopeTest {
         sut.create(modifiedState);
         // then: 'the state is put to the cache by the id from the handler'
         verify(cache, times(1)).put(2l, modifiedState);
+        verify(knownKeys.getLoaded(), times(1)).add(2l);
     }
 
     @Test
@@ -73,11 +81,33 @@ class DefaultNeo4JElementStateScopeTest {
     }
 
     @Test
-    void getAll() {
+    void getAllSelectedIds() {
         // when: 'loading unknown items'
         assertEquals(ImmutableMap.of(1l, state), sut.getAll(ImmutableSet.of(1l, 2l, 3l, 4l)));
         // then: 'the rest should have been loaded'
         verify(handler, times(1)).getAll(ImmutableSet.of(2l, 3l, 4l));
+    }
+
+    @Test
+    void getAllEmptyIdsCompletelyLoaded() {
+        when(knownKeys.isCompletelyKnown()).thenReturn(true);
+        when(knownKeys.getExisting()).thenReturn(ImmutableSet.of(5l));
+        when(handler.getAll(ImmutableSet.of(5l))).thenReturn(ImmutableMap.of(5l, state));
+        // when: 'loading unknown items'
+        assertEquals(ImmutableMap.of(5l, state), sut.getAll(ImmutableSet.of()));
+        // then: 'the rest should have been loaded'
+        verify(handler, times(1)).getAll(ImmutableSet.of(5l));
+    }
+
+
+    @Test
+    void getAllEmptyIdsNotCompletelyKnown() {
+        when(handler.getAll(ImmutableSet.of())).thenReturn(ImmutableMap.of(5l, state));
+        // when: 'loading unknown items'
+        assertEquals(ImmutableMap.of(5l, state), sut.getAll(ImmutableSet.of()));
+        // then: 'the rest should have been loaded'
+        verify(handler, times(1)).getAll(ImmutableSet.of());
+        verify(knownKeys.getLoaded(), times(1)).add(5l);
     }
 
     @Test

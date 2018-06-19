@@ -9,7 +9,6 @@ import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ta.nemahuta.neo4j.cache.SessionCache;
 import ta.nemahuta.neo4j.structure.Neo4JGraph;
 
 import javax.annotation.Nonnull;
@@ -25,17 +24,14 @@ import java.util.Optional;
 public class Neo4JTransaction extends AbstractThreadedTransaction implements StatementExecutor {
 
     private final Session session;
-    private final SessionCache sessionCache;
     private Transaction wrapped;
 
     private static final Logger statementLogger = LoggerFactory.getLogger(Neo4JTransaction.class.getPackage().getName() + ".Statement");
 
     public Neo4JTransaction(@Nonnull final Neo4JGraph g,
-                            @Nonnull final Session session,
-                            @Nonnull final SessionCache sessionCache) {
+                            @Nonnull final Session session) {
         super(g);
         this.session = session;
-        this.sessionCache = sessionCache;
     }
 
     @Override
@@ -45,7 +41,7 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
 
     @Override
     protected void doCommit() throws TransactionException {
-        log.debug("Committing all entities in sessions scope of transaction {} in session {}", transactionHashCode(), session.hashCode());
+        log.debug("Committing all entities in session scope of transaction {} in session {}", transactionHashCode(), session.hashCode());
 
         Optional.ofNullable(wrapped)
                 .orElseThrow(org.apache.tinkerpop.gremlin.structure.Transaction.Exceptions::transactionMustBeOpenToReadWrite)
@@ -56,6 +52,7 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
     protected void doReadWrite() {
         if (!isOpen()) {
             open();
+            log.debug("Opened transaction {} for session {}", transactionHashCode(), session.hashCode());
         }
     }
 
@@ -70,14 +67,15 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
     }
 
     @Override
-    public void close() {
-        log.debug("Closing transaction {} for session {}", transactionHashCode(), session.hashCode());
-        super.close();
-        sessionCache.close();
-        Optional.ofNullable(wrapped)
-                .orElseThrow(org.apache.tinkerpop.gremlin.structure.Transaction.Exceptions::transactionMustBeOpenToReadWrite)
-                .close();
-        this.wrapped = null;
+    public void doClose() {
+        if (isOpen()) {
+            log.debug("Closing transaction {} for session {}", transactionHashCode(), session.hashCode());
+            super.doClose();
+            Optional.ofNullable(wrapped)
+                    .orElseThrow(org.apache.tinkerpop.gremlin.structure.Transaction.Exceptions::transactionMustBeOpenToReadWrite)
+                    .close();
+            this.wrapped = null;
+        }
     }
 
     @Override
@@ -93,7 +91,7 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
         return wrapped.run(statement);
     }
 
-    private int transactionHashCode() {
+    private Integer transactionHashCode() {
         return Optional.ofNullable(wrapped).map(Object::hashCode).orElse(null);
     }
 

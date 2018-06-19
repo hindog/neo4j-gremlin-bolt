@@ -47,7 +47,7 @@ dependencies {
     compile group: 'javax.cache', name: 'cache-api', version: '1.1.0'
     compile group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '1.6.1'
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
-    compile group: 'com.google.guava', name: 'guava', version: '24.1-jre'
+    compile group: 'com.google.guava', name: 'guava', version: '25.1-jre'
 
     ["junit-jupiter-api", "junit-jupiter-params"].each {
         testCompile "org.junit.jupiter:${it}:${junitVersion}"

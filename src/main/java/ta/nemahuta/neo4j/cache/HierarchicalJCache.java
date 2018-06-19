@@ -1,37 +1,48 @@
 package ta.nemahuta.neo4j.cache;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import com.google.common.collect.ImmutableSet;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nonnull;
 import javax.cache.Cache;
-import java.util.*;
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Default implementation of the {@link HierarchicalCache}.
  */
-@RequiredArgsConstructor
 @Slf4j
 public class HierarchicalJCache<K, V> implements HierarchicalCache<K, V> {
 
     /**
      * The global cache for all sessions
      */
-    @NonNull
-    Cache<K, V> parent;
+    final Cache<K, V> parent;
 
     /**
-     * The local cache for the session.
+     * The local cache for the session
      */
-    @NonNull
-    Cache<K, V> child;
+    final Map<K, Reference<V>> child;
+
+    public HierarchicalJCache(@Nonnull final Cache<K, V> parent) {
+        this(parent, new ConcurrentHashMap<>());
+    }
+
+    HierarchicalJCache(@Nonnull final Cache<K, V> parent, @Nonnull final Map<K, Reference<V>> child) {
+        this.parent = parent;
+        this.child = child;
+    }
 
     @Override
     public void commit() {
         long counter = 0;
-        for (final Cache.Entry<K, V> e : child) {
-            parent.put(e.getKey(), e.getValue());
+        for (final Map.Entry<K, Reference<V>> e : child.entrySet()) {
+            Optional.ofNullable(e.getValue()).map(Reference::get).ifPresent(value -> parent.put(e.getKey(), value));
             child.remove(e.getKey());
             counter++;
         }
@@ -46,17 +57,17 @@ public class HierarchicalJCache<K, V> implements HierarchicalCache<K, V> {
 
     @Override
     public V get(final K key) {
-        return Optional.ofNullable(child.get(key)).orElseGet(() -> parent.get(key));
+        return Optional.ofNullable(child.get(key)).map(Reference::get).orElseGet(() -> parent.get(key));
     }
 
     @Override
     public void put(final K key, final V value) {
-        child.put(key, value);
+        child.put(key, new SoftReference<>(value));
     }
 
     @Override
     public boolean remove(final K key) {
-        return child.remove(key);
+        return Optional.ofNullable(child.remove(key)).map(Reference::get).isPresent();
     }
 
     @Override
@@ -66,10 +77,13 @@ public class HierarchicalJCache<K, V> implements HierarchicalCache<K, V> {
     }
 
     @Override
-    public Iterator<Cache.Entry<K, V>> iterator() {
-        final Map<K, Cache.Entry<K, V>> result = new HashMap<>();
-        parent.iterator().forEachRemaining(e -> result.put(e.getKey(), e));
-        child.iterator().forEachRemaining(e -> result.put(e.getKey(), e));
-        return result.values().iterator();
+    public Set<K> getKeys() {
+        final Set<K> builder = new HashSet<>();
+        for (final Cache.Entry<K, V> e : parent) {
+            builder.add(e.getKey());
+        }
+        builder.addAll(child.keySet());
+        return ImmutableSet.copyOf(builder);
     }
+
 }
