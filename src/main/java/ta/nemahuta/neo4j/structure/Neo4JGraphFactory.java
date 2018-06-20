@@ -59,7 +59,7 @@ public class Neo4JGraphFactory implements AutoCloseable, Supplier<Graph> {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         driver.close();
         cacheManager.close();
     }

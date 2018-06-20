@@ -1,6 +1,5 @@
 package ta.nemahuta.neo4j.scope;
 
-import com.google.common.collect.ImmutableSet;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,11 +39,11 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
     private final Neo4JElementStateHandler remoteElementHandler;
 
     @NonNull
-    private final KnownKeys<Long> knownKeys;
+    private final IdCache<Long> idCache;
 
     @Override
     public void update(final long id, @Nonnull final S newState) {
-        if (knownKeys.getRemoved().contains(id)) {
+        if (idCache.isRemoved(id)) {
             throw new IllegalStateException("The element " + id + " has been deleted in the scope, cannot change to state: " + newState);
         }
         locked(ReadWriteLock::writeLock, () -> {
@@ -60,12 +59,12 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
 
     @Override
     public void delete(final long id) {
-        if (knownKeys.getRemoved().contains(id)) {
+        if (idCache.isRemoved(id)) {
             return;
         }
         locked(ReadWriteLock::writeLock, () -> {
             log.trace("Deleting element with id temporary: {}", id);
-            knownKeys.getRemoved().add(id);
+            idCache.localRemoval(id);
             hierarchicalCache.remove(id);
             remoteElementHandler.delete(id);
             return null;
@@ -78,7 +77,7 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
         return locked(ReadWriteLock::writeLock, () -> {
             final Long result = remoteElementHandler.create(state);
             hierarchicalCache.put(result, state);
-            knownKeys.getLoaded().add(result);
+            idCache.localCreation(result);
             return result;
         });
     }
@@ -95,30 +94,24 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
         return locked(ReadWriteLock::readLock, () -> {
             log.trace("Retrieving {} items", ids.size());
             final Map<Long, S> results = new ConcurrentHashMap<>();
-            final Collection<Long> idsToBeRetrieved;
-            if (ids.isEmpty()) {
-                if (knownKeys.isCompletelyKnown()) {
-                    log.trace("Scope is populated, using cache items only.");
-                    // if all ids have been loaded at this point, we take them from the cache completely
-                    idsToBeRetrieved = knownKeys.getExisting();
-                } else {
-                    // in the other case we must load each and every entry from the scope
-                    log.trace("Scope is not populated yet, loading all items.");
-                    loadFromSession(ImmutableSet.of(), results);
-                    knownKeys.markCompletelyKnown();
-                    return results;
-                }
-            } else {
-                idsToBeRetrieved = ids;
+            final Collection<Long> idsToBeRetrieved = ids.isEmpty() ? idCache.getAllSelector() : ids;
+            if (idsToBeRetrieved.isEmpty()) {
+                log.debug("Loading complete graph.");
             }
-            putAllFromCache(idsToBeRetrieved, results);
+            if (!idsToBeRetrieved.isEmpty()) {
+                log.trace("Putting {} elements from cache", idsToBeRetrieved.size());
+                putAllFromCache(idsToBeRetrieved, results);
+            }
+            final int fromCacheSize = results.size();
             final Set<Long> idsToBeLoaded = idsToBeRetrieved.stream().filter(id -> !results.containsKey(id)).collect(Collectors.toSet());
             log.trace("Found {} elements to be in scope already.", results.size());
-            if (!idsToBeLoaded.isEmpty()) {
+            if (!idsToBeLoaded.isEmpty() || idsToBeRetrieved.isEmpty()) {
                 log.trace("Loading the other {} elements.", idsToBeLoaded.size());
                 loadFromSession(idsToBeLoaded, results);
             }
-
+            if (!idsToBeRetrieved.isEmpty() && idsToBeRetrieved.size() != results.size()) {
+                log.warn("Could not retrieve all {} elements, got {} from cache, and {} from the session.", idsToBeLoaded.size(), fromCacheSize, results.size() - fromCacheSize);
+            }
             // Now we load all the remaining elements and put them to the cache and in the results
             return results;
         });
@@ -128,19 +121,23 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
         final Map<Long, S> loaded = remoteElementHandler.getAll(selectorOrEmpty);
         log.trace("Loaded {} items", loaded.size());
         for (final Map.Entry<Long, S> entry : loaded.entrySet()) {
-            if (!knownKeys.getRemoved().contains(entry.getKey())) {
+            if (!idCache.isRemoved(entry.getKey())) {
                 results.put(entry.getKey(), entry.getValue());
                 hierarchicalCache.put(entry.getKey(), entry.getValue());
-                knownKeys.getLoaded().add(entry.getKey());
             }
+        }
+        if (selectorOrEmpty.isEmpty()) {
+            idCache.completeLoad(results.keySet());
         }
     }
 
     private void putAllFromCache(final Collection<Long> selectorOrEmpty, final Map<Long, S> results) {
         final long beforeSize = results.size();
-        final Stream<Long> selector = (!selectorOrEmpty.isEmpty() ? selectorOrEmpty.stream() : hierarchicalCache.getKeys().stream())
-                .filter(key -> !knownKeys.getRemoved().contains(key))
-                .distinct();
+        final Stream<Long> selector = (
+                !selectorOrEmpty.isEmpty() ?
+                        selectorOrEmpty.stream() :
+                        hierarchicalCache.getKeys().stream().filter(key -> !idCache.isRemoved(key))
+        ).distinct();
 
         selector.forEach(key -> {
             final S value = this.hierarchicalCache.get(key);
@@ -164,14 +161,14 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
     @Override
     public void commit() {
         this.hierarchicalCache.commit();
-        this.hierarchicalCache.removeFromParent(knownKeys.getRemoved());
-        this.knownKeys.commit();
+        this.hierarchicalCache.removeFromParent(idCache.getRemoved());
+        this.idCache.commit();
     }
 
     @Override
     public void rollback() {
         this.hierarchicalCache.clear();
-        this.knownKeys.rollback();
+        this.idCache.rollback();
     }
-    
+
 }

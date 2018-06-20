@@ -1,7 +1,7 @@
 package ta.nemahuta.neo4j.cache;
 
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
-import ta.nemahuta.neo4j.scope.KnownKeys;
+import ta.nemahuta.neo4j.scope.IdCache;
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
 
@@ -12,7 +12,10 @@ import javax.cache.configuration.Factory;
 import javax.cache.configuration.MutableConfiguration;
 import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.ExpiryPolicy;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class JCacheSessionCacheManager implements SessionCacheManager {
 
@@ -21,9 +24,9 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
 
     protected final CacheManager cacheManager;
     protected final Cache<Long, Neo4JEdgeState> globalEdgeCache;
-    protected final KnownKeys<Long> globalKnownEdgeIds = new KnownKeys<>();
+    protected final AtomicReference<Set<Long>> globalKnownEdgeIds = new AtomicReference<>(new HashSet<>());
     protected final Cache<Long, Neo4JVertexState> globalVertexCache;
-    protected final KnownKeys<Long> globalKnownVertexIds = new KnownKeys<>();
+    protected final AtomicReference<Set<Long>> globalKnownVertexIds = new AtomicReference<>(new HashSet<>());
     private final Neo4JConfiguration configuration;
     private final Factory<? extends ExpiryPolicy> expiryFactory;
 
@@ -62,9 +65,9 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
     public SessionCache createSessionCache(final Object id) {
         return new DefaultSessionCache(
                 new HierarchicalJCache<>(globalEdgeCache),
-                new KnownKeys<>(globalKnownEdgeIds),
+                new IdCache<>(globalKnownEdgeIds),
                 new HierarchicalJCache<>(globalVertexCache),
-                new KnownKeys<>(globalKnownVertexIds)
+                new IdCache<>(globalKnownVertexIds)
         );
     }
 
@@ -74,7 +77,6 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
         globalEdgeCache.close();
         cacheManager.destroyCache(globalEdgeCacheName);
         cacheManager.destroyCache(globalVertexCacheName);
-        cacheManager.close();
     }
 
 }

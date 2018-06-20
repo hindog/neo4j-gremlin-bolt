@@ -3,7 +3,7 @@ package ta.nemahuta.neo4j.cache;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import ta.nemahuta.neo4j.scope.KnownKeys;
+import ta.nemahuta.neo4j.scope.IdCache;
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
 
@@ -18,7 +18,7 @@ public class DefaultSessionCache implements SessionCache {
 
     @Getter(onMethod = @__(@Nonnull))
     @NonNull
-    private final KnownKeys<Long> knownEdgeIds;
+    private final IdCache<Long> knownEdgeIds;
 
     @Getter(onMethod = @__(@Nonnull))
     @NonNull
@@ -26,6 +26,6 @@ public class DefaultSessionCache implements SessionCache {
 
     @Getter(onMethod = @__(@Nonnull))
     @NonNull
-    private final KnownKeys<Long> knownVertexIds;
+    private final IdCache<Long> knownVertexIds;
 
 }

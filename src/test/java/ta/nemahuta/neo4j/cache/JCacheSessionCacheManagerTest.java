@@ -15,8 +15,6 @@ import ta.nemahuta.neo4j.state.Neo4JVertexState;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.configuration.Configuration;
-import java.lang.ref.Reference;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -62,7 +60,6 @@ class JCacheSessionCacheManagerTest {
         // when: 'closing the cache manager'
         sut.close();
         // then: 'the cache manager has been closed as well'
-        verify(cacheManager, times(1)).close();
         verify(cacheManager, times(1)).destroyCache(startsWith("edge-global-"));
         verify(cacheManager, times(1)).destroyCache(startsWith("vertex-global-"));
 

@@ -4,4 +4,7 @@ public interface SessionCacheManager extends AutoCloseable {
 
     SessionCache createSessionCache(final Object id);
 
+    @Override
+    void close();
+
 }

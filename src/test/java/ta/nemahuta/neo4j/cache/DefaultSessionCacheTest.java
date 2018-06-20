@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ta.nemahuta.neo4j.scope.KnownKeys;
+import ta.nemahuta.neo4j.scope.IdCache;
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
 
@@ -18,7 +18,7 @@ class DefaultSessionCacheTest {
     @Mock
     private HierarchicalCache<Long, Neo4JVertexState> vertexCache;
     @Mock
-    private KnownKeys<Long> edgeIds, vertexIds;
+    private IdCache<Long> edgeIds, vertexIds;
 
     @Test
     void returnsCaches() {
