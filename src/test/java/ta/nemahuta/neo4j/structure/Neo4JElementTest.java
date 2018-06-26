@@ -123,6 +123,14 @@ class Neo4JElementTest {
     }
 
     @Test
+    void removeProperty() {
+        // when:
+        sut.removeProperty("x");
+        // then:
+        verify(scope, times(1)).update(eq(1l), any());
+    }
+
+    @Test
     void checkHashCode() {
         // expect: 'the hashcode to be the same as the id'
         assertEquals(Long.valueOf(1l).hashCode(), sut.hashCode());

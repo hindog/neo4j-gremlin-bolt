@@ -50,7 +50,7 @@ class Neo4JPropertyTest {
         assertNotNull(sutYz.toString());
         assertFalse(sutYz.equals(sutXy));
         sutYz.remove();
-        verify(parent, times(1)).property("yz", null);
+        verify(parent, times(1)).removeProperty("yz");
     }
 
 }

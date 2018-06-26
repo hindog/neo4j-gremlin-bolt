@@ -17,6 +17,7 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static ta.nemahuta.neo4j.AbstractExampleGraphTest.ExampleGraphs.COMPLEX;
 import static ta.nemahuta.neo4j.AbstractExampleGraphTest.ExampleGraphs.SIMPLE;
@@ -33,6 +34,9 @@ class SimpleCreateAndLoadTest extends AbstractExampleGraphTest {
                     .filter(v -> Objects.equals(v.property("name").value(), "josh")).findAny();
             assertTrue(joshOpt.isPresent(), "Josh is not present");
             final Vertex josh = joshOpt.get();
+            assertTrue(josh.property("age").isPresent());
+            josh.property("age").remove();
+            assertFalse(josh.property("age").isPresent());
             assertTrue(josh.edges(Direction.OUT).hasNext(), "No out edges for josh");
             josh.remove();
             assertTrue(ImmutableList.copyOf(graph.vertices()).stream()
