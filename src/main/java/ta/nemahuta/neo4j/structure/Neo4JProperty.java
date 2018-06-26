@@ -55,7 +55,7 @@ public abstract class Neo4JProperty<P extends Neo4JElement, T> implements Proper
 
     @Override
     public void remove() {
-        parent.property(key, null);
+        parent.removeProperty(key);
     }
 
     @Override

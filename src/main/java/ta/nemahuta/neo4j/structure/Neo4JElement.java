@@ -102,4 +102,11 @@ public abstract class Neo4JElement<S extends Neo4JElementState, P extends Proper
         return Optional.of(scope.get(id)).orElseThrow(() -> new IllegalStateException("Element has been deleted in the scope: " + id));
     }
 
+    public void removeProperty(final String key) {
+        final S state = scope.get(id);
+        final ImmutableMap.Builder<String, Object> propertyBuilder = ImmutableMap.builder();
+        state.getProperties().entrySet().stream().filter(e -> !Objects.equals(e.getKey(), key)).forEach(propertyBuilder::put);
+        scope.update(id, (S) state.withProperties(propertyBuilder.build()));
+        propertyMap.remove(key);
+    }
 }
