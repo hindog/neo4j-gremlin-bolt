@@ -10,7 +10,13 @@ import ta.nemahuta.neo4j.scope.Neo4JElementStateScope;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -42,9 +48,15 @@ public class Neo4JVertex extends Neo4JElement<Neo4JVertexState, VertexProperty> 
             throw new IllegalArgumentException("Cannot connect a " + getClass().getSimpleName() + " to a " +
                     Optional.ofNullable(inVertex).map(Object::getClass).map(Class::getSimpleName).orElse(null));
         }
-        final Neo4JEdge result = graph.addEdge(label, this, (Neo4JVertex) inVertex, keyValues);
+        final Neo4JVertex neo4jInVertex = (Neo4JVertex) inVertex;
+        final Neo4JEdge result = graph.addEdge(label, this, neo4jInVertex, keyValues);
         outEdgeProvider.register(label, result.id());
+        neo4jInVertex.registerInEdge(label, result.id());
         return result;
+    }
+
+    void registerInEdge(@Nonnull final String label, @Nonnull final Long id) {
+        inEdgeProvider.register(label, id);
     }
 
     @Override
