@@ -82,6 +82,7 @@ class Neo4JVertexTest {
         assertEquals(inEdge, sut.addEdge("edge", otherVertex));
         // then: 'the edge is registered in the out provider'
         verify(outProvider, times(1)).register("edge", inEdge.id());
+        verify(otherVertex, times(1)).registerInEdge("edge", inEdge.id());
         // expect: 'non neo4j vertices throw exceptions'
         assertThrows(IllegalArgumentException.class, () -> sut.addEdge("x", invalidVertex));
     }

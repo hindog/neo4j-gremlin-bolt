@@ -2,9 +2,11 @@ package ta.nemahuta.neo4j;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.jupiter.api.Test;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -14,11 +16,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static ta.nemahuta.neo4j.AbstractExampleGraphTest.ExampleGraphs.COMPLEX;
 import static ta.nemahuta.neo4j.AbstractExampleGraphTest.ExampleGraphs.SIMPLE;
 
@@ -62,6 +64,22 @@ class SimpleCreateAndLoadTest extends AbstractExampleGraphTest {
     @Test
     void parallelTest2() throws Exception {
         parallelStream(10, "/graph2-example.xml");
+    }
+
+    @Test
+    void edgesAreRegisteredOnBothEnds() throws Exception {
+        final AtomicReference<Object> vertexId = new AtomicReference<Object>();
+        withGraph(graph -> {
+            assertFalse(graph.vertices().hasNext());
+            final Vertex vertex1 = graph.addVertex("hallo");
+            vertexId.set(vertex1.id());
+            final Vertex vertex2 = graph.addVertex("hejsan");
+            assertFalse(vertex1.edges(Direction.OUT, "svenska").hasNext());
+            vertex1.addEdge("svenska", vertex2);
+            assertEquals(vertex1, graph.vertices(vertex1.id()).next());
+            assertTrue(vertex2.edges(Direction.IN, "svenska").hasNext());
+            assertTrue(graph.vertices(vertex2.id()).next().edges(Direction.IN, "svenska").hasNext());
+        });
     }
 
     private void parallelStream(final int max, final String source) throws InterruptedException {
