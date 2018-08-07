@@ -1,17 +1,19 @@
 package ta.nemahuta.neo4j.cache;
 
-import com.google.common.collect.ImmutableSet;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nonnull;
 import javax.cache.Cache;
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Default implementation of the {@link HierarchicalCache}.
@@ -89,13 +91,11 @@ public class HierarchicalJCache<K, V> implements HierarchicalCache<K, V> {
     }
 
     @Override
-    public Set<K> getKeys() {
-        final Set<K> builder = new HashSet<>();
-        for (final Cache.Entry<K, V> e : parent) {
-            builder.add(e.getKey());
-        }
-        builder.addAll(child.keySet());
-        return ImmutableSet.copyOf(builder);
+    public Stream<K> getKeys() {
+        return Stream.concat(StreamSupport.stream(
+                Spliterators.spliteratorUnknownSize(parent.iterator(), Spliterator.NONNULL | Spliterator.IMMUTABLE),
+                false).map(Cache.Entry::getKey),
+                child.keySet().stream());
     }
 
 }

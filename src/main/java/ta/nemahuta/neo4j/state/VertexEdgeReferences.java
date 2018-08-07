@@ -15,6 +15,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -51,7 +52,6 @@ public class VertexEdgeReferences implements Serializable {
         // Now with the labels present, create a new map
         final ImmutableMap.Builder<String, ImmutableSet<Long>> builder = ImmutableMap.builder();
         for (final String label : labels) {
-            //
             Optional.ofNullable(edgeIdsPerLabel.get(label)) // Querying the values
                     .map(Optional::of)
                     // If no ids are known, but we have complete knowledge of the edges, we use an empty set
@@ -69,18 +69,15 @@ public class VertexEdgeReferences implements Serializable {
 
     @Nonnull
     public VertexEdgeReferences withNewEdge(@Nonnull final String label, final long edgeId) {
-        final ImmutableSet<Long> ids = edgeIdsPerLabel.get(label);
 
-        // Make sure the label gets known, in case all labels are known and the label is not yet known
-        final ImmutableSet<String> newLabels = (labels != null && !this.labels.contains(label))
-                ? ImmutableSet.<String>builder().addAll(this.labels).add(label).build()
-                : this.labels;
-
-        final Map<String, ImmutableSet<Long>> newMap = new HashMap<>(this.edgeIdsPerLabel);
+        final Map<String, Set<Long>> newMap = new HashMap<>(this.edgeIdsPerLabel);
+        final ImmutableSet<Long> ids = this.edgeIdsPerLabel.get(label);
 
         if (ids != null && !ids.contains(edgeId)) {
             // we have references for that label and they do not contain the edge id to be added
-            newMap.put(label, ImmutableSet.<Long>builder().addAll(ids).add(edgeId).build());
+            final Set<Long> combined = new HashSet<>(ids);
+            combined.add(edgeId);
+            newMap.put(label, combined);
         } else if (ids == null && this.labels != null) {
             // we do not have references, but all labels are loaded
             newMap.put(label, ImmutableSet.of(edgeId));
@@ -88,7 +85,8 @@ public class VertexEdgeReferences implements Serializable {
             // otherwise we have nothing to be done here
             return this;
         }
-        return new VertexEdgeReferences(newLabels, ImmutableMap.copyOf(newMap));
+
+        return withPartialResolvedEdges(newMap);
     }
 
     /**
@@ -99,9 +97,8 @@ public class VertexEdgeReferences implements Serializable {
      */
     @Nonnull
     public VertexEdgeReferences withAllResolvedEdges(@Nonnull final Map<String, Set<Long>> allEdgeReferences) {
-        final ImmutableMap.Builder<String, ImmutableSet<Long>> builder = ImmutableMap.builder();
-        allEdgeReferences.forEach((k, v) -> builder.put(k, ImmutableSet.copyOf(v)));
-        return new VertexEdgeReferences(ImmutableSet.copyOf(allEdgeReferences.keySet()), builder.build());
+        final ImmutableMap<String, ImmutableSet<Long>> result = convertMap(allEdgeReferences);
+        return new VertexEdgeReferences(result.keySet(), result);
     }
 
     /**
@@ -112,25 +109,30 @@ public class VertexEdgeReferences implements Serializable {
      */
     @Nonnull
     public VertexEdgeReferences withPartialResolvedEdges(@Nonnull final Map<String, Set<Long>> someEdgeReferences) {
-        final ImmutableMap.Builder<String, ImmutableSet<Long>> builder = ImmutableMap.builder();
-        this.edgeIdsPerLabel.entrySet().stream().filter(e -> !someEdgeReferences.containsKey(e.getKey())).forEach(builder::put);
-        return new VertexEdgeReferences(
-                Optional.ofNullable(this.labels)// In case we know all labels
-                        .map(ImmutableSet.<String>builder()::addAll)// Add the current knowledge
-                        .map(b -> b.addAll(Sets.difference(this.labels, someEdgeReferences.keySet()))) // Add all new labels as well
-                        .map(ImmutableSet.Builder::build) // And build the set
-                        .orElse(null), // Fall back to no labels known
-                ImmutableMap.<String, ImmutableSet<Long>>builder().build()
-        );
+        final Map<String, Set<Long>> merge = new HashMap<>(this.edgeIdsPerLabel);
+        merge.putAll(someEdgeReferences);
+        final ImmutableMap<String, ImmutableSet<Long>> edgeIdsPerLabel = convertMap(merge);
+        final ImmutableSet<String> labels = this.labels != null ? edgeIdsPerLabel.keySet() : null;
+        return new VertexEdgeReferences(labels, edgeIdsPerLabel);
     }
 
-    public VertexEdgeReferences withRemovedEdges(final Set<Long> removedIds) {
-        if (edgeIdsPerLabel.values().stream().noneMatch(removedIds::contains)) {
+    /**
+     * Removes all edges with the provided ids.
+     *
+     * @param removedEdgeIds the ids of the provided edges
+     * @return this, if no change occurred, or a new instance not containing the removed ids
+     */
+    public VertexEdgeReferences withRemovedEdges(final Set<Long> removedEdgeIds) {
+        if (getAllKnown().noneMatch(removedEdgeIds::contains)) {
             return this;
         }
-        return new VertexEdgeReferences(this.labels,
-                ImmutableMap.copyOf(Maps.transformValues(this.edgeIdsPerLabel,
-                        v -> v.stream().filter(id -> !removedIds.contains(id)).collect(ImmutableSet.toImmutableSet())))
-        );
+        return withPartialResolvedEdges(Maps.transformValues(this.edgeIdsPerLabel, v -> Sets.difference(v, removedEdgeIds)));
     }
+
+    private ImmutableMap<String, ImmutableSet<Long>> convertMap(@Nonnull final Map<String, Set<Long>> source) {
+        final ImmutableMap.Builder<String, ImmutableSet<Long>> builder = ImmutableMap.builder();
+        source.forEach((k, v) -> builder.put(k, ImmutableSet.copyOf(v)));
+        return builder.build();
+    }
+
 }

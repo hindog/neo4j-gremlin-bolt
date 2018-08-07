@@ -147,7 +147,7 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState, Q extend
         final Stream<Long> selector = (
                 !selectorOrEmpty.isEmpty() ?
                         selectorOrEmpty.stream() :
-                        hierarchicalCache.getKeys().stream().filter(key -> !idCache.isRemoved(key))
+                        hierarchicalCache.getKeys().filter(key -> !idCache.isRemoved(key))
         ).distinct();
 
         selector.forEach(key -> {

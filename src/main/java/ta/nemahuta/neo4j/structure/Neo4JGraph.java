@@ -115,19 +115,19 @@ public class Neo4JGraph implements Graph {
                 // Make sure the known edges are marked deleted, so the cache is not out of sync
                 edgeIds.forEach(edgeScope::delete);
                 // Make sure to remove all the references for those edges in all the states
-                for (final Long key : vertexCache.getKeys()) {
+                vertexCache.getKeys().forEach(key -> {
                     Optional.ofNullable(vertexCache.get(key)).ifPresent(state -> {
                         final Neo4JVertexState newState = state.withRemovedEdges(edgeIds);
                         if (newState != state) {
                             vertexCache.put(key, newState);
                         }
                     });
-                }
+                });
                 // Finally delegate the deletion
                 super.delete(id);
             }
         };
-        this.relationHandler = new DefaultRelationHandler(vertexScope, edgeScope);
+        this.relationHandler = new DefaultRelationHandler(vertexScope, sessionCache.getVertexCache(), edgeScope);
         this.configuration = configuration;
     }
 

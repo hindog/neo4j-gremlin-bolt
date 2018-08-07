@@ -68,10 +68,12 @@ class Neo4JVertexTest {
         when(graph.edges(outEdge, inEdgeId)).then(i -> Stream.of(outEdge, inEdge).iterator());
         when(graph.edges()).then(i -> Stream.of(outEdge, inEdge).iterator());
         // Stub inVertex -inEdge-> sut -outEdge->outVertex
-        when(relationProvider.getRelationIdsOf(sutId, Direction.IN, ImmutableSet.of("x"))).thenAnswer(i -> ImmutableList.of(inEdgeId).stream());
-        when(relationProvider.getRelationIdsOf(sutId, Direction.OUT, ImmutableSet.of("x"))).thenAnswer(i -> ImmutableList.of(outEdge).stream());
-        when(relationProvider.getRelationIdsOf(sutId, Direction.IN, ImmutableSet.of("y"))).thenAnswer(i -> Stream.empty());
-        when(relationProvider.getRelationIdsOf(sutId, Direction.OUT, ImmutableSet.of("y"))).thenAnswer(i -> Stream.empty());
+        when(relationProvider.getRelationIdsOf(eq(sutId), eq(Direction.IN), eq(ImmutableSet.of("x")))).thenAnswer(i -> ImmutableList.of(inEdgeId).stream());
+        when(relationProvider.getRelationIdsOf(eq(sutId), eq(Direction.OUT), eq(ImmutableSet.of("x")))).thenAnswer(i -> ImmutableList.of(outEdgeId).stream());
+        when(relationProvider.getRelationIdsOf(eq(sutId), eq(Direction.BOTH), eq(ImmutableSet.of("x")))).thenAnswer(i -> ImmutableList.of(inEdgeId, outEdgeId).stream());
+        when(relationProvider.getRelationIdsOf(eq(sutId), eq(Direction.IN), eq(ImmutableSet.of("y")))).thenAnswer(i -> Stream.empty());
+        when(relationProvider.getRelationIdsOf(eq(sutId), eq(Direction.OUT), eq(ImmutableSet.of("y")))).thenAnswer(i -> Stream.empty());
+        when(relationProvider.getRelationIdsOf(eq(sutId), eq(Direction.BOTH), eq(ImmutableSet.of("y")))).thenAnswer(i -> Stream.empty());
         when(inEdge.outVertex()).thenReturn(inVertex);
         when(inEdge.inVertex()).thenReturn(sut);
         when(outEdge.inVertex()).thenReturn(outVertex);

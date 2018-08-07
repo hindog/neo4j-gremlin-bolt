@@ -5,6 +5,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.cache.Cache;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public interface HierarchicalCache<K, V> {
 
@@ -53,5 +54,5 @@ public interface HierarchicalCache<K, V> {
     /**
      * @return the keys of the elements the cache has encountered, regardless of their cache status
      */
-    Set<K> getKeys();
+    Stream<K> getKeys();
 }
