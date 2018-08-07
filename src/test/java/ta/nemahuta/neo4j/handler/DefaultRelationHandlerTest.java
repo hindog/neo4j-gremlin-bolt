@@ -25,7 +25,7 @@ import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -37,28 +37,26 @@ class DefaultRelationHandlerTest {
     private HierarchicalCache<Long, Neo4JVertexState> vertexCache;
     @Mock
     private Neo4JElementStateScope<Neo4JEdgeState, EdgeQueryBuilder> edgeScope;
+    @Mock
+    private Neo4JVertexState vertexState;
+    @Mock
+    private VertexEdgeReferences inRefs, outRefs;
 
     private RelationHandler sut;
 
     @BeforeEach
     void setupSut() {
         sut = new DefaultRelationHandler(vertexScope, vertexCache, edgeScope);
-    }
-
-    @Test
-    void getRelationIdsOf() {
-
+        when(vertexState.getIncomingEdgeIds()).thenReturn(inRefs);
+        when(vertexState.getOutgoingEdgeIds()).thenReturn(outRefs);
+        when(vertexState.getEdgeIds(any())).then(i -> i.getArgument(0) == Direction.IN ? inRefs : outRefs);
     }
 
     @Nested
-    @DisplayName("getRelationIdsOf")
+    @DisplayName("getRelationIdsOf()")
     @ExtendWith(MockitoExtension.class)
     class GetRelatedIds {
 
-        @Mock
-        private Neo4JVertexState vertexState;
-        @Mock
-        private VertexEdgeReferences inRefs, outRefs;
         @Mock
         private Neo4JEdgeState inEdgeState, outEdgeState;
         @Mock(answer = Answers.RETURNS_DEEP_STUBS)
@@ -67,8 +65,6 @@ class DefaultRelationHandlerTest {
 
         @BeforeEach
         void stubState() {
-            when(vertexState.getIncomingEdgeIds()).thenReturn(inRefs);
-            when(vertexState.getOutgoingEdgeIds()).thenReturn(outRefs);
             when(vertexState.getEdgeIds(any())).then(i -> i.getArgument(0) == Direction.IN ? inRefs : outRefs);
             when(inEdgeState.getLabel()).thenReturn("a");
             when(outEdgeState.getLabel()).thenReturn("b");
@@ -93,5 +89,46 @@ class DefaultRelationHandlerTest {
         void retrieveLabelsNoState() {
             assertEquals(ImmutableSet.of(), ImmutableSet.copyOf(sut.getRelationIdsOf(1l, Direction.BOTH, ImmutableSet.of()).iterator()));
         }
+    }
+
+    @Nested
+    @DisplayName("registerEdge()")
+    class RegisterEdge {
+
+        @Test
+        void noStateNoInvocation() {
+            // when: ''
+            sut.registerEdge(1l, Direction.BOTH, "q", 2l);
+            // then: 'no update is expected'
+            verify(vertexScope, never()).update(anyLong(), any());
+        }
+
+        @Test
+        void nonChangedStateNoUpdate() {
+            // setup:
+            when(vertexCache.get(1l)).thenReturn(vertexState);
+            when(inRefs.withNewEdge(any(), anyLong())).thenReturn(inRefs);
+            when(outRefs.withNewEdge(any(), anyLong())).thenReturn(outRefs);
+            // when: ''
+            sut.registerEdge(1l, Direction.BOTH, "q", 2l);
+            // then: 'no update is expected'
+            verify(vertexScope, never()).update(anyLong(), any());
+        }
+
+        @Test
+        void changedStateTriggersUpdate() {
+            // setup:
+            when(vertexCache.get(1l)).thenReturn(vertexState);
+            final Neo4JVertexState changedVertexState = mock(Neo4JVertexState.class);
+            when(inRefs.withNewEdge(any(), anyLong())).thenReturn(mock(VertexEdgeReferences.class));
+            when(outRefs.withNewEdge(any(), anyLong())).thenReturn(mock(VertexEdgeReferences.class));
+            when(vertexState.withEdgeIds(any(), any())).thenReturn(changedVertexState);
+            // when: ''
+            sut.registerEdge(1l, Direction.BOTH, "q", 2l);
+            // then: 'no update is expected'
+            verify(vertexScope, times(2)).update(eq(1l), eq(changedVertexState));
+        }
+
+
     }
 }
