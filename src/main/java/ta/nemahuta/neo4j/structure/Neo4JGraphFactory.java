@@ -28,7 +28,7 @@ public class Neo4JGraphFactory implements AutoCloseable, Supplier<Graph> {
     private final Driver driver;
 
     public Neo4JGraphFactory(@Nonnull final Neo4JConfiguration configuration) {
-        this(new JCacheSessionCacheManager(Caching.getCachingProvider().getCacheManager(), configuration), configuration);
+        this(new JCacheSessionCacheManager(Caching.getCachingProvider(), configuration), configuration);
     }
 
     public Neo4JGraphFactory(@Nonnull final SessionCacheManager cacheManager,

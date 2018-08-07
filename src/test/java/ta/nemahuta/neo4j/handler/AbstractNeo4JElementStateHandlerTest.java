@@ -18,6 +18,7 @@ import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
+import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.session.StatementExecutor;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 
@@ -52,11 +53,14 @@ class AbstractNeo4JElementStateHandlerTest {
     @Mock
     private Value value;
 
-    private AbstractNeo4JElementStateHandler<Neo4JElementState> sut;
+    @Mock
+    private AbstractQueryBuilder queryBuilder;
+
+    private AbstractNeo4JElementStateHandler<Neo4JElementState, ? extends AbstractQueryBuilder> sut;
 
     @BeforeEach
     void stubStatements() {
-        sut = new AbstractNeo4JElementStateHandler<Neo4JElementState>(statementExecutor) {
+        sut = new AbstractNeo4JElementStateHandler<Neo4JElementState, AbstractQueryBuilder>(statementExecutor) {
             @Override
             protected Pair<Long, Neo4JElementState> getIdAndConvertToState(final Record r) {
                 return new Pair<>(1l, state);
@@ -90,6 +94,12 @@ class AbstractNeo4JElementStateHandlerTest {
             @Override
             protected Statement createCreateIndexCommand(@Nonnull final Set<String> labels, final String propertyName) {
                 return createIndexStmt;
+            }
+
+            @Nonnull
+            @Override
+            protected AbstractQueryBuilder query() {
+                return queryBuilder;
             }
         };
         when(statementExecutor.executeStatement(any())).then(i -> {

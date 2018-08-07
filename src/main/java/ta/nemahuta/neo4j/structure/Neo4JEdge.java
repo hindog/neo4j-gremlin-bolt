@@ -5,6 +5,7 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
+import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.scope.Neo4JElementStateScope;
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 
@@ -21,7 +22,7 @@ public class Neo4JEdge extends Neo4JElement<Neo4JEdgeState, Property> implements
 
     public Neo4JEdge(@Nonnull final Neo4JGraph graph,
                      @Nonnull final long id,
-                     @Nonnull final Neo4JElementStateScope<Neo4JEdgeState> scope) {
+                     @Nonnull final Neo4JElementStateScope<Neo4JEdgeState, ? extends AbstractQueryBuilder> scope) {
         super(graph, id, scope);
     }
 

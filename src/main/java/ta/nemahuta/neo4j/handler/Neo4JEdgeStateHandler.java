@@ -16,8 +16,9 @@ import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.Set;
+import java.util.function.Function;
 
-public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4JEdgeState> {
+public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4JEdgeState, EdgeQueryBuilder> {
 
     private final Neo4JGraphPartition readPartition;
 
@@ -91,10 +92,9 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
     /**
      * @return a new {@link VertexQueryBuilder}
      */
-    @Nonnull
+    @Override
     protected EdgeQueryBuilder query() {
         return new EdgeQueryBuilder(readPartition);
     }
-
 
 }

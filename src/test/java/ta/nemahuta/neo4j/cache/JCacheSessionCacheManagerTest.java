@@ -15,6 +15,7 @@ import ta.nemahuta.neo4j.state.Neo4JVertexState;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.configuration.Configuration;
+import javax.cache.spi.CachingProvider;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -24,6 +25,9 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class JCacheSessionCacheManagerTest {
+
+    @Mock
+    private CachingProvider cachingProvider;
 
     @Mock
     private CacheManager cacheManager;
@@ -37,10 +41,11 @@ class JCacheSessionCacheManagerTest {
 
     @BeforeEach
     void stubGlobalCreationAndCreateSut() {
-        when(cacheManager.createCache(startsWith("vertex-global-"), any(Configuration.class))).thenReturn(globalVertexCache);
-        when(cacheManager.createCache(startsWith("edge-global-"), any(Configuration.class))).thenReturn(globalEdgeCache);
+        when(cachingProvider.getCacheManager()).thenReturn(cacheManager);
+        when(cacheManager.createCache(startsWith("vertex-global-"), (Configuration<Long, Neo4JVertexState>)any(Configuration.class))).thenReturn(globalVertexCache);
+        when(cacheManager.createCache(startsWith("edge-global-"), (Configuration<Long, Neo4JEdgeState>)any(Configuration.class))).thenReturn(globalEdgeCache);
         final Neo4JConfiguration config = Neo4JConfiguration.builder().hostname("localhost").port(1234).authToken(AuthTokens.none()).build();
-        this.sut = new JCacheSessionCacheManager(cacheManager, config);
+        this.sut = new JCacheSessionCacheManager(cachingProvider, config);
     }
 
 

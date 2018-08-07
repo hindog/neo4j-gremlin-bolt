@@ -42,7 +42,14 @@ public class HierarchicalJCache<K, V> implements HierarchicalCache<K, V> {
     public void commit() {
         long counter = 0;
         for (final Map.Entry<K, Reference<V>> e : child.entrySet()) {
-            Optional.ofNullable(e.getValue()).map(Reference::get).ifPresent(value -> parent.put(e.getKey(), value));
+            final V value = e.getValue().get();
+            if (value != null) {
+                // The state is still in the cache
+                parent.put(e.getKey(), value);
+            } else {
+                // The state has been removed from the cache, so we need to clear out the parent's state
+                parent.remove(e.getKey());
+            }
             child.remove(e.getKey());
             counter++;
         }
@@ -57,7 +64,12 @@ public class HierarchicalJCache<K, V> implements HierarchicalCache<K, V> {
 
     @Override
     public V get(final K key) {
-        return Optional.ofNullable(child.get(key)).map(Reference::get).orElseGet(() -> parent.get(key));
+        final Reference<V> ref = child.get(key);
+        if (ref != null) {
+            return ref.get();
+        } else {
+            return parent.get(key);
+        }
     }
 
     @Override

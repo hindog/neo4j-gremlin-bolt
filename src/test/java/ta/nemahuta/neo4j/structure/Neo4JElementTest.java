@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.scope.Neo4JElementStateScope;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 
@@ -26,7 +27,7 @@ class Neo4JElementTest {
     private Neo4JGraph graph;
 
     @Mock
-    private Neo4JElementStateScope<Neo4JElementState> scope;
+    private Neo4JElementStateScope<Neo4JElementState, AbstractQueryBuilder> scope;
 
     @Mock
     private Neo4JElementState state, changedState;

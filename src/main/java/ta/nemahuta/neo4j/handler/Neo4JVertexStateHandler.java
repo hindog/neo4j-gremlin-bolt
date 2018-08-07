@@ -16,7 +16,7 @@ import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.Set;
 
-public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Neo4JVertexState> {
+public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Neo4JVertexState, VertexQueryBuilder> {
 
     private final Neo4JGraphPartition readPartition;
 
@@ -83,10 +83,7 @@ public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Ne
                 .build().get();
     }
 
-    /**
-     * @return a new {@link VertexQueryBuilder}
-     */
-    @Nonnull
+    @Override
     protected VertexQueryBuilder query() {
         return new VertexQueryBuilder(readPartition);
     }

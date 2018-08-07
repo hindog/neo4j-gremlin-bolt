@@ -1,10 +1,12 @@
 package ta.nemahuta.neo4j.scope;
 
+import com.google.common.collect.ImmutableMap;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ta.nemahuta.neo4j.cache.HierarchicalCache;
 import ta.nemahuta.neo4j.handler.Neo4JElementStateHandler;
+import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 
 import javax.annotation.Nonnull;
@@ -25,7 +27,7 @@ import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Slf4j
-public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implements Neo4JElementStateScope<S> {
+public class DefaultNeo4JElementStateScope<S extends Neo4JElementState, Q extends AbstractQueryBuilder> implements Neo4JElementStateScope<S, Q> {
 
     private final ReentrantReadWriteLock lockProvider = new ReentrantReadWriteLock();
 
@@ -115,6 +117,15 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState> implemen
             // Now we load all the remaining elements and put them to the cache and in the results
             return results;
         });
+    }
+
+    @Override
+    public Map<Long, S> queryAndCache(@Nonnull final Function<Q, Q> query) {
+        final Map<Long, S> queried = remoteElementHandler.query(query);
+        for (final Map.Entry<Long, S> entry : queried.entrySet()) {
+            hierarchicalCache.put(entry.getKey(), entry.getValue());
+        }
+        return ImmutableMap.copyOf(queried);
     }
 
     private void loadFromSession(final Set<Long> selectorOrEmpty, final Map<Long, S> results) {
