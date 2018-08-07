@@ -86,7 +86,6 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
         globalEdgeCache.close();
         cacheManager.destroyCache(globalEdgeCache.getName());
         cacheManager.destroyCache(globalVertexCache.getName());
-        Optional.ofNullable(configuration.getCacheConfiguration()).ifPresent(x -> cacheManager.close());
     }
 
 }
