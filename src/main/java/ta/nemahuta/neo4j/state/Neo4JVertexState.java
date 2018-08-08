@@ -9,7 +9,6 @@ import org.apache.tinkerpop.gremlin.structure.Direction;
 
 import javax.annotation.Nonnull;
 import java.util.Set;
-import java.util.stream.Stream;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
@@ -37,17 +36,9 @@ public class Neo4JVertexState extends Neo4JElementState {
         this.outgoingEdgeIds = outgoingEdgeIds;
     }
 
-    public Stream<Long> getAllKnownEdgeIds() {
-        return Stream.concat(incomingEdgeIds.getAllKnown(), outgoingEdgeIds.getAllKnown());
-    }
-
     public Neo4JVertexState withRemovedEdges(final Set<Long> removedIds) {
-        final VertexEdgeReferences incomingEdgeIds = this.incomingEdgeIds.withRemovedEdges(removedIds);
-        final VertexEdgeReferences outgoingEdgeIds = this.outgoingEdgeIds.withRemovedEdges(removedIds);
-        if (this.incomingEdgeIds == incomingEdgeIds && this.outgoingEdgeIds == outgoingEdgeIds) {
-            return this;
-        }
-        return new Neo4JVertexState(labels, properties, incomingEdgeIds, outgoingEdgeIds);
+        return withIncomingEdgeIds(this.incomingEdgeIds.withRemovedEdges(removedIds))
+                .withOutgoingEdgeIds(this.outgoingEdgeIds.withRemovedEdges(removedIds));
     }
 
     public VertexEdgeReferences getEdgeIds(@Nonnull final Direction direction) {
@@ -74,14 +65,23 @@ public class Neo4JVertexState extends Neo4JElementState {
 
     @Override
     public Neo4JVertexState withProperties(@Nonnull final ImmutableMap<String, Object> properties) {
+        if (this.properties == properties) {
+            return this;
+        }
         return new Neo4JVertexState(labels, properties, incomingEdgeIds, outgoingEdgeIds);
     }
 
     public Neo4JVertexState withIncomingEdgeIds(@Nonnull final VertexEdgeReferences incomingEdgeIds) {
+        if (this.incomingEdgeIds == incomingEdgeIds) {
+            return this;
+        }
         return new Neo4JVertexState(labels, properties, incomingEdgeIds, outgoingEdgeIds);
     }
 
     public Neo4JVertexState withOutgoingEdgeIds(@Nonnull final VertexEdgeReferences outgoingEdgeIds) {
+        if (this.outgoingEdgeIds == outgoingEdgeIds) {
+            return this;
+        }
         return new Neo4JVertexState(labels, properties, incomingEdgeIds, outgoingEdgeIds);
     }
 

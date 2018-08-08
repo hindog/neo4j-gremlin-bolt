@@ -239,7 +239,6 @@ public class Neo4JGraph implements Graph {
         return getOrCreateEdge(id);
     }
 
-
     @Override
     public Transaction tx() {
         return transaction;

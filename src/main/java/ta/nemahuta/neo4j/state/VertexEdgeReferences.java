@@ -17,7 +17,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -41,25 +40,6 @@ public class VertexEdgeReferences implements Serializable {
     @Nonnull
     public Stream<Long> getAllKnown() {
         return edgeIdsPerLabel.values().stream().map(Set::stream).reduce(Stream::concat).orElseGet(Stream::empty);
-    }
-
-    @Nonnull
-    public ImmutableMap<String, ImmutableSet<Long>> edgeIds(@Nonnull final Set<String> labels) {
-        // We need the labels to be present
-        if (labels.isEmpty()) {
-            throw new IllegalArgumentException("Labels to be queried must not be empty.");
-        }
-        // Now with the labels present, create a new map
-        final ImmutableMap.Builder<String, ImmutableSet<Long>> builder = ImmutableMap.builder();
-        for (final String label : labels) {
-            Optional.ofNullable(edgeIdsPerLabel.get(label)) // Querying the values
-                    .map(Optional::of)
-                    // If no ids are known, but we have complete knowledge of the edges, we use an empty set
-                    .orElseGet(() -> Optional.ofNullable(this.labels).map(l -> ImmutableSet.of()))
-                    // Put the resulting ids into the builder
-                    .ifPresent(v -> builder.put(label, v));
-        }
-        return builder.build();
     }
 
     @Nullable
