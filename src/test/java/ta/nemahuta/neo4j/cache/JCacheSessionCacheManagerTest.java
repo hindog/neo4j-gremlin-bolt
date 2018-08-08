@@ -42,19 +42,10 @@ class JCacheSessionCacheManagerTest {
     @BeforeEach
     void stubGlobalCreationAndCreateSut() {
         when(cachingProvider.getCacheManager()).thenReturn(cacheManager);
-        final String[] cacheNames = new String[2];
-        when(globalVertexCache.getName()).then(i -> cacheNames[0]);
-        when(globalEdgeCache.getName()).then(i -> cacheNames[1]);
-        when(cacheManager.createCache(startsWith("vertex-global-"), (Configuration<Long, Neo4JVertexState>) any(Configuration.class)))
-                .then(i -> {
-                    cacheNames[0] = i.getArgument(0);
-                    return globalVertexCache;
-                });
-        when(cacheManager.createCache(startsWith("edge-global-"), (Configuration<Long, Neo4JEdgeState>) any(Configuration.class)))
-                .then(i -> {
-                    cacheNames[1] = i.getArgument(0);
-                    return globalEdgeCache;
-                });
+        when(globalVertexCache.getName()).thenReturn("vertex-global");
+        when(globalEdgeCache.getName()).thenReturn("edge-global");
+        when(cacheManager.createCache(eq("vertex-global"), (Configuration<Long, Neo4JVertexState>) any(Configuration.class))).thenReturn(globalVertexCache);
+        when(cacheManager.createCache(eq("edge-global"), (Configuration<Long, Neo4JEdgeState>) any(Configuration.class))).thenReturn(globalEdgeCache);
         final Neo4JConfiguration config = Neo4JConfiguration.builder().hostname("localhost").port(1234).authToken(AuthTokens.none()).build();
         this.sut = new JCacheSessionCacheManager(cachingProvider, config);
     }
@@ -76,8 +67,8 @@ class JCacheSessionCacheManagerTest {
         // when: 'closing the cache manager'
         sut.close();
         // then: 'the cache manager has been closed as well'
-        verify(cacheManager, times(1)).destroyCache(startsWith("edge-global-"));
-        verify(cacheManager, times(1)).destroyCache(startsWith("vertex-global-"));
+        verify(cacheManager, times(1)).destroyCache(eq("edge-global"));
+        verify(cacheManager, times(1)).destroyCache(eq("vertex-global"));
 
     }
 }
