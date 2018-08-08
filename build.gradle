@@ -3,7 +3,7 @@ plugins {
     id 'java'
     id 'maven-publish'
     id 'jacoco'
-    id 'com.jfrog.bintray' version '1.8.0'
+    id 'com.jfrog.bintray' version '1.8.4'
 }
 
 group = 'ta.nemahuta.neo4j'
