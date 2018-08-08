@@ -15,6 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import ta.nemahuta.neo4j.features.Neo4JFeatures;
+import ta.nemahuta.neo4j.handler.RelationProvider;
+import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.scope.Neo4JElementStateScope;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
 
@@ -32,10 +34,10 @@ class Neo4JVertexTest {
     private Neo4JGraph graph;
 
     @Mock
-    private Neo4JElementStateScope<Neo4JVertexState> scope;
+    private Neo4JElementStateScope<Neo4JVertexState, AbstractQueryBuilder> scope;
 
     @Mock
-    private EdgeProvider inProvider, outProvider;
+    private RelationProvider relationProvider;
 
     @Mock
     private Neo4JVertex otherVertex, inVertex, outVertex;
@@ -54,7 +56,7 @@ class Neo4JVertexTest {
 
     @BeforeEach
     void createSutAndStub() {
-        this.sut = new Neo4JVertex(graph, sutId, scope, inProvider, outProvider);
+        this.sut = new Neo4JVertex(graph, sutId, scope, relationProvider);
         when(scope.get(sutId)).thenReturn(state);
         when(inEdge.id()).thenReturn(inEdgeId);
         when(outEdge.id()).thenReturn(outEdgeId);
@@ -66,10 +68,12 @@ class Neo4JVertexTest {
         when(graph.edges(outEdge, inEdgeId)).then(i -> Stream.of(outEdge, inEdge).iterator());
         when(graph.edges()).then(i -> Stream.of(outEdge, inEdge).iterator());
         // Stub inVertex -inEdge-> sut -outEdge->outVertex
-        when(inProvider.provideEdges(eq("x"))).thenReturn(ImmutableList.of(inEdgeId));
-        when(outProvider.provideEdges(eq("x"))).thenReturn(ImmutableList.of(outEdgeId));
-        when(inProvider.provideEdges(eq("y"))).thenReturn(ImmutableList.of());
-        when(outProvider.provideEdges(eq("y"))).thenReturn(ImmutableList.of());
+        when(relationProvider.getRelationIdsOf(eq(sutId), eq(Direction.IN), eq(ImmutableSet.of("x")))).thenAnswer(i -> ImmutableList.of(inEdgeId).stream());
+        when(relationProvider.getRelationIdsOf(eq(sutId), eq(Direction.OUT), eq(ImmutableSet.of("x")))).thenAnswer(i -> ImmutableList.of(outEdgeId).stream());
+        when(relationProvider.getRelationIdsOf(eq(sutId), eq(Direction.BOTH), eq(ImmutableSet.of("x")))).thenAnswer(i -> ImmutableList.of(inEdgeId, outEdgeId).stream());
+        when(relationProvider.getRelationIdsOf(eq(sutId), eq(Direction.IN), eq(ImmutableSet.of("y")))).thenAnswer(i -> Stream.empty());
+        when(relationProvider.getRelationIdsOf(eq(sutId), eq(Direction.OUT), eq(ImmutableSet.of("y")))).thenAnswer(i -> Stream.empty());
+        when(relationProvider.getRelationIdsOf(eq(sutId), eq(Direction.BOTH), eq(ImmutableSet.of("y")))).thenAnswer(i -> Stream.empty());
         when(inEdge.outVertex()).thenReturn(inVertex);
         when(inEdge.inVertex()).thenReturn(sut);
         when(outEdge.inVertex()).thenReturn(outVertex);
@@ -80,9 +84,6 @@ class Neo4JVertexTest {
     void addEdge() {
         // when: 'adding an edge'
         assertEquals(inEdge, sut.addEdge("edge", otherVertex));
-        // then: 'the edge is registered in the out provider'
-        verify(outProvider, times(1)).register("edge", inEdge.id());
-        verify(otherVertex, times(1)).registerInEdge("edge", inEdge.id());
         // expect: 'non neo4j vertices throw exceptions'
         assertThrows(IllegalArgumentException.class, () -> sut.addEdge("x", invalidVertex));
     }

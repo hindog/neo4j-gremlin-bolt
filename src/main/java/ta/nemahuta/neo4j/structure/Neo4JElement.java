@@ -7,6 +7,7 @@ import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
+import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.scope.Neo4JElementStateScope;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 
@@ -29,7 +30,7 @@ public abstract class Neo4JElement<S extends Neo4JElementState, P extends Proper
 
     protected final Neo4JGraph graph;
     protected final long id;
-    protected final Neo4JElementStateScope<S> scope;
+    protected final Neo4JElementStateScope<S, ? extends AbstractQueryBuilder> scope;
 
     private final Map<String, P> propertyMap = new ConcurrentHashMap<>();
 

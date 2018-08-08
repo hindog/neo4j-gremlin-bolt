@@ -1,7 +1,12 @@
 package ta.nemahuta.neo4j.config;
 
 import com.google.common.collect.ImmutableMap;
-import lombok.*;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.Configuration;
@@ -14,6 +19,7 @@ import javax.annotation.Nullable;
 import javax.cache.expiry.Duration;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -86,6 +92,9 @@ public class Neo4JConfiguration {
     @ConfigurationKey
     private final boolean cacheStatistics;
 
+    @Getter
+    @ConfigurationKey
+    private final URI cacheConfiguration;
 
     @Nonnull
     public Configuration toApacheConfiguration() {
@@ -145,9 +154,10 @@ public class Neo4JConfiguration {
         return BOXING_DEFINITION.getOrDefault(toClass, toClass).isAssignableFrom(BOXING_DEFINITION.getOrDefault(fromClass, fromClass));
     }
 
+    @Nullable
     public Duration getCacheExpiryDuration() {
         if (StringUtils.isEmpty(cacheExpiry)) {
-            return DEFAULT_CACHE_EXPIRY;
+            return null;
         }
         final String[] split = cacheExpiry.split(".");
         final long amount = parseExpiryAmount(split[0]);

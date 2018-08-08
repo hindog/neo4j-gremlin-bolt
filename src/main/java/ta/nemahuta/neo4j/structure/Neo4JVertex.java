@@ -1,11 +1,14 @@
 package ta.nemahuta.neo4j.structure;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
+import ta.nemahuta.neo4j.handler.RelationProvider;
+import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.scope.Neo4JElementStateScope;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
 
@@ -18,7 +21,6 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
@@ -30,15 +32,13 @@ public class Neo4JVertex extends Neo4JElement<Neo4JVertexState, VertexProperty> 
 
     public static final String LABEL_DELIMITER = "::";
 
-    private final EdgeProvider inEdgeProvider, outEdgeProvider;
+    private final RelationProvider edgeProvider;
 
     public Neo4JVertex(@Nonnull final Neo4JGraph graph, final long id,
-                       @Nonnull final Neo4JElementStateScope<Neo4JVertexState> scope,
-                       @Nonnull final EdgeProvider inEdgeProvider,
-                       @Nonnull final EdgeProvider outEdgeProvider) {
+                       @Nonnull final Neo4JElementStateScope<Neo4JVertexState, ? extends AbstractQueryBuilder> scope,
+                       @Nonnull final RelationProvider edgeProvider) {
         super(graph, id, scope);
-        this.inEdgeProvider = inEdgeProvider;
-        this.outEdgeProvider = outEdgeProvider;
+        this.edgeProvider = edgeProvider;
     }
 
 
@@ -49,19 +49,12 @@ public class Neo4JVertex extends Neo4JElement<Neo4JVertexState, VertexProperty> 
                     Optional.ofNullable(inVertex).map(Object::getClass).map(Class::getSimpleName).orElse(null));
         }
         final Neo4JVertex neo4jInVertex = (Neo4JVertex) inVertex;
-        final Neo4JEdge result = graph.addEdge(label, this, neo4jInVertex, keyValues);
-        outEdgeProvider.register(label, result.id());
-        neo4jInVertex.registerInEdge(label, result.id());
-        return result;
-    }
-
-    void registerInEdge(@Nonnull final String label, @Nonnull final Long id) {
-        inEdgeProvider.register(label, id);
+        return graph.addEdge(label, this, neo4jInVertex, keyValues);
     }
 
     @Override
     public Iterator<Edge> edges(final Direction direction, final String... edgeLabels) {
-        final Set<Long> edgeIds = edgeIdStream(direction, edgeLabels).collect(Collectors.toSet());
+        final Set<Long> edgeIds = edgeProvider.getRelationIdsOf(id, direction, ImmutableSet.copyOf(edgeLabels)).collect(Collectors.toSet());
         return edgeIds.isEmpty() ? Collections.emptyIterator() : graph.edges(edgeIds.toArray());
     }
 
@@ -73,25 +66,6 @@ public class Neo4JVertex extends Neo4JElement<Neo4JVertexState, VertexProperty> 
                 .iterator();
     }
 
-    private Stream<Long> edgeIdStream(final Direction direction, final String... edgeLabels) {
-        switch (Optional.ofNullable(direction).orElse(Direction.BOTH)) {
-            case IN:
-                return inEdgeIdStream(edgeLabels);
-            case OUT:
-                return outEdgeIdStream(edgeLabels);
-            default:
-            case BOTH:
-                return Stream.concat(inEdgeIdStream(edgeLabels), outEdgeIdStream(edgeLabels));
-        }
-    }
-
-    private Stream<Long> inEdgeIdStream(@Nonnull final String... labels) {
-        return inEdgeProvider.provideEdges(labels).stream();
-    }
-
-    private Stream<Long> outEdgeIdStream(@Nonnull final String... labels) {
-        return outEdgeProvider.provideEdges(labels).stream();
-    }
 
     @Override
     public String label() {

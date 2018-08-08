@@ -1,12 +1,14 @@
 package ta.nemahuta.neo4j.handler;
 
+import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
-public interface Neo4JElementStateHandler<S extends Neo4JElementState> {
+public interface Neo4JElementStateHandler<S extends Neo4JElementState, Q extends AbstractQueryBuilder> {
 
     /**
      * Loads the {@link Neo4JElementState} of the ids to be loaded.
@@ -16,6 +18,14 @@ public interface Neo4JElementStateHandler<S extends Neo4JElementState> {
      */
     @Nonnull
     Map<Long, S> getAll(@Nonnull Set<Long> idsToBeLoaded);
+
+    /**
+     * Query elements and return the found elements.
+     *
+     * @param query the query to be processed
+     * @return the found elements by id
+     */
+    Map<Long, S> query(@Nonnull Function<Q, Q> query);
 
     /**
      * Update an element.

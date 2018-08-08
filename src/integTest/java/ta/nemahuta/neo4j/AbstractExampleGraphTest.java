@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -74,13 +75,14 @@ public abstract class AbstractExampleGraphTest {
     }
 
     @BeforeAll
-    static private void createFactory() {
+    static private void createFactory() throws URISyntaxException {
         closeFactory();
         TL_GRAPH_FACTORY.set(new Neo4JGraphFactory(
                 Neo4JConfiguration.builder()
                         .graphName(UUID.randomUUID().toString())
                         .hostname("localhost")
                         .port(7687)
+                        .cacheConfiguration(AbstractExampleGraphTest.class.getResource("/ehCache.xml").toURI())
                         .authToken(AuthTokens.basic("neo4j", "neo4j123")).build()
         ));
     }

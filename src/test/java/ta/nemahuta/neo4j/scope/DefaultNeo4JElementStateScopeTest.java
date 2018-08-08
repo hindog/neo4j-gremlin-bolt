@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import ta.nemahuta.neo4j.cache.HierarchicalCache;
 import ta.nemahuta.neo4j.handler.Neo4JElementStateHandler;
+import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,7 +27,7 @@ class DefaultNeo4JElementStateScopeTest {
     private HierarchicalCache<Long, Neo4JElementState> cache;
 
     @Mock
-    private Neo4JElementStateHandler<Neo4JElementState> handler;
+    private Neo4JElementStateHandler<Neo4JElementState, ? extends AbstractQueryBuilder> handler;
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private IdCache<Long> idCache;
@@ -34,7 +35,7 @@ class DefaultNeo4JElementStateScopeTest {
     @Mock
     private Neo4JElementState state, modifiedState;
 
-    private Neo4JElementStateScope<Neo4JElementState> sut;
+    private Neo4JElementStateScope<Neo4JElementState, ? extends AbstractQueryBuilder> sut;
 
     @BeforeEach
     void createSut() {

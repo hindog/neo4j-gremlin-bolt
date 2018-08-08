@@ -15,23 +15,28 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactoryClass;
 import org.neo4j.driver.v1.Session;
+import ta.nemahuta.neo4j.cache.HierarchicalCache;
 import ta.nemahuta.neo4j.cache.SessionCache;
 import ta.nemahuta.neo4j.cache.SessionCacheManager;
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
 import ta.nemahuta.neo4j.features.Neo4JFeatures;
-import ta.nemahuta.neo4j.handler.DefaultRelationProvider;
+import ta.nemahuta.neo4j.handler.DefaultRelationHandler;
 import ta.nemahuta.neo4j.handler.Neo4JEdgeStateHandler;
 import ta.nemahuta.neo4j.handler.Neo4JVertexStateHandler;
-import ta.nemahuta.neo4j.handler.RelationProvider;
+import ta.nemahuta.neo4j.handler.RelationHandler;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.partition.Neo4JLabelGraphPartition;
+import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
+import ta.nemahuta.neo4j.query.edge.EdgeQueryBuilder;
+import ta.nemahuta.neo4j.query.vertex.VertexQueryBuilder;
 import ta.nemahuta.neo4j.scope.DefaultNeo4JElementStateScope;
+import ta.nemahuta.neo4j.scope.IdCache;
 import ta.nemahuta.neo4j.scope.Neo4JElementStateScope;
-import ta.nemahuta.neo4j.session.LazyEdgeProvider;
 import ta.nemahuta.neo4j.session.Neo4JTransaction;
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
+import ta.nemahuta.neo4j.state.VertexEdgeReferences;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -62,14 +67,14 @@ public class Neo4JGraph implements Graph {
     private final SessionCache cache;
 
     private final Neo4JGraphPartition partition;
-    private final DefaultNeo4JElementStateScope<Neo4JVertexState> vertexScope;
-    private final DefaultNeo4JElementStateScope<Neo4JEdgeState> edgeScope;
+    private final DefaultNeo4JElementStateScope<Neo4JVertexState, VertexQueryBuilder> vertexScope;
+    private final DefaultNeo4JElementStateScope<Neo4JEdgeState, EdgeQueryBuilder> edgeScope;
     private final Neo4JConfiguration configuration;
 
     private final SoftRefMap<Long, Neo4JVertex> vertices = new SoftRefMap<>();
     private final SoftRefMap<Long, Neo4JEdge> edges = new SoftRefMap<>();
 
-    private final RelationProvider relationProvider;
+    private final RelationHandler relationHandler;
     private final Neo4JVertexStateHandler vertexStateHandler;
     private final Neo4JEdgeStateHandler edgeStateHandler;
 
@@ -92,20 +97,37 @@ public class Neo4JGraph implements Graph {
         this.transaction.addTransactionListener(this::handleTransaction);
         this.vertexStateHandler = new Neo4JVertexStateHandler(transaction, partition);
         this.edgeStateHandler = new Neo4JEdgeStateHandler(transaction, partition);
-        this.relationProvider = new DefaultRelationProvider(transaction, partition);
         this.edgeScope = new DefaultNeo4JElementStateScope<>(sessionCache.getEdgeCache(), edgeStateHandler, sessionCache.getKnownEdgeIds());
-        this.vertexScope = new DefaultNeo4JElementStateScope<Neo4JVertexState>(sessionCache.getVertexCache(), vertexStateHandler, sessionCache.getKnownVertexIds()) {
+        final HierarchicalCache<Long, Neo4JVertexState> vertexCache = sessionCache.getVertexCache();
+        final IdCache<Long> knownVertexIds = sessionCache.getKnownVertexIds();
+        this.vertexScope = new DefaultNeo4JElementStateScope<Neo4JVertexState, VertexQueryBuilder>(vertexCache, vertexStateHandler, knownVertexIds) {
             @Override
             public void delete(long id) {
-                final Set<Long> edgeIds = sessionCache.getKnownVertexIds().getRemoved().contains(id) ? Collections.emptySet() :
-                        relationProvider.loadRelationIds(id, Direction.BOTH, Collections.emptySet())
-                                .values().stream().map(Set::stream).reduce(Stream::concat)
-                                .orElseGet(Stream::empty)
-                                .collect(ImmutableSet.toImmutableSet());
+                final Set<Long> edgeIds = knownVertexIds.getRemoved().contains(id)
+                        // For a removed vertex, the referenced edges are empty
+                        ? ImmutableSet.of()
+                        // For all others, the referenced edges can be obtained by using the state's in and outgoing references
+                        : Optional.ofNullable(vertexCache.get(id))
+                        .map(state ->
+                                Stream.concat(state.getIncomingEdgeIds().getAllKnown(), state.getOutgoingEdgeIds().getAllKnown())
+                                        .collect(ImmutableSet.toImmutableSet()))
+                        .orElseGet(() -> ImmutableSet.of());
+                // Make sure the known edges are marked deleted, so the cache is not out of sync
                 edgeIds.forEach(edgeScope::delete);
+                // Make sure to remove all the references for those edges in all the states
+                vertexCache.getKeys().forEach(key -> {
+                    Optional.ofNullable(vertexCache.get(key)).ifPresent(state -> {
+                        final Neo4JVertexState newState = state.withRemovedEdges(edgeIds);
+                        if (newState != state) {
+                            vertexCache.put(key, newState);
+                        }
+                    });
+                });
+                // Finally delegate the deletion
                 super.delete(id);
             }
         };
+        this.relationHandler = new DefaultRelationHandler(vertexScope, sessionCache.getVertexCache(), edgeScope);
         this.configuration = configuration;
     }
 
@@ -137,9 +159,12 @@ public class Neo4JGraph implements Graph {
         final ImmutableMap<String, Object> properties =
                 ImmutableMap.copyOf(Maps.filterKeys(ElementHelper.asMap(keyValues), k -> !Objects.equals("label", k)));
 
-        final long id = vertexScope.create(new Neo4JVertexState(labels, properties));
+        final long id = vertexScope.create(new Neo4JVertexState(labels, properties,
+                new VertexEdgeReferences().withAllResolvedEdges(Collections.emptyMap()),
+                new VertexEdgeReferences().withAllResolvedEdges(Collections.emptyMap())
+        ));
 
-        return getOrCreateVertex(id, true);
+        return getOrCreateVertex(id);
     }
 
     @Override
@@ -154,7 +179,7 @@ public class Neo4JGraph implements Graph {
 
     @Override
     public Iterator<Vertex> vertices(@Nonnull final Object... vertexIds) {
-        return loadAndReturnFoundElementsOnly(vertexScope, id -> getOrCreateVertex(id, false), vertexIds);
+        return loadAndReturnFoundElementsOnly(vertexScope, id -> getOrCreateVertex(id), vertexIds);
     }
 
     @Override
@@ -184,7 +209,7 @@ public class Neo4JGraph implements Graph {
         edgeStateHandler.createIndex(Collections.singleton(label), propertyName);
     }
 
-    private <R, S extends Neo4JElementState> Iterator<R> loadAndReturnFoundElementsOnly(@Nonnull final Neo4JElementStateScope<S> scope,
+    private <R, S extends Neo4JElementState> Iterator<R> loadAndReturnFoundElementsOnly(@Nonnull final Neo4JElementStateScope<S, ? extends AbstractQueryBuilder> scope,
                                                                                         @Nonnull final Function<Long, R> accessor,
                                                                                         @Nonnull final Object... ids) {
         // Load all elements using the scope
@@ -209,10 +234,10 @@ public class Neo4JGraph implements Graph {
                 ImmutableMap.copyOf(Maps.filterKeys(ElementHelper.asMap(keyValues), k -> !Objects.equals(T.label, k)));
 
         final long id = edgeScope.create(new Neo4JEdgeState(label, properties, inVertex.id(), outVertex.id()));
-
+        relationHandler.registerEdge(outVertex.id, Direction.OUT, label, id);
+        relationHandler.registerEdge(inVertex.id, Direction.IN, label, id);
         return getOrCreateEdge(id);
     }
-
 
     @Override
     public Transaction tx() {
@@ -242,11 +267,9 @@ public class Neo4JGraph implements Graph {
         return Neo4JFeatures.INSTANCE;
     }
 
-    private Vertex getOrCreateVertex(final long id, final boolean justCreated) {
+    private Vertex getOrCreateVertex(final long id) {
         return vertices.getOrCreate(id, () -> {
-            final EdgeProvider inEdgeProvider = new LazyEdgeProvider(labels -> relationProvider.loadRelationIds(id, Direction.IN, labels), justCreated);
-            final EdgeProvider outEdgeProvider = new LazyEdgeProvider(labels -> relationProvider.loadRelationIds(id, Direction.OUT, labels), justCreated);
-            final Neo4JVertex newVertex = new Neo4JVertex(this, id, vertexScope, inEdgeProvider, outEdgeProvider);
+            final Neo4JVertex newVertex = new Neo4JVertex(this, id, vertexScope, relationHandler);
             return newVertex;
         });
     }

@@ -14,6 +14,7 @@ import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -118,9 +119,9 @@ class HierarchicalJCacheTest {
     @Test
     void getKeys() {
         // when: 'requesting the iterator'
-        final Set<String> keys = sut.getKeys();
+        final Stream<String> keys = sut.getKeys();
         // then: 'the result is unique by their keys'
-        assertEquals(ImmutableSet.copyOf(keys), ImmutableSet.of("a", "y"));
+        assertEquals(ImmutableSet.copyOf(keys.iterator()), ImmutableSet.of("a", "y"));
         // and: 'both caches are queried'
         verify(childCacheMock, times(1)).keySet();
         verify(parentCacheMock, times(1)).iterator();

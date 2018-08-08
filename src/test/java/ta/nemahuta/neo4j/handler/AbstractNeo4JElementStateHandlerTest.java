@@ -18,12 +18,15 @@ import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
+import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.session.StatementExecutor;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 
 import javax.annotation.Nonnull;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,7 +41,7 @@ class AbstractNeo4JElementStateHandlerTest {
     private Neo4JElementState state;
 
     @Mock
-    private Statement deleteStmt, createStmt, updateStmt, loadStmt, createIndexStmt;
+    private Statement deleteStmt, createStmt, updateStmt, loadStmt, createIndexStmt, queryStmt;
 
     @Mock(answer = Answers.CALLS_REAL_METHODS)
     private StatementExecutor statementExecutor;
@@ -52,11 +55,14 @@ class AbstractNeo4JElementStateHandlerTest {
     @Mock
     private Value value;
 
-    private AbstractNeo4JElementStateHandler<Neo4JElementState> sut;
+    @Mock
+    private AbstractQueryBuilder queryBuilder;
+
+    private AbstractNeo4JElementStateHandler<Neo4JElementState, AbstractQueryBuilder> sut;
 
     @BeforeEach
     void stubStatements() {
-        sut = new AbstractNeo4JElementStateHandler<Neo4JElementState>(statementExecutor) {
+        sut = new AbstractNeo4JElementStateHandler<Neo4JElementState, AbstractQueryBuilder>(statementExecutor) {
             @Override
             protected Pair<Long, Neo4JElementState> getIdAndConvertToState(final Record r) {
                 return new Pair<>(1l, state);
@@ -91,6 +97,12 @@ class AbstractNeo4JElementStateHandlerTest {
             protected Statement createCreateIndexCommand(@Nonnull final Set<String> labels, final String propertyName) {
                 return createIndexStmt;
             }
+
+            @Nonnull
+            @Override
+            protected AbstractQueryBuilder query() {
+                return queryBuilder;
+            }
         };
         when(statementExecutor.executeStatement(any())).then(i -> {
             final Iterator<Record> iter = Stream.of(record).iterator();
@@ -99,6 +111,7 @@ class AbstractNeo4JElementStateHandlerTest {
             when(result.next()).then(ii -> iter.next());
             return result;
         });
+        when(queryBuilder.build()).thenReturn(Optional.of(queryStmt));
         when(record.get(0)).thenReturn(value);
         when(type.constructor()).thenReturn(TypeConstructor.NUMBER);
         when(value.type()).thenReturn(type);
@@ -151,4 +164,18 @@ class AbstractNeo4JElementStateHandlerTest {
         sut.createIndex(ImmutableSet.of("x"), "property");
         verify(statementExecutor, times(1)).executeStatement(createIndexStmt);
     }
+
+    @Test
+    void query() {
+        final Function<AbstractQueryBuilder, AbstractQueryBuilder> queryFun = mock(Function.class);
+        when(queryFun.apply(any())).then(i -> i.getArgument(0));
+
+        // when: 'applying the query'
+        assertEquals(ImmutableMap.of(1l, state), ImmutableMap.copyOf(sut.query(queryFun)));
+
+        // and: 'the query statements are executed'
+        verify(statementExecutor, times(1)).executeStatement(queryStmt);
+        verify(statementExecutor, times(1)).retrieveRecords(queryStmt);
+    }
+
 }

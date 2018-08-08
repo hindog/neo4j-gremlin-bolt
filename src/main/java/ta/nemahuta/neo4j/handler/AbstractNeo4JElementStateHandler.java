@@ -8,18 +8,24 @@ import org.neo4j.driver.internal.types.TypeRepresentation;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.Value;
+import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
+import ta.nemahuta.neo4j.query.vertex.VertexQueryBuilder;
 import ta.nemahuta.neo4j.session.StatementExecutor;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Slf4j
-public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementState> implements Neo4JElementStateHandler<S> {
+public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementState, Q extends AbstractQueryBuilder>
+        implements Neo4JElementStateHandler<S, Q> {
 
     @NonNull
     protected final StatementExecutor statementExecutor;
@@ -137,5 +143,19 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
      */
     @Nonnull
     protected abstract Statement createCreateIndexCommand(@Nonnull Set<String> labels, @Nonnull String propertyName);
+
+    /**
+     * @return a new {@link VertexQueryBuilder}
+     */
+    @Nonnull
+    protected abstract Q query();
+
+    @Override
+    public Map<Long, S> query(@Nonnull final Function<Q, Q> query) {
+        return query.apply(this.query()).build()
+                .map(statementExecutor::retrieveRecords)
+                .map(records -> records.map(this::getIdAndConvertToState).collect(Collectors.toMap(Pair::getValue0, Pair::getValue1)))
+                .orElseGet(Collections::emptyMap);
+    }
 
 }

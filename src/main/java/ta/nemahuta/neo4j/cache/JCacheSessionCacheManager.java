@@ -11,7 +11,9 @@ import javax.cache.CacheManager;
 import javax.cache.configuration.Factory;
 import javax.cache.configuration.MutableConfiguration;
 import javax.cache.expiry.AccessedExpiryPolicy;
+import javax.cache.expiry.EternalExpiryPolicy;
 import javax.cache.expiry.ExpiryPolicy;
+import javax.cache.spi.CachingProvider;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -27,39 +29,38 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
     protected final AtomicReference<Set<Long>> globalKnownEdgeIds = new AtomicReference<>(new HashSet<>());
     protected final Cache<Long, Neo4JVertexState> globalVertexCache;
     protected final AtomicReference<Set<Long>> globalKnownVertexIds = new AtomicReference<>(new HashSet<>());
+
     private final Neo4JConfiguration configuration;
     private final Factory<? extends ExpiryPolicy> expiryFactory;
 
-    private final String globalEdgeCacheName;
-    private final String globalVertexCacheName;
 
-    public JCacheSessionCacheManager(@Nonnull final CacheManager cacheManager,
+    public JCacheSessionCacheManager(@Nonnull final CachingProvider cachingProvider,
                                      @Nonnull final Neo4JConfiguration configuration) {
-        this.cacheManager = cacheManager;
+        this.cacheManager = Optional.ofNullable(configuration.getCacheConfiguration())
+                .map(cacheConfig -> cachingProvider.getCacheManager(cacheConfig, getClass().getClassLoader()))
+                .orElseGet(cachingProvider::getCacheManager);
         this.configuration = configuration;
-        final String sessionName = configuration.getHostname() + ":" + configuration.getPort();
-        this.globalEdgeCacheName = CACHE_NAME_EDGE_GLOBAL + "-" + sessionName;
-        this.globalVertexCacheName = CACHE_NAME_VERTEX_GLOBAL + "-" + sessionName;
-        this.globalEdgeCache = Optional.ofNullable(cacheManager.getCache(globalEdgeCacheName, Long.class, Neo4JEdgeState.class))
-                .orElseGet(() -> createEdgeCache(globalEdgeCacheName));
-        this.globalVertexCache = Optional.ofNullable(cacheManager.getCache(globalVertexCacheName, Long.class, Neo4JVertexState.class))
-                .orElseGet(() -> createVertexCache(globalVertexCacheName));
-        this.expiryFactory = () -> new AccessedExpiryPolicy(configuration.getCacheExpiryDuration());
+        this.globalEdgeCache = getOrCreateCache(CACHE_NAME_EDGE_GLOBAL, Neo4JEdgeState.class);
+        this.globalVertexCache = getOrCreateCache(CACHE_NAME_VERTEX_GLOBAL, Neo4JVertexState.class);
+        this.expiryFactory = Optional.ofNullable(configuration.getCacheExpiryDuration())
+                .map(AccessedExpiryPolicy::factoryOf)
+                .orElseGet(EternalExpiryPolicy::factoryOf);
     }
 
-    private Cache<Long, Neo4JVertexState> createVertexCache(final String name) {
-        final MutableConfiguration<Long, Neo4JVertexState> cacheConfig = new MutableConfiguration<>();
-        cacheConfig.setExpiryPolicyFactory(expiryFactory);
-        cacheConfig.setStatisticsEnabled(this.configuration.isCacheStatistics());
-        return cacheManager.createCache(name, cacheConfig);
+    protected <E> Cache<Long, E> getOrCreateCache(final String globalEdgeCacheName, Class<E> elementCls) {
+        return Optional.ofNullable(cacheManager.getCache(globalEdgeCacheName, Long.class, elementCls))
+                .orElseGet(() -> cacheManager.createCache(globalEdgeCacheName, createCacheConfiguration()));
     }
 
-    protected Cache<Long, Neo4JEdgeState> createEdgeCache(final String name) {
-        final MutableConfiguration<Long, Neo4JEdgeState> cacheConfig = new MutableConfiguration<>();
+    @Nonnull
+    private <V> MutableConfiguration<Long, V> createCacheConfiguration() {
+        final MutableConfiguration<Long, V> cacheConfig = new MutableConfiguration<>();
         cacheConfig.setExpiryPolicyFactory(expiryFactory);
         cacheConfig.setStatisticsEnabled(this.configuration.isCacheStatistics());
-        return cacheManager.createCache(name, cacheConfig);
+        cacheConfig.setManagementEnabled(this.configuration.isCacheStatistics());
+        return cacheConfig;
     }
+
 
     @Override
     public SessionCache createSessionCache(final Object id) {
@@ -75,8 +76,8 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
     public void close() {
         globalVertexCache.close();
         globalEdgeCache.close();
-        cacheManager.destroyCache(globalEdgeCacheName);
-        cacheManager.destroyCache(globalVertexCacheName);
+        cacheManager.destroyCache(globalEdgeCache.getName());
+        cacheManager.destroyCache(globalVertexCache.getName());
     }
 
 }

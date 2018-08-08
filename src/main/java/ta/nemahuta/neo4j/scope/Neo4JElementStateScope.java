@@ -1,5 +1,6 @@
 package ta.nemahuta.neo4j.scope;
 
+import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.session.RollbackAndCommit;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
 
@@ -7,8 +8,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Function;
 
-public interface Neo4JElementStateScope<S extends Neo4JElementState> extends RollbackAndCommit {
+public interface Neo4JElementStateScope<S extends Neo4JElementState, Q extends AbstractQueryBuilder> extends RollbackAndCommit {
 
     /**
      * Modifies the element state for the element with the provided id.
@@ -52,5 +54,13 @@ public interface Neo4JElementStateScope<S extends Neo4JElementState> extends Rol
      */
     @Nonnull
     Map<Long, S> getAll(@Nonnull Collection<Long> ids);
+
+    /**
+     * Queries elements using the provided query function.
+     *
+     * @param query the query to be processed
+     * @return the elements which have been loaded and cached
+     */
+    Map<Long, S> queryAndCache(@Nonnull final Function<Q, Q> query);
 
 }
