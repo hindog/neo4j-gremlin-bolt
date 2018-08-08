@@ -3,7 +3,7 @@ plugins {
     id 'java'
     id 'maven-publish'
     id 'jacoco'
-    id 'com.jfrog.bintray' version '1.8.0'
+    id 'com.jfrog.bintray' version '1.8.4'
 }
 
 group = 'ta.nemahuta.neo4j'
@@ -45,7 +45,7 @@ dependencies {
     }
 
     compile group: 'javax.cache', name: 'cache-api', version: '1.1.0'
-    compile group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '1.6.1'
+    compile group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '1.6.2'
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
     compile group: 'com.google.guava', name: 'guava', version: '25.1-jre'
 
