@@ -1,10 +1,12 @@
 package ta.nemahuta.neo4j.structure;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 import ta.nemahuta.neo4j.cache.JCacheSessionCacheManager;
+import ta.nemahuta.neo4j.cache.NopSessionCacheManager;
 import ta.nemahuta.neo4j.cache.SessionCacheManager;
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
 
@@ -21,6 +23,7 @@ import java.util.function.Supplier;
  *
  * @author Christian Heike (christian.heike@icloud.com)
  */
+@Slf4j
 public class Neo4JGraphFactory implements AutoCloseable, Supplier<Graph> {
 
     private final SessionCacheManager cacheManager;
@@ -28,7 +31,19 @@ public class Neo4JGraphFactory implements AutoCloseable, Supplier<Graph> {
     private final Driver driver;
 
     public Neo4JGraphFactory(@Nonnull final Neo4JConfiguration configuration) {
-        this(new JCacheSessionCacheManager(Caching.getCachingProvider(), configuration), configuration);
+        this(getCacheManager(configuration), configuration);
+    }
+
+    @Nonnull
+    protected static SessionCacheManager getCacheManager(@Nonnull final Neo4JConfiguration configuration) {
+        return Optional.ofNullable(configuration.isCacheDisabled() ? null : Caching.getCachingProvider())
+                .map(provider -> (SessionCacheManager) new JCacheSessionCacheManager(provider, configuration))
+                .orElseGet(() -> {
+                    if (configuration.isCacheStatistics()) {
+                        log.warn("Caching is not disabled, but no cache manager found.");
+                    }
+                    return new NopSessionCacheManager();
+                });
     }
 
     public Neo4JGraphFactory(@Nonnull final SessionCacheManager cacheManager,

@@ -1,7 +1,6 @@
 package ta.nemahuta.neo4j.cache;
 
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
-import ta.nemahuta.neo4j.scope.IdCache;
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 import ta.nemahuta.neo4j.state.Neo4JVertexState;
 
@@ -14,21 +13,16 @@ import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.EternalExpiryPolicy;
 import javax.cache.expiry.ExpiryPolicy;
 import javax.cache.spi.CachingProvider;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
-public class JCacheSessionCacheManager implements SessionCacheManager {
+public class JCacheSessionCacheManager extends AbstractSessionCacheManager {
 
     public static final String CACHE_NAME_EDGE_GLOBAL = "edge-global";
     public static final String CACHE_NAME_VERTEX_GLOBAL = "vertex-global";
 
     protected final CacheManager cacheManager;
-    protected final Cache<Long, Neo4JEdgeState> globalEdgeCache;
-    protected final AtomicReference<Set<Long>> globalKnownEdgeIds = new AtomicReference<>(new HashSet<>());
-    protected final Cache<Long, Neo4JVertexState> globalVertexCache;
-    protected final AtomicReference<Set<Long>> globalKnownVertexIds = new AtomicReference<>(new HashSet<>());
+    private final Cache<Long, Neo4JEdgeState> globalEdgeCache;
+    private final Cache<Long, Neo4JVertexState> globalVertexCache;
 
     private final Neo4JConfiguration configuration;
     private final Factory<? extends ExpiryPolicy> expiryFactory;
@@ -66,9 +60,9 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
     public SessionCache createSessionCache(final Object id) {
         return new DefaultSessionCache(
                 new HierarchicalJCache<>(globalEdgeCache),
-                new IdCache<>(globalKnownEdgeIds),
+                createIdCache(globalKnownEdgeIds),
                 new HierarchicalJCache<>(globalVertexCache),
-                new IdCache<>(globalKnownVertexIds)
+                createIdCache(globalKnownVertexIds)
         );
     }
 

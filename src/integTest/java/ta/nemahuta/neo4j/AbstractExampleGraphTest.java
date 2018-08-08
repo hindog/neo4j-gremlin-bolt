@@ -83,6 +83,7 @@ public abstract class AbstractExampleGraphTest {
                         .hostname("localhost")
                         .port(7687)
                         .cacheConfiguration(AbstractExampleGraphTest.class.getResource("/ehCache.xml").toURI())
+                        .cacheDisabled(true)
                         .authToken(AuthTokens.basic("neo4j", "neo4j123")).build()
         ));
     }

@@ -96,6 +96,10 @@ public class Neo4JConfiguration {
     @ConfigurationKey
     private final URI cacheConfiguration;
 
+    @Getter
+    @ConfigurationKey
+    private final boolean cacheDisabled;
+
     @Nonnull
     public Configuration toApacheConfiguration() {
         final Configuration result = new BaseConfiguration();
