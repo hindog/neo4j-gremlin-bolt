@@ -45,7 +45,7 @@ dependencies {
     }
 
     compile group: 'javax.cache', name: 'cache-api', version: '1.1.0'
-    compile group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '1.6.2'
+    compile group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '1.7.2'
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
     compile group: 'com.google.guava', name: 'guava', version: '25.1-jre'
 
@@ -110,8 +110,8 @@ jacocoTestReport {
     dependsOn test, integrationTest
     executionData = files(test.jacoco.destinationFile, integrationTest.jacoco.destinationFile)
     reports {
-        xml.enabled = true
-        xml.destination "${buildDir}/reports/jacoco/report.xml"
+//        xml.enabled = true
+//        xml.destination "${buildDir}/reports/jacoco/report.xml"
     }
 }
 
