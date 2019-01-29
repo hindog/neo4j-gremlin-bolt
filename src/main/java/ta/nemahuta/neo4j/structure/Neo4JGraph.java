@@ -190,23 +190,23 @@ public class Neo4JGraph implements Graph {
     /**
      * Creates an index for a vertex property using the provided labels to match them.
      *
-     * @param labels       the labels of the vertices to match
-     * @param propertyName the name of the property to create an index for
+     * @param label         the labels of the vertices to match
+     * @param propertyNames the names of the properties to create an index for
      */
-    public void createVertexPropertyIndex(@Nonnull final Set<String> labels,
-                                          @Nonnull final String propertyName) {
-        vertexStateHandler.createIndex(labels, propertyName);
+    public void createVertexPropertyIndex(@Nonnull final String label,
+                                          @Nonnull final Set<String> propertyNames) {
+        vertexStateHandler.createIndex(label, propertyNames);
     }
 
     /**
      * Creates an index for a edge property using the provided label to match them.
      *
-     * @param label        the labels of the vertices to match
-     * @param propertyName the name of the property to create an index for
+     * @param label         the labels of the vertices to match
+     * @param propertyNames the names of the properties to create an index for
      */
     public void createEdgePropertyIndex(@Nonnull final String label,
-                                        @Nonnull final String propertyName) {
-        edgeStateHandler.createIndex(Collections.singleton(label), propertyName);
+                                        @Nonnull final Set<String> propertyNames) {
+        edgeStateHandler.createIndex(label, propertyNames);
     }
 
     private <R, S extends Neo4JElementState> Iterator<R> loadAndReturnFoundElementsOnly(@Nonnull final Neo4JElementStateScope<S, ? extends AbstractQueryBuilder> scope,

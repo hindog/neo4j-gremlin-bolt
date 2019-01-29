@@ -94,7 +94,7 @@ class AbstractNeo4JElementStateHandlerTest {
 
             @Nonnull
             @Override
-            protected Statement createCreateIndexCommand(@Nonnull final Set<String> labels, final String propertyName) {
+            protected Statement createCreateIndexCommand(@Nonnull final String label, final Set<String> propertyNames) {
                 return createIndexStmt;
             }
 
@@ -161,7 +161,7 @@ class AbstractNeo4JElementStateHandlerTest {
     @Test
     void createIndex() {
         // when: ''
-        sut.createIndex(ImmutableSet.of("x"), "property");
+        sut.createIndex("x", ImmutableSet.of("property"));
         verify(statementExecutor, times(1)).executeStatement(createIndexStmt);
     }
 

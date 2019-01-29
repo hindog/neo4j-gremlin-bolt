@@ -16,7 +16,6 @@ import ta.nemahuta.neo4j.state.Neo4JEdgeState;
 import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.Set;
-import java.util.function.Function;
 
 public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4JEdgeState, EdgeQueryBuilder> {
 
@@ -79,13 +78,10 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
 
     @Nonnull
     @Override
-    protected Statement createCreateIndexCommand(@Nonnull final Set<String> labels,
-                                                 @Nonnull final String propertyName) {
-        if (labels.size() != 1) {
-            throw new IllegalArgumentException("Expected exactly one label, but got: " + labels.size());
-        }
+    protected Statement createCreateIndexCommand(@Nonnull final String label,
+                                                 @Nonnull final Set<String> propertyNames) {
         return query()
-                .andThen(b -> b.createPropertyIndex(labels.iterator().next(), propertyName))
+                .andThen(b -> b.createPropertyIndex(label, propertyNames))
                 .build().get();
     }
 

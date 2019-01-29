@@ -1,6 +1,10 @@
 package ta.nemahuta.neo4j.query.vertex;
 
-import ta.nemahuta.neo4j.query.operation.*;
+import ta.nemahuta.neo4j.query.operation.CreatePropertyIndex;
+import ta.nemahuta.neo4j.query.operation.DeleteOperation;
+import ta.nemahuta.neo4j.query.operation.ReturnIdOperation;
+import ta.nemahuta.neo4j.query.operation.UpdateLabelsOperation;
+import ta.nemahuta.neo4j.query.operation.UpdatePropertiesOperation;
 import ta.nemahuta.neo4j.query.vertex.operation.CreateVertexOperation;
 import ta.nemahuta.neo4j.query.vertex.operation.ReturnVertexOperation;
 
@@ -80,14 +84,14 @@ public abstract class VertexQueryFactory extends VertexQueryPredicateFactory {
     /**
      * Create a new property index for vertices with the provided labels.
      *
-     * @param labels       the labels to be matched
-     * @param propertyName the property name to create an index on
+     * @param label         the label to be matched for the index
+     * @param propertyNames the property names to create an index for
      * @return the operation
      */
     @Nonnull
-    public VertexOperation createPropertyIndex(@Nonnull final Set<String> labels,
-                                               @Nonnull final String propertyName) {
-        return new CreatePropertyIndex(getPartition().ensurePartitionLabelsSet(labels), propertyName);
+    public VertexOperation createPropertyIndex(@Nonnull final String label,
+                                               @Nonnull final Set<String> propertyNames) {
+        return new CreatePropertyIndex(label, propertyNames);
     }
 
 }

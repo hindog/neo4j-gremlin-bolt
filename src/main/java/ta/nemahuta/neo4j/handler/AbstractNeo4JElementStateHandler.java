@@ -92,9 +92,9 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
     }
 
     @Override
-    public void createIndex(@Nonnull final Set<String> labels,
-                            @Nonnull final String propertyName) {
-        statementExecutor.executeStatement(createCreateIndexCommand(labels, propertyName));
+    public void createIndex(@Nonnull final String label,
+                            @Nonnull final Set<String> propertyNames) {
+        statementExecutor.executeStatement(createCreateIndexCommand(label, propertyNames));
     }
 
     /**
@@ -137,12 +137,12 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
     /**
      * Create a command which creates an index for the property of all elements which match the provided labels.
      *
-     * @param labels       the labels to be matched
-     * @param propertyName the name of the property
+     * @param label         the label to be matched
+     * @param propertyNames the names of the properties
      * @return the statement to be processed
      */
     @Nonnull
-    protected abstract Statement createCreateIndexCommand(@Nonnull Set<String> labels, @Nonnull String propertyName);
+    protected abstract Statement createCreateIndexCommand(@Nonnull String label, @Nonnull Set<String> propertyNames);
 
     /**
      * @return a new {@link VertexQueryBuilder}

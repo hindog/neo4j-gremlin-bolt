@@ -54,9 +54,9 @@ public interface Neo4JElementStateHandler<S extends Neo4JElementState, Q extends
     /**
      * Create an index for the element with the provided labels.
      *
-     * @param labels       the labels to be matched
-     * @param propertyName the name of the property to create the index for
+     * @param label         the labels to be matched
+     * @param propertyNames the names of the properties to create the index for
      */
-    void createIndex(@Nonnull Set<String> labels, @Nonnull String propertyName);
+    void createIndex(@Nonnull String label, @Nonnull Set<String> propertyNames);
 
 }

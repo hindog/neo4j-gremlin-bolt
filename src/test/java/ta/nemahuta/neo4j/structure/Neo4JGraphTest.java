@@ -149,13 +149,13 @@ class Neo4JGraphTest {
     @Test
     void createEdgePropertyIndex() {
         stub.stubStatementExecution("CREATE INDEX ON :`relation`(property)", ImmutableMap.of(), mock(StatementResult.class));
-        sut.createEdgePropertyIndex("relation", "property");
+        sut.createEdgePropertyIndex("relation", Collections.singleton("property"));
     }
 
     @Test
     void createVertexPropertyIndex() {
-        stub.stubStatementExecution("CREATE INDEX ON :`v1`:`v2`:`x`(property)", ImmutableMap.of(), mock(StatementResult.class));
-        sut.createVertexPropertyIndex(ImmutableSet.of("v1", "v2"), "property");
+        stub.stubStatementExecution("CREATE INDEX ON :`v1`(property1,property2)", ImmutableMap.of(), mock(StatementResult.class));
+        sut.createVertexPropertyIndex("v1", ImmutableSet.of("property1", "property2"));
     }
 
     @Test

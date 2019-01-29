@@ -174,14 +174,14 @@ public abstract class EdgeQueryFactory {
     /**
      * Create a new property index for edge with the provided label.
      *
-     * @param label        the label to be matched
-     * @param propertyName the property name to create an index on
+     * @param label         the label to be matched
+     * @param propertyNames the property names to create an index for
      * @return the operation
      */
     @Nonnull
     public EdgeOperation createPropertyIndex(@Nonnull final String label,
-                                             @Nonnull final String propertyName) {
-        return new CreatePropertyIndex(Collections.singleton(label), propertyName);
+                                             @Nonnull final Set<String> propertyNames) {
+        return new CreatePropertyIndex(label, propertyNames);
     }
 
     /**
