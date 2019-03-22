@@ -35,19 +35,19 @@ dependencies {
     final lombokVersion = "1.16.20"
     final mockitoVersion = "2.18.3"
     final junitVersion = "5.2.0"
-    final ehCacheVersion = "3.5.2"
+    final ehCacheVersion = "3.7.0"
 
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
-    compile(group: 'org.apache.tinkerpop', name: 'gremlin-core', version: '3.3.0') {
+    compile(group: 'org.apache.tinkerpop', name: 'gremlin-core', version: '3.4.0') {
         exclude(group: "org.slf4j", module: 'slf4j-log4j12')
     }
 
     compile group: 'javax.cache', name: 'cache-api', version: '1.1.0'
-    compile group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '1.7.2'
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
-    compile group: 'com.google.guava', name: 'guava', version: '25.1-jre'
+    compile group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '1.7.3'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.26'
+    compile group: 'com.google.guava', name: 'guava', version: '27.1-jre'
 
     ["junit-jupiter-api", "junit-jupiter-params"].each {
         testCompile "org.junit.jupiter:${it}:${junitVersion}"
