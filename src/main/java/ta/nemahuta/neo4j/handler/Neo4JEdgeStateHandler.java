@@ -3,12 +3,12 @@ package ta.nemahuta.neo4j.handler;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.javatuples.Pair;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.types.Relationship;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.edge.EdgeQueryBuilder;
+import ta.nemahuta.neo4j.query.edge.EdgeQueryFactory;
 import ta.nemahuta.neo4j.query.vertex.VertexQueryBuilder;
 import ta.nemahuta.neo4j.session.StatementExecutor;
 import ta.nemahuta.neo4j.state.Neo4JEdgeState;
@@ -27,13 +27,21 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
         this.readPartition = readPartition;
     }
 
+
+    @Nonnull
     @Override
-    protected Pair<Long, Neo4JEdgeState> getIdAndConvertToState(final Record r) {
+    protected Neo4JEdgeState convertToState(@Nonnull final Record r) {
         final Relationship relationship = r.get(0).asRelationship();
         final long inId = relationship.endNodeId();
         final long outId = relationship.startNodeId();
-        final Neo4JEdgeState state = new Neo4JEdgeState(relationship.type(), ImmutableMap.copyOf(relationship.asMap()), inId, outId);
-        return new Pair<>(relationship.id(), state);
+        return new Neo4JEdgeState(relationship.type(), ImmutableMap.copyOf(relationship.asMap()), inId, outId);
+    }
+
+    @Nonnull
+    @Override
+    protected Long getId(@Nonnull final Record r) {
+        final Relationship relationship = r.get(0).asRelationship();
+        return relationship.id();
     }
 
     @Nonnull
@@ -74,6 +82,12 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
                 .where(b -> b.whereIds(ImmutableSet.copyOf(ids)))
                 .andThen(b -> b.returnEdge())
                 .build().get();
+    }
+
+    @Nonnull
+    @Override
+    protected Statement createLoadAllIdsCommand() {
+        return query().andThen(EdgeQueryFactory::returnId).build().get();
     }
 
     @Nonnull

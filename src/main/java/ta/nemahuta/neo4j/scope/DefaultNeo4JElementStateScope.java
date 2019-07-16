@@ -1,5 +1,6 @@
 package ta.nemahuta.neo4j.scope;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,9 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
@@ -22,8 +25,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -38,7 +39,7 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState, Q extend
     private final HierarchicalCache<Long, S> hierarchicalCache;
 
     @NonNull
-    private final Neo4JElementStateHandler remoteElementHandler;
+    private final Neo4JElementStateHandler<S, Q> remoteElementHandler;
 
     @NonNull
     private final IdCache<Long> idCache;
@@ -94,29 +95,38 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState, Q extend
     @Override
     public Map<Long, S> getAll(@Nonnull final Collection<Long> ids) {
         return locked(ReadWriteLock::readLock, () -> {
-            log.trace("Retrieving {} items", ids.size());
+
+            log.trace("Retrieving {} items", ids.isEmpty() ? "all" : ids.size());
             final Map<Long, S> results = new ConcurrentHashMap<>();
-            final Collection<Long> idsToBeRetrieved = ids.isEmpty() ? idCache.getAllSelector() : ids;
-            if (idsToBeRetrieved.isEmpty()) {
-                log.debug("Loading complete graph.");
+            final Set<Long> remainingIds = knownIdsForSelector(ids);
+
+            log.trace("Trying {} elements from cache", remainingIds.size());
+            putAllFromCache(remainingIds, results);
+            log.trace("Got {} elements from cache", results.size());
+
+            log.trace("Loading {} elements from the session.", remainingIds.size());
+            loadFromSession(remainingIds, results);
+
+            if (!remainingIds.isEmpty()) {
+                if (knownIdsForSelector(remainingIds).size() == remainingIds.size()) {
+                    throw new NoSuchElementException("Could not retrieve the items with the following ids: " +
+                            String.join(",", Joiner.on(",").join(remainingIds)));
+                } else {
+                    log.debug("Elements which have been deleted by a parallel transaction: {}", remainingIds);
+                }
             }
-            if (!idsToBeRetrieved.isEmpty()) {
-                log.trace("Putting {} elements from cache", idsToBeRetrieved.size());
-                putAllFromCache(idsToBeRetrieved, results);
-            }
-            final int fromCacheSize = results.size();
-            final Set<Long> idsToBeLoaded = idsToBeRetrieved.stream().filter(id -> !results.containsKey(id)).collect(Collectors.toSet());
-            log.trace("Found {} elements to be in scope already.", results.size());
-            if (!idsToBeLoaded.isEmpty() || idsToBeRetrieved.isEmpty()) {
-                log.trace("Loading the other {} elements.", idsToBeLoaded.size());
-                loadFromSession(idsToBeLoaded, results);
-            }
-            if (!idsToBeRetrieved.isEmpty() && idsToBeRetrieved.size() != results.size()) {
-                log.warn("Could not retrieve all {} elements, got {} from cache, and {} from the session.", idsToBeLoaded.size(), fromCacheSize, results.size() - fromCacheSize);
-            }
-            // Now we load all the remaining elements and put them to the cache and in the results
+
             return results;
         });
+    }
+
+    private Set<Long> knownIdsForSelector(@Nonnull final Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            log.debug("Loading complete graph...");
+            return idCache.getAll(remoteElementHandler::retrieveAllIds);
+        } else {
+            return idCache.filterExisting(ids, remoteElementHandler::retrieveAllIds);
+        }
     }
 
     @Override
@@ -128,35 +138,27 @@ public class DefaultNeo4JElementStateScope<S extends Neo4JElementState, Q extend
         return ImmutableMap.copyOf(queried);
     }
 
-    private void loadFromSession(final Set<Long> selectorOrEmpty, final Map<Long, S> results) {
-        final Map<Long, S> loaded = remoteElementHandler.getAll(selectorOrEmpty);
-        log.trace("Loaded {} items", loaded.size());
-        for (final Map.Entry<Long, S> entry : loaded.entrySet()) {
-            if (!idCache.isRemoved(entry.getKey())) {
-                results.put(entry.getKey(), entry.getValue());
-                hierarchicalCache.put(entry.getKey(), entry.getValue());
-            }
+    private void loadFromSession(final Set<Long> ids, final Map<Long, S> results) {
+        if (ids.isEmpty()) {
+            return;
         }
-        if (selectorOrEmpty.isEmpty()) {
-            idCache.completeLoad(results.keySet());
-        }
+        remoteElementHandler.getAll(ids).forEach((k, v) -> {
+            hierarchicalCache.put(k, v);
+            results.put(k, v);
+        });
+        ids.removeAll(results.keySet());
     }
 
-    private void putAllFromCache(final Collection<Long> selectorOrEmpty, final Map<Long, S> results) {
-        final long beforeSize = results.size();
-        final Stream<Long> selector = (
-                !selectorOrEmpty.isEmpty() ?
-                        selectorOrEmpty.stream() :
-                        hierarchicalCache.getKeys().filter(key -> !idCache.isRemoved(key))
-        ).distinct();
-
-        selector.forEach(key -> {
-            final S value = this.hierarchicalCache.get(key);
-            if (value != null) {
-                results.put(key, value);
-            }
-        });
-        log.trace("Put {} elements from cache", results.size() - beforeSize);
+    private void putAllFromCache(final Collection<Long> ids, final Map<Long, S> results) {
+        if (ids.isEmpty()) {
+            return;
+        }
+        ids.parallelStream().forEach(k ->
+                Optional.ofNullable(this.hierarchicalCache.get(k)).ifPresent(v -> {
+                    results.put(k, v);
+                })
+        );
+        ids.removeAll(results.keySet());
     }
 
     private <S> S locked(@Nonnull final Function<ReadWriteLock, Lock> lockFunction, @Nonnull final Supplier<S> fun) {

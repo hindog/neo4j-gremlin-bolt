@@ -2,7 +2,6 @@ package ta.nemahuta.neo4j.handler;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import org.javatuples.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +40,7 @@ class AbstractNeo4JElementStateHandlerTest {
     private Neo4JElementState state;
 
     @Mock
-    private Statement deleteStmt, createStmt, updateStmt, loadStmt, createIndexStmt, queryStmt;
+    private Statement deleteStmt, createStmt, updateStmt, loadStmt, createIndexStmt, queryStmt, loadIdsStmt;
 
     @Mock(answer = Answers.CALLS_REAL_METHODS)
     private StatementExecutor statementExecutor;
@@ -63,9 +62,17 @@ class AbstractNeo4JElementStateHandlerTest {
     @BeforeEach
     void stubStatements() {
         sut = new AbstractNeo4JElementStateHandler<Neo4JElementState, AbstractQueryBuilder>(statementExecutor) {
+
+            @Nonnull
             @Override
-            protected Pair<Long, Neo4JElementState> getIdAndConvertToState(final Record r) {
-                return new Pair<>(1l, state);
+            protected Neo4JElementState convertToState(@Nonnull final Record r) {
+                return state;
+            }
+
+            @Nonnull
+            @Override
+            protected Long getId(@Nonnull final Record r) {
+                return 1L;
             }
 
             @Nonnull
@@ -90,6 +97,12 @@ class AbstractNeo4JElementStateHandlerTest {
             @Override
             protected Statement createLoadCommand(@Nonnull final Set<Long> ids) {
                 return loadStmt;
+            }
+
+            @Nonnull
+            @Override
+            protected Statement createLoadAllIdsCommand() {
+                return loadIdsStmt;
             }
 
             @Nonnull

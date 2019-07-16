@@ -15,7 +15,6 @@ import ta.nemahuta.neo4j.state.Neo4JElementState;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -32,16 +31,28 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
 
     @Nonnull
     @Override
-    public Map<Long, S> getAll(@Nonnull final Set<Long> idsToBeLoaded) {
-        final Map<Long, S> results = new HashMap<>();
-        statementExecutor.retrieveRecords(createLoadCommand(idsToBeLoaded)).forEach(r -> {
-            final Pair<Long, S> idAndState = getIdAndConvertToState(r);
-            results.put(idAndState.getValue0(), idAndState.getValue1());
-        });
-        return results;
+    public Set<Long> retrieveAllIds() {
+        return statementExecutor.executeStatement(createLoadAllIdsCommand()).stream().map(this::getId).collect(Collectors.toSet());
     }
 
-    protected abstract Pair<Long, S> getIdAndConvertToState(final Record r);
+    @Nonnull
+    @Override
+    public Map<Long, S> getAll(@Nonnull final Set<Long> idsToBeLoaded) {
+        return statementExecutor.retrieveRecords(createLoadCommand(idsToBeLoaded))
+                .map(this::getIdAndConvertToState)
+                .collect(Collectors.toMap(Pair::getValue0, Pair::getValue1));
+    }
+
+    @Nonnull
+    protected Pair<Long, S> getIdAndConvertToState(@Nonnull final Record r) {
+        return new Pair<>(getId(r), convertToState(r));
+    }
+
+    @Nonnull
+    protected abstract S convertToState(@Nonnull final Record r);
+
+    @Nonnull
+    protected abstract Long getId(@Nonnull final Record r);
 
     @Override
     public void update(final long id, @Nonnull final S currentState, @Nonnull final S newState) {
@@ -133,6 +144,14 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
      */
     @Nonnull
     protected abstract Statement createLoadCommand(@Nonnull Set<Long> ids);
+
+    /**
+     * Create a load command returning all ids for the elements in the graph.
+     *
+     * @return the command
+     */
+    @Nonnull
+    protected abstract Statement createLoadAllIdsCommand();
 
     /**
      * Create a command which creates an index for the property of all elements which match the provided labels.

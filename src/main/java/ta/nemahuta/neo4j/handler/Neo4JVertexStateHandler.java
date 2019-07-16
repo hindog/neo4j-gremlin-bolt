@@ -2,7 +2,6 @@ package ta.nemahuta.neo4j.handler;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import org.javatuples.Pair;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.types.Node;
@@ -26,13 +25,20 @@ public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Ne
         this.readPartition = readPartition;
     }
 
+    @Nonnull
     @Override
-    protected Pair<Long, Neo4JVertexState> getIdAndConvertToState(final Record r) {
+    protected Neo4JVertexState convertToState(@Nonnull final Record r) {
         final Node n = r.get(0).asNode();
-        final Neo4JVertexState state = new Neo4JVertexState(
+        return new Neo4JVertexState(
                 ImmutableSet.copyOf(readPartition.ensurePartitionLabelsNotSet(n.labels())),
                 ImmutableMap.copyOf(n.asMap()));
-        return new Pair<>(n.id(), state);
+    }
+
+    @Nonnull
+    @Override
+    protected Long getId(@Nonnull final Record r) {
+        final Node n = r.get(0).asNode();
+        return n.id();
     }
 
     @Nonnull
@@ -76,6 +82,14 @@ public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Ne
 
     @Nonnull
     @Override
+    protected Statement createLoadAllIdsCommand() {
+        return query()
+                .match(b -> b.labelsMatch(readPartition.ensurePartitionLabelsSet(Collections.emptySet())))
+                .andThen(VertexQueryFactory::returnId).build().get();
+    }
+
+    @Nonnull
+    @Override
     protected Statement createCreateIndexCommand(@Nonnull final String label,
                                                  @Nonnull final Set<String> propertyNames) {
         return query()
@@ -87,5 +101,4 @@ public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Ne
     protected VertexQueryBuilder query() {
         return new VertexQueryBuilder(readPartition);
     }
-
 }

@@ -2,11 +2,9 @@ package ta.nemahuta.neo4j;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.jupiter.api.Test;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -58,12 +56,12 @@ class SimpleCreateAndLoadTest extends AbstractExampleGraphTest {
 
     @Test
     void parallelTest1() throws Exception {
-        parallelStream(1000, "/graph1-example.xml");
+        parallelStream(100, "/graph1-example.xml");
     }
 
     @Test
     void parallelTest2() throws Exception {
-        parallelStream(10, "/graph2-example.xml");
+        parallelStream(5, "/graph2-example.xml");
     }
 
     @Test
