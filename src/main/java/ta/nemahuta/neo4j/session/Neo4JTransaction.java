@@ -27,11 +27,19 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
     private Transaction wrapped;
 
     private static final Logger statementLogger = LoggerFactory.getLogger(Neo4JTransaction.class.getPackage().getName() + ".Statement");
+    private boolean modification = false;
 
     public Neo4JTransaction(@Nonnull final Neo4JGraph g,
                             @Nonnull final Session session) {
         super(g);
         this.session = session;
+    }
+
+    /**
+     * Marks the transaction to modify the underlying graph database.
+     */
+    public void markModifying() {
+        this.modification = true;
     }
 
     @Override
@@ -43,6 +51,7 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
     protected void doCommit() throws TransactionException {
         log.debug("Committing all entities in session scope of transaction {} in session {}", transactionHashCode(), session.hashCode());
 
+        log.debug("Committing all entities in session scope of transaction {} in session {}", transactionHashCode(), session.hashCode());
         Optional.ofNullable(wrapped)
                 .orElseThrow(org.apache.tinkerpop.gremlin.structure.Transaction.Exceptions::transactionMustBeOpenToReadWrite)
                 .success();
@@ -59,7 +68,6 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
     @Override
     protected void doRollback() throws TransactionException {
         log.debug("Rolling back all entities in sessions scope of transaction {} in session {}", transactionHashCode(), session.hashCode());
-
 
         Optional.ofNullable(wrapped)
                 .orElseThrow(org.apache.tinkerpop.gremlin.structure.Transaction.Exceptions::transactionMustBeOpenToReadWrite)

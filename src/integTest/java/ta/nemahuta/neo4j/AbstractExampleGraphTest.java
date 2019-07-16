@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.structure.io.IoCore;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -21,8 +22,20 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -114,16 +127,25 @@ public abstract class AbstractExampleGraphTest {
         compareGraph(params.getSource(), params.getVerticesCount(), params.getEdgesCount());
     }
 
-    protected <T> T withGraph(final GraphFunction<T> callable) throws Exception {
+    protected <T> T withGraphResult(final GraphFunction<T> callable) throws Exception {
         try (Graph graph = TL_GRAPH_FACTORY.get().get()) {
-            try (Transaction tx = graph.tx()) {
-                return callable.apply(graph);
+            Transaction tx = graph.tx();
+            tx.readWrite();
+            try {
+                final T result = callable.apply(graph);
+                tx.commit();
+                return result;
+            } catch (Exception ex) {
+                tx.rollback();
+                throw ex;
+            } finally {
+                tx.close();
             }
         }
     }
 
     protected void withGraph(final GraphConsumer consumer) throws Exception {
-        withGraph(graph -> {
+        withGraphResult(graph -> {
             consumer.consume(graph);
             return null;
         });
@@ -151,6 +173,29 @@ public abstract class AbstractExampleGraphTest {
                 graph.io(IoCore.graphml()).reader().create().readGraph(is, graph);
             }
         });
+    }
+
+    protected <T> void runInParallelAndAssert(@Nonnull final Supplier<Callable<T>> actualFn, final T expected, final int amount)
+            throws InterruptedException, ExecutionException {
+
+        final ExecutorService executor = Executors.newScheduledThreadPool(10);
+        final List<Callable<T>> callables = Stream.generate(actualFn).limit(amount).collect(Collectors.toList());
+        final List<Future<T>> futures = executor.invokeAll(callables);
+        executor.shutdown();
+        final List<T> results = new ArrayList<>();
+        for (final Future<T> future : futures) {
+            results.add(future.get());
+        }
+        final List<T> expectedList = Stream.generate(() -> expected).limit(amount).collect(Collectors.toList());
+        results.removeAll(expectedList);
+        assertEquals(Collections.emptyList(), results);
+    }
+
+    protected <T> Predicate<Vertex> propertyEquals(@Nonnull final String propertyName, @Nonnull final T value) {
+        return v -> {
+            final VertexProperty<T> p = v.property(propertyName);
+            return p.isPresent() && p.value().equals(value);
+        };
     }
 
     @FunctionalInterface

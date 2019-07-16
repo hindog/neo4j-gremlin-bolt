@@ -10,6 +10,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -31,6 +32,8 @@ import ta.nemahuta.neo4j.state.Neo4JVertexState;
 import ta.nemahuta.neo4j.testutils.StatementExecutorStub;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -131,17 +134,28 @@ class Neo4JGraphTest {
     @Test
     void vertices() {
         stub.stubVertexLoad("MATCH (v:`x`) WHERE ID(v) IN {vertexId1} RETURN v", ImmutableMap.of("vertexId1", Collections.singleton(1)), 1l);
+        when(knownVertexIds.filterExisting(ArgumentMatchers.any(), ArgumentMatchers.any())).thenAnswer(i ->
+                new HashSet<Long>(i.getArgument(0))
+        );
         assertEquals(1, ImmutableList.copyOf(sut.vertices(1l)).size());
     }
 
     @Test
     void verticesAll() {
-        stub.stubVertexLoad("MATCH (v:`x`) RETURN v", ImmutableMap.of(), 1l);
+        when(knownVertexIds.getAll(ArgumentMatchers.any())).thenAnswer(i -> {
+            final Set<Long> result = new HashSet<>();
+            result.add(1L);
+            return result;
+        });
+        stub.stubVertexLoad("MATCH (v:`x`) WHERE ID(v) IN {vertexId1} RETURN v", ImmutableMap.of("vertexId1", Collections.singleton(1)), 1l);
         assertEquals(1, ImmutableList.copyOf(sut.vertices()).size());
     }
 
     @Test
     void edges() {
+        when(knownEdgeIds.filterExisting(ArgumentMatchers.any(), ArgumentMatchers.any())).thenAnswer(i ->
+                new HashSet<Long>(i.getArgument(0))
+        );
         stub.stubEdgeLoad("MATCH (n:`x`)-[r]->(m:`x`) WHERE ID(r) IN {edgeId1} RETURN r", ImmutableMap.of("edgeId1", Collections.singleton(1)), 1l, 1l, 2l);
         assertEquals(1, ImmutableList.copyOf(sut.edges(1l)).size());
     }

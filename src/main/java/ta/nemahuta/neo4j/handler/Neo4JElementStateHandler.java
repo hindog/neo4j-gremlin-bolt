@@ -11,6 +11,14 @@ import java.util.function.Function;
 public interface Neo4JElementStateHandler<S extends Neo4JElementState, Q extends AbstractQueryBuilder> {
 
     /**
+     * Retrieve all identifiers in the graph.
+     *
+     * @return the identifiers in the graph
+     */
+    @Nonnull
+    Set<Long> retrieveAllIds();
+
+    /**
      * Loads the {@link Neo4JElementState} of the ids to be loaded.
      *
      * @param idsToBeLoaded the elements to be loaded
