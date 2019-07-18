@@ -32,7 +32,7 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
     @Nonnull
     @Override
     public Set<Long> retrieveAllIds() {
-        return statementExecutor.executeStatement(createLoadAllIdsCommand()).stream().map(this::getId).collect(Collectors.toSet());
+        return statementExecutor.executeStatement(createLoadAllIdsCommand()).stream().map(r -> r.get(0).asLong()).collect(Collectors.toSet());
     }
 
     @Nonnull

@@ -50,6 +50,16 @@ class SimpleCreateAndLoadTest extends AbstractExampleGraphTest {
     }
 
     @Test
+    void openAndCloseFactory() throws Exception {
+        checkGraph(SIMPLE);
+        resetGraphFactory();
+        withGraph(graph -> {
+            assertTrue(ImmutableList.copyOf(graph.vertices()).stream()
+                    .anyMatch(v -> Objects.equals(v.property("name").value(), "josh")));
+        });
+    }
+
+    @Test
     void checkCreateAndReadHugeGraph() throws Exception {
         checkGraph(COMPLEX);
     }

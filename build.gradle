@@ -7,7 +7,6 @@ plugins {
 }
 
 group = 'ta.nemahuta.neo4j'
-version = '1.6.2'
 
 description = "Tanemahuta's Neo4J Gremlin (Bolt) integration"
 
@@ -16,6 +15,7 @@ targetCompatibility = 1.8
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
+
 }
 
 repositories {
@@ -59,7 +59,7 @@ dependencies {
     }
     testRuntime "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
     testRuntime 'org.junit.platform:junit-platform-launcher:1.2.0'
-    
+
     testRuntime group: 'org.ehcache', name: 'ehcache', version: ehCacheVersion
 
     integTestCompile group: 'org.hamcrest', name: 'hamcrest-library', version: '2.1'
@@ -101,7 +101,7 @@ test {
 }
 
 jacoco {
-    toolVersion = '0.8.1'
+    toolVersion = '0.8.4'
 }
 
 test.jacoco.excludes['ta.nemahuta.neo4j.features.*']
@@ -110,8 +110,7 @@ jacocoTestReport {
     dependsOn test, integrationTest
     executionData = files(test.jacoco.destinationFile, integrationTest.jacoco.destinationFile)
     reports {
-//        xml.enabled = true
-//        xml.destination "${buildDir}/reports/jacoco/report.xml"
+        xml.enabled = true
     }
 }
 

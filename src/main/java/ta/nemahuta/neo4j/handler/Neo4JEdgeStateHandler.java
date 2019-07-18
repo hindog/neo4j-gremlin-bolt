@@ -87,7 +87,9 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
     @Nonnull
     @Override
     protected Statement createLoadAllIdsCommand() {
-        return query().andThen(EdgeQueryFactory::returnId).build().get();
+        return query()
+                .direction(Direction.BOTH)
+                .andThen(EdgeQueryFactory::returnId).build().get();
     }
 
     @Nonnull

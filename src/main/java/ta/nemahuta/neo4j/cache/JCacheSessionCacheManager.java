@@ -26,9 +26,9 @@ public class JCacheSessionCacheManager implements SessionCacheManager {
 
     protected final CacheManager cacheManager;
     protected final Cache<Long, Neo4JEdgeState> globalEdgeCache;
-    protected final AtomicReference<Set<Long>> globalKnownEdgeIds = new AtomicReference<>(new HashSet<>());
+    protected final AtomicReference<Set<Long>> globalKnownEdgeIds = new AtomicReference<>(null);
     protected final Cache<Long, Neo4JVertexState> globalVertexCache;
-    protected final AtomicReference<Set<Long>> globalKnownVertexIds = new AtomicReference<>(new HashSet<>());
+    protected final AtomicReference<Set<Long>> globalKnownVertexIds = new AtomicReference<>(null);
 
     private final Neo4JConfiguration configuration;
     private final Factory<? extends ExpiryPolicy> expiryFactory;

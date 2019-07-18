@@ -87,17 +87,28 @@ public abstract class AbstractExampleGraphTest {
         return TL_GRAPH_FACTORY.get();
     }
 
-    @BeforeAll
-    static private void createFactory() throws URISyntaxException {
+    protected void resetGraphFactory() throws URISyntaxException {
+        createFactoryFor(
+                Optional.ofNullable(TL_GRAPH_FACTORY.get())
+                        .map(f -> f.getConfiguration().getGraphName()).orElse(UUID.randomUUID().toString())
+        );
+    }
+
+    private static void createFactoryFor(@Nonnull final String graphName) throws URISyntaxException {
         closeFactory();
         TL_GRAPH_FACTORY.set(new Neo4JGraphFactory(
                 Neo4JConfiguration.builder()
-                        .graphName(UUID.randomUUID().toString())
+                        .graphName(graphName)
                         .hostname("localhost")
                         .port(7687)
                         .cacheConfiguration(AbstractExampleGraphTest.class.getResource("/ehCache.xml").toURI())
                         .authToken(AuthTokens.basic("neo4j", "neo4j123")).build()
         ));
+    }
+
+    @BeforeAll
+    static private void createFactory() throws URISyntaxException {
+        createFactoryFor(UUID.randomUUID().toString());
     }
 
     @AfterAll
