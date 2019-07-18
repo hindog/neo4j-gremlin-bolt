@@ -87,13 +87,13 @@ public class IdCache<K> implements RollbackAndCommit {
     @Override
     public void commit() {
         global.getAndUpdate(source -> {
-            if (source != null) {
+            if (source == null) {
+                return null;
+            } else {
                 final Set<K> updated = new HashSet<>(source);
                 updated.addAll(added);
                 updated.removeAll(removed);
                 return updated;
-            } else {
-                return source;
             }
         });
         resetLocalScope();
