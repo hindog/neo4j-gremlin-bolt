@@ -101,7 +101,7 @@ test {
 }
 
 jacoco {
-    toolVersion = '0.8.1'
+    toolVersion = '0.8.4'
 }
 
 test.jacoco.excludes['ta.nemahuta.neo4j.features.*']
@@ -110,8 +110,7 @@ jacocoTestReport {
     dependsOn test, integrationTest
     executionData = files(test.jacoco.destinationFile, integrationTest.jacoco.destinationFile)
     reports {
-//        xml.enabled = true
-//        xml.destination "${buildDir}/reports/jacoco/report.xml"
+        xml.enabled = true
     }
 }
 
