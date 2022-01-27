@@ -17,5 +17,4 @@ public interface StatementBuilderAppender {
      * @param parameters   the parameters to append to
      */
     void append(@Nonnull StringBuilder queryBuilder, @Nonnull Map<String, Object> parameters);
-
 }

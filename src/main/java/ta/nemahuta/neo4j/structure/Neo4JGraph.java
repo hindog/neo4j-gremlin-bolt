@@ -14,7 +14,7 @@ import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactoryClass;
-import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.Session;
 import ta.nemahuta.neo4j.cache.HierarchicalCache;
 import ta.nemahuta.neo4j.cache.SessionCache;
 import ta.nemahuta.neo4j.cache.SessionCacheManager;

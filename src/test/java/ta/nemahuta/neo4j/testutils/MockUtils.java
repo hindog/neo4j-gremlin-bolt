@@ -3,12 +3,12 @@ package ta.nemahuta.neo4j.testutils;
 import com.google.common.collect.ImmutableList;
 import org.neo4j.driver.internal.types.TypeConstructor;
 import org.neo4j.driver.internal.types.TypeRepresentation;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.types.MapAccessor;
-import org.neo4j.driver.v1.types.Node;
-import org.neo4j.driver.v1.types.Relationship;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.types.MapAccessor;
+import org.neo4j.driver.types.Node;
+import org.neo4j.driver.types.Relationship;
 
 import javax.annotation.Nonnull;
 import java.util.Iterator;
@@ -50,8 +50,8 @@ public class MockUtils {
         return relationship;
     }
 
-    public static StatementResult mockStatementResult(@Nonnull final Record... records) {
-        final StatementResult statementResult = mock(StatementResult.class);
+    public static Result mockStatementResult(@Nonnull final Record... records) {
+        final Result statementResult = mock(Result.class);
         final Iterator<Record> iter = Stream.of(records).iterator();
         when(statementResult.hasNext()).then(i -> iter.hasNext());
         when(statementResult.next()).then(i -> iter.next());

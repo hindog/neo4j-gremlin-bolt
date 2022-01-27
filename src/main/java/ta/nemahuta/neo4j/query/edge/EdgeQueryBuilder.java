@@ -38,8 +38,8 @@ public class EdgeQueryBuilder extends AbstractQueryBuilder {
 
     private final EdgeQueryFactory factory = new EdgeQueryFactory() {
 
-        @Getter(value = AccessLevel.PROTECTED, onMethod = @__(@Override))
-        protected final UniqueParamNameGenerator paramNameGenerator = new UniqueParamNameGenerator();
+        @Getter(value = AccessLevel.PROTECTED)
+        protected UniqueParamNameGenerator paramNameGenerator = new UniqueParamNameGenerator();
 
         @Override
         protected String getLhsAlias() {

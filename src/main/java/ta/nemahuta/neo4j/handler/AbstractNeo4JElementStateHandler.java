@@ -4,10 +4,12 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
+import org.neo4j.cypherdsl.core.Statement;
+import org.neo4j.driver.Query;
+import org.neo4j.driver.Value;
 import org.neo4j.driver.internal.types.TypeRepresentation;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.types.Node;
 import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.query.vertex.VertexQueryBuilder;
 import ta.nemahuta.neo4j.session.StatementExecutor;
@@ -115,7 +117,7 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
      * @return the statement to be processed
      */
     @Nonnull
-    protected abstract Statement createDeleteCommand(long id);
+    protected abstract Query createDeleteCommand(long id);
 
     /**
      * Create an update statement to be processed.
@@ -125,7 +127,7 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
      * @return the statement to be processed
      */
     @Nonnull
-    protected abstract Statement createUpdateCommand(long id, final S currentState, S state);
+    protected abstract Query createUpdateCommand(long id, final S currentState, S state);
 
     /**
      * Create an insert statement to be processed.
@@ -134,7 +136,7 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
      * @return the statement to be processed
      */
     @Nonnull
-    protected abstract Statement createInsertCommand(@Nonnull S state);
+    protected abstract Query createInsertCommand(@Nonnull S state);
 
     /**
      * Create a load command for the provided ids.
@@ -143,7 +145,7 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
      * @return the statement to be processed
      */
     @Nonnull
-    protected abstract Statement createLoadCommand(@Nonnull Set<Long> ids);
+    protected abstract Query createLoadCommand(@Nonnull Set<Long> ids);
 
     /**
      * Create a load command returning all ids for the elements in the graph.
@@ -151,7 +153,7 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
      * @return the command
      */
     @Nonnull
-    protected abstract Statement createLoadAllIdsCommand();
+    protected abstract Query createLoadAllIdsCommand();
 
     /**
      * Create a command which creates an index for the property of all elements which match the provided labels.
@@ -161,7 +163,7 @@ public abstract class AbstractNeo4JElementStateHandler<S extends Neo4JElementSta
      * @return the statement to be processed
      */
     @Nonnull
-    protected abstract Statement createCreateIndexCommand(@Nonnull String label, @Nonnull Set<String> propertyNames);
+    protected abstract Query createCreateIndexCommand(@Nonnull String label, @Nonnull Set<String> propertyNames);
 
     /**
      * @return a new {@link VertexQueryBuilder}

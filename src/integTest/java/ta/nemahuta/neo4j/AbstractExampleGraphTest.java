@@ -9,7 +9,7 @@ import org.apache.tinkerpop.gremlin.structure.io.IoCore;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.neo4j.driver.v1.AuthTokens;
+import org.neo4j.driver.AuthTokens;
 import org.xmlunit.matchers.CompareMatcher;
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
 import ta.nemahuta.neo4j.structure.Neo4JGraphFactory;

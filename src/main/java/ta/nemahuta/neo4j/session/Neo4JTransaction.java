@@ -3,10 +3,10 @@ package ta.nemahuta.neo4j.session;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tinkerpop.gremlin.structure.util.AbstractThreadedTransaction;
 import org.apache.tinkerpop.gremlin.structure.util.TransactionException;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.Query;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ta.nemahuta.neo4j.structure.Neo4JGraph;
@@ -54,7 +54,7 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
         log.debug("Committing all entities in session scope of transaction {} in session {}", transactionHashCode(), session.hashCode());
         Optional.ofNullable(wrapped)
                 .orElseThrow(org.apache.tinkerpop.gremlin.structure.Transaction.Exceptions::transactionMustBeOpenToReadWrite)
-                .success();
+                .commit();
     }
 
     @Override
@@ -71,7 +71,7 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
 
         Optional.ofNullable(wrapped)
                 .orElseThrow(org.apache.tinkerpop.gremlin.structure.Transaction.Exceptions::transactionMustBeOpenToReadWrite)
-                .failure();
+                .rollback();
     }
 
     @Override
@@ -93,10 +93,10 @@ public class Neo4JTransaction extends AbstractThreadedTransaction implements Sta
 
     @Nullable
     @Override
-    public StatementResult executeStatement(@Nonnull final Statement statement) {
+    public Result executeStatement(@Nonnull final Query statement) {
         readWrite();
         statementLogger.debug("Execution in transaction {} for session {}: '{}' with {}", transactionHashCode(), session.hashCode(), statement.text(), statement.parameters());
-        return wrapped.run(statement);
+        return wrapped.run(statement.text(), statement.parameters().asMap());
     }
 
     private Integer transactionHashCode() {

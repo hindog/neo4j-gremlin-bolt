@@ -1,6 +1,7 @@
 package ta.nemahuta.neo4j.query;
 
-import org.neo4j.driver.v1.Statement;
+import org.neo4j.cypherdsl.core.Statement;
+import org.neo4j.driver.Query;
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
@@ -16,6 +17,6 @@ public interface StatementBuilder {
      * @return build the {@link Statement}, if a statement is required
      */
     @Nonnull
-    Optional<Statement> build();
+    Optional<Query> build();
 
 }

@@ -4,8 +4,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.neo4j.driver.v1.Statement;
+import org.neo4j.cypherdsl.core.Statement;
+import org.neo4j.driver.Query;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
+import org.neo4j.cypherdsl.parser.CypherParser;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -60,9 +62,10 @@ public abstract class AbstractQueryBuilder implements StatementBuilder {
 
     @Override
     @Nonnull
-    public Optional<Statement> build() {
+    public Optional<Query> build() {
         final StringBuilder sb = new StringBuilder();
         final Map<String, Object> parameters = new HashMap<>();
+
         Optional.ofNullable(getMatch()).ifPresent(m -> {
             sb.append("MATCH ");
             m.append(sb, parameters);
@@ -82,7 +85,8 @@ public abstract class AbstractQueryBuilder implements StatementBuilder {
                 needsOperation = true;
             }
         }
-        return needsOperation ? Optional.of(new Statement(sb.toString().trim(), parameters)) : Optional.empty();
+
+        return needsOperation ? Optional.of(new Query(sb.toString().trim(), parameters)) : Optional.empty();
     }
 
 }

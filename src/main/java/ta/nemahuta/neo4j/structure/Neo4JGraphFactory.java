@@ -2,9 +2,9 @@ package ta.nemahuta.neo4j.structure;
 
 import lombok.Getter;
 import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.neo4j.driver.v1.Config;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.driver.Config;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.GraphDatabase;
 import ta.nemahuta.neo4j.cache.JCacheSessionCacheManager;
 import ta.nemahuta.neo4j.cache.SessionCacheManager;
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
@@ -56,9 +56,9 @@ public class Neo4JGraphFactory implements AutoCloseable, Supplier<Graph> {
 
     @Nonnull
     private Config createAdditionalConfiguration(@Nullable final Consumer<Config.ConfigBuilder> consumer) {
-        final Config.ConfigBuilder builder = Config.build();
+        final Config.ConfigBuilder builder = Config.builder();
         Optional.ofNullable(consumer).ifPresent(c -> c.accept(builder));
-        return builder.toConfig();
+        return builder.build();
     }
 
     @Override

@@ -7,9 +7,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.cypherdsl.core.Statement;
+import org.neo4j.driver.Query;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Result;
 
 import java.util.Iterator;
 import java.util.stream.Stream;
@@ -22,10 +23,10 @@ import static org.mockito.Mockito.when;
 class StatementExecutorTest {
 
     @Mock
-    private StatementResult statementResult;
+    private Result statementResult;
 
     @Mock
-    private Statement statement;
+    private Query statement;
 
     @Mock
     private Record record1, record2;

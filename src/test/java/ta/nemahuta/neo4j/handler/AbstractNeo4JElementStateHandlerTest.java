@@ -11,12 +11,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.neo4j.cypherdsl.core.Statement;
+import org.neo4j.driver.*;
 import org.neo4j.driver.internal.types.TypeConstructor;
 import org.neo4j.driver.internal.types.TypeRepresentation;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Result;
 import ta.nemahuta.neo4j.query.AbstractQueryBuilder;
 import ta.nemahuta.neo4j.session.StatementExecutor;
 import ta.nemahuta.neo4j.state.Neo4JElementState;
@@ -40,7 +40,7 @@ class AbstractNeo4JElementStateHandlerTest {
     private Neo4JElementState state;
 
     @Mock
-    private Statement deleteStmt, createStmt, updateStmt, loadStmt, createIndexStmt, queryStmt, loadIdsStmt;
+    private Query deleteStmt, createStmt, updateStmt, loadStmt, createIndexStmt, queryStmt, loadIdsStmt;
 
     @Mock(answer = Answers.CALLS_REAL_METHODS)
     private StatementExecutor statementExecutor;
@@ -77,37 +77,37 @@ class AbstractNeo4JElementStateHandlerTest {
 
             @Nonnull
             @Override
-            protected Statement createDeleteCommand(final long id) {
+            protected Query createDeleteCommand(final long id) {
                 return deleteStmt;
             }
 
             @Nonnull
             @Override
-            protected Statement createUpdateCommand(final long id, final Neo4JElementState currentState, final Neo4JElementState state) {
+            protected Query createUpdateCommand(final long id, final Neo4JElementState currentState, final Neo4JElementState state) {
                 return updateStmt;
             }
 
             @Nonnull
             @Override
-            protected Statement createInsertCommand(@Nonnull final Neo4JElementState state) {
+            protected Query createInsertCommand(@Nonnull final Neo4JElementState state) {
                 return createStmt;
             }
 
             @Nonnull
             @Override
-            protected Statement createLoadCommand(@Nonnull final Set<Long> ids) {
+            protected Query createLoadCommand(@Nonnull final Set<Long> ids) {
                 return loadStmt;
             }
 
             @Nonnull
             @Override
-            protected Statement createLoadAllIdsCommand() {
+            protected Query createLoadAllIdsCommand() {
                 return loadIdsStmt;
             }
 
             @Nonnull
             @Override
-            protected Statement createCreateIndexCommand(@Nonnull final String label, final Set<String> propertyNames) {
+            protected Query createCreateIndexCommand(@Nonnull final String label, final Set<String> propertyNames) {
                 return createIndexStmt;
             }
 
@@ -119,7 +119,7 @@ class AbstractNeo4JElementStateHandlerTest {
         };
         when(statementExecutor.executeStatement(any())).then(i -> {
             final Iterator<Record> iter = Stream.of(record).iterator();
-            final StatementResult result = mock(StatementResult.class);
+            final Result result = mock(Result.class);
             when(result.hasNext()).then(ii -> iter.hasNext());
             when(result.next()).then(ii -> iter.next());
             return result;

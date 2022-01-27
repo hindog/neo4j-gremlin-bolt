@@ -2,10 +2,12 @@ package ta.nemahuta.neo4j.testutils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import org.neo4j.cypherdsl.core.Statement;
+import org.neo4j.driver.Query;
+import org.neo4j.driver.Result;
 import org.neo4j.driver.internal.types.TypeConstructor;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Value;
 import ta.nemahuta.neo4j.session.StatementExecutor;
 
 import javax.annotation.Nonnull;
@@ -19,11 +21,11 @@ import static ta.nemahuta.neo4j.testutils.MockUtils.*;
 
 public class StatementExecutorStub implements StatementExecutor {
 
-    private final Map<String, StatementResult> statementStubs = new HashMap<>();
+    private final Map<String, Result> statementStubs = new HashMap<>();
 
     @Nullable
     @Override
-    public StatementResult executeStatement(@Nonnull final Statement statement) {
+    public Result executeStatement(@Nonnull final Query statement) {
         final String key = getKey(statement.text(), statement.parameters().asMap());
         return Optional.ofNullable(statementStubs.get(key))
                 .orElseThrow(() -> new IllegalStateException("No stub exists for statement:\n" +
@@ -56,7 +58,7 @@ public class StatementExecutorStub implements StatementExecutor {
         )));
     }
 
-    public void stubStatementExecution(final String text, final Map<String, Object> params, final StatementResult statementResult) {
+    public void stubStatementExecution(final String text, final Map<String, Object> params, final Result statementResult) {
         statementStubs.put(getKey(text, params), statementResult);
     }
 

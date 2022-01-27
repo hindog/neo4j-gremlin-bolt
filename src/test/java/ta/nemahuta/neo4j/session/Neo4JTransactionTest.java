@@ -5,11 +5,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.Transaction;
-import ta.nemahuta.neo4j.cache.SessionCache;
+import org.neo4j.driver.Query;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Transaction;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.internal.value.MapValue;
 import ta.nemahuta.neo4j.structure.Neo4JGraph;
+
+import java.util.Collections;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -28,7 +32,7 @@ class Neo4JTransactionTest {
     private Transaction transaction;
 
     @Mock
-    private Statement statement;
+    private Query statement;
 
     private Neo4JTransaction sut;
 
@@ -60,7 +64,7 @@ class Neo4JTransactionTest {
         // when: 'committing the transaction'
         sut.doCommit();
         // then: 'the transaction was marked as success and the cache was committed'
-        verify(transaction, times(1)).success();
+        verify(transaction, times(1)).commit();
     }
 
 
@@ -71,7 +75,7 @@ class Neo4JTransactionTest {
         // when: 'committing the transaction'
         sut.doRollback();
         // then: 'the transaction was marked as failure and the cache was flushed'
-        verify(transaction, times(1)).failure();
+        verify(transaction, times(1)).rollback();
     }
 
     @Test
@@ -88,11 +92,15 @@ class Neo4JTransactionTest {
     @Test
     void executeStatement() {
         // setup: 'stub the transaction'
+        Value parameters = new MapValue(Collections.emptyMap());
         when(session.beginTransaction()).thenReturn(transaction);
+        when(statement.text()).thenReturn("foo");
+        when(statement.parameters()).thenReturn(parameters);
+
         // when: 'closing the transaction'
         sut.executeStatement(statement);
         // then: 'the execution is delegated'
-        verify(transaction, times(1)).run(statement);
+        verify(transaction, times(1)).run("foo", parameters.asMap());
         // and: 'a new transaction was requested'
         verify(session, times(1)).beginTransaction();
     }

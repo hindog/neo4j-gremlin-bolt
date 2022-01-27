@@ -3,9 +3,10 @@ package ta.nemahuta.neo4j.handler;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.types.Relationship;
+import org.neo4j.cypherdsl.core.Statement;
+import org.neo4j.driver.Query;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.types.Relationship;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.edge.EdgeQueryBuilder;
 import ta.nemahuta.neo4j.query.edge.EdgeQueryFactory;
@@ -46,18 +47,18 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
 
     @Nonnull
     @Override
-    protected Statement createDeleteCommand(final long id) {
+    protected Query createDeleteCommand(final long id) {
         return query()
                 .direction(Direction.BOTH)
                 .labels(Collections.emptySet())
                 .where(b -> b.whereId(id))
-                .andThen(b -> b.deleteEdge())
+                .andThen(EdgeQueryFactory::deleteEdge)
                 .build().get();
     }
 
     @Nonnull
     @Override
-    protected Statement createUpdateCommand(final long id, final Neo4JEdgeState currentState, final Neo4JEdgeState newState) {
+    protected Query createUpdateCommand(final long id, final Neo4JEdgeState currentState, final Neo4JEdgeState newState) {
         return query()
                 .where(b -> b.whereId(id))
                 .direction(Direction.BOTH)
@@ -67,7 +68,7 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
 
     @Nonnull
     @Override
-    protected Statement createInsertCommand(@Nonnull final Neo4JEdgeState state) {
+    protected Query createInsertCommand(@Nonnull final Neo4JEdgeState state) {
         return query()
                 .where(b -> b.getLhs().id(state.getOutVertexId()).and(b.getRhs().id(state.getInVertexId())))
                 .andThen(b -> b.createEdge(Direction.OUT, state.getLabel(), state.getProperties()))
@@ -76,7 +77,7 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
 
     @Nonnull
     @Override
-    protected Statement createLoadCommand(@Nonnull final Set<Long> ids) {
+    protected Query createLoadCommand(@Nonnull final Set<Long> ids) {
         return query()
                 .direction(Direction.OUT)
                 .where(b -> b.whereIds(ImmutableSet.copyOf(ids)))
@@ -86,7 +87,7 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
 
     @Nonnull
     @Override
-    protected Statement createLoadAllIdsCommand() {
+    protected Query createLoadAllIdsCommand() {
         return query()
                 .direction(Direction.BOTH)
                 .andThen(EdgeQueryFactory::returnId).build().get();
@@ -94,8 +95,8 @@ public class Neo4JEdgeStateHandler extends AbstractNeo4JElementStateHandler<Neo4
 
     @Nonnull
     @Override
-    protected Statement createCreateIndexCommand(@Nonnull final String label,
-                                                 @Nonnull final Set<String> propertyNames) {
+    protected Query createCreateIndexCommand(@Nonnull final String label,
+                                             @Nonnull final Set<String> propertyNames) {
         return query()
                 .andThen(b -> b.createPropertyIndex(label, propertyNames))
                 .build().get();

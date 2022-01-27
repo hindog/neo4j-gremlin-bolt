@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
-import org.neo4j.driver.v1.AuthToken;
-import org.neo4j.driver.v1.Config;
+import org.neo4j.driver.AuthToken;
+import org.neo4j.driver.Config;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

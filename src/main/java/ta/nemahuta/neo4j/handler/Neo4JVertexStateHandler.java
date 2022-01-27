@@ -2,9 +2,10 @@ package ta.nemahuta.neo4j.handler;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.types.Node;
+import org.neo4j.cypherdsl.core.Statement;
+import org.neo4j.driver.Query;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.types.Node;
 import ta.nemahuta.neo4j.partition.Neo4JGraphPartition;
 import ta.nemahuta.neo4j.query.vertex.VertexQueryBuilder;
 import ta.nemahuta.neo4j.query.vertex.VertexQueryFactory;
@@ -43,7 +44,7 @@ public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Ne
 
     @Nonnull
     @Override
-    protected Statement createDeleteCommand(final long id) {
+    protected Query createDeleteCommand(final long id) {
         return query()
                 .match(b -> b.labelsMatch(Collections.emptySet()))
                 .where(b -> b.id(id))
@@ -53,7 +54,7 @@ public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Ne
 
     @Nonnull
     @Override
-    protected Statement createUpdateCommand(final long id, final Neo4JVertexState currentState, final Neo4JVertexState newState) {
+    protected Query createUpdateCommand(final long id, final Neo4JVertexState currentState, final Neo4JVertexState newState) {
         return query()
                 .match(b -> b.labelsMatch(Collections.emptySet()))
                 .where(b -> b.id(id))
@@ -64,7 +65,7 @@ public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Ne
 
     @Nonnull
     @Override
-    protected Statement createInsertCommand(@Nonnull final Neo4JVertexState state) {
+    protected Query createInsertCommand(@Nonnull final Neo4JVertexState state) {
         return query()
                 .andThen(b -> b.create(state.getLabels(), state.getProperties()))
                 .build().get();
@@ -72,7 +73,7 @@ public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Ne
 
     @Nonnull
     @Override
-    protected Statement createLoadCommand(@Nonnull final Set<Long> ids) {
+    protected Query createLoadCommand(@Nonnull final Set<Long> ids) {
         return query()
                 .match(b -> b.labelsMatch(readPartition.ensurePartitionLabelsSet(Collections.emptySet())))
                 .where(b -> b.idsInSet(ids))
@@ -82,7 +83,7 @@ public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Ne
 
     @Nonnull
     @Override
-    protected Statement createLoadAllIdsCommand() {
+    protected Query createLoadAllIdsCommand() {
         return query()
                 .match(b -> b.labelsMatch(readPartition.ensurePartitionLabelsSet(Collections.emptySet())))
                 .andThen(VertexQueryFactory::returnId).build().get();
@@ -90,8 +91,8 @@ public class Neo4JVertexStateHandler extends AbstractNeo4JElementStateHandler<Ne
 
     @Nonnull
     @Override
-    protected Statement createCreateIndexCommand(@Nonnull final String label,
-                                                 @Nonnull final Set<String> propertyNames) {
+    protected Query createCreateIndexCommand(@Nonnull final String label,
+                                             @Nonnull final Set<String> propertyNames) {
         return query()
                 .andThen(b -> b.createPropertyIndex(label, propertyNames))
                 .build().get();

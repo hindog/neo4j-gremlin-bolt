@@ -15,10 +15,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.Statement;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Transaction;
+import org.neo4j.cypherdsl.core.Statement;
+import org.neo4j.cypherdsl.parser.CypherParser;
+import org.neo4j.driver.Query;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Transaction;
 import ta.nemahuta.neo4j.cache.HierarchicalCache;
 import ta.nemahuta.neo4j.cache.SessionCache;
 import ta.nemahuta.neo4j.config.Neo4JConfiguration;
@@ -33,6 +35,7 @@ import ta.nemahuta.neo4j.testutils.StatementExecutorStub;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -82,7 +85,8 @@ class Neo4JGraphTest {
         this.sut = new Neo4JGraph(session, sessionCache, graphPartition, configuration);
         when(session.beginTransaction()).thenReturn(transaction);
         when(configuration.toApacheConfiguration()).thenReturn(apacheConfiguration);
-        when(transaction.run(any(Statement.class))).then(i -> stub.executeStatement(i.getArgument(0)));
+        when(transaction.run(any(String.class))).then(i -> stub.executeStatement(new Query(i.getArgument(0))));
+        when(transaction.run(any(String.class), any(Map.class))).then(i -> stub.executeStatement(new Query(i.getArgument(0), (Map<String, Object>)i.getArgument(1))));
     }
 
     @Test
@@ -162,13 +166,13 @@ class Neo4JGraphTest {
 
     @Test
     void createEdgePropertyIndex() {
-        stub.stubStatementExecution("CREATE INDEX ON :`relation`(property)", ImmutableMap.of(), mock(StatementResult.class));
+        stub.stubStatementExecution("CREATE INDEX ON :`relation`(property)", ImmutableMap.of(), mock(Result.class));
         sut.createEdgePropertyIndex("relation", Collections.singleton("property"));
     }
 
     @Test
     void createVertexPropertyIndex() {
-        stub.stubStatementExecution("CREATE INDEX ON :`v1`(property1,property2)", ImmutableMap.of(), mock(StatementResult.class));
+        stub.stubStatementExecution("CREATE INDEX ON :`v1`(property1,property2)", ImmutableMap.of(), mock(Result.class));
         sut.createVertexPropertyIndex("v1", ImmutableSet.of("property1", "property2"));
     }
 
